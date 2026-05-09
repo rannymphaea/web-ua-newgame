@@ -73,7 +73,7 @@
             </div>
 
             <div class="mb-8">
-                <h2 class="text-3xl font-bold">Activity Logs 📊</h2>
+                <h2 class="text-3xl font-bold">Activity Logs </h2>
                 <p class="text-gray-400 mt-1">Semua aktivitas sistem tercatat di sini</p>
             </div>
 
@@ -146,11 +146,11 @@
 
         const actionLabels = {
             'attend': { label: '✅ Absensi', color: 'text-green-400 bg-green-500/10' },
-            'start_event': { label: '🚀 Mulai Event', color: 'text-blue-400 bg-blue-500/10' },
-            'close_event': { label: '🔒 Tutup Event', color: 'text-yellow-400 bg-yellow-500/10' },
-            'change_role': { label: '👑 Ubah Role', color: 'text-purple-400 bg-purple-500/10' },
-            'token_invalid': { label: '❌ Token Invalid', color: 'text-red-400 bg-red-500/10' },
-            'request_close_event': { label: '⏳ Request Tutup', color: 'text-orange-400 bg-orange-500/10' }
+            'start_event': { label: ' Mulai Event', color: 'text-blue-400 bg-blue-500/10' },
+            'close_event': { label: ' Tutup Event', color: 'text-yellow-400 bg-yellow-500/10' },
+            'change_role': { label: ' Ubah Role', color: 'text-purple-400 bg-purple-500/10' },
+            'token_invalid': { label: ' Token Invalid', color: 'text-red-400 bg-red-500/10' },
+            'request_close_event': { label: ' Request Tutup', color: 'text-orange-400 bg-orange-500/10' }
         };
 
         window.loadLogs = async function(append = false) {
@@ -190,7 +190,6 @@
             list.innerHTML = allLogs.map(log => {
                 const action = actionLabels[log.action] || { label: log.action, color: 'text-gray-400 bg-gray-500/10' };
                 const time = log.timestamp ? log.timestamp.toDate().toLocaleString('id-ID') : '-';
-                const result = log.result === 'success' ? '✅' : log.result === 'failed' ? '❌' : '⏳';
                 return `
                     <div class="flex items-start gap-4 py-3 border-b border-white/5 last:border-0">
                         <span class="text-lg mt-0.5">${result}</span>

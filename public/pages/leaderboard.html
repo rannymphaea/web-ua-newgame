@@ -78,7 +78,7 @@
             </div>
 
             <div class="mb-8">
-                <h2 class="text-3xl font-bold">Leaderboard 🏆</h2>
+                <h2 class="text-3xl font-bold">Leaderboard </h2>
                 <p class="text-gray-400 mt-1">Ranking XP semua anggota NEWGAME</p>
             </div>
 
@@ -152,7 +152,6 @@
 
                 // Podium top 3
                 const podiumEl = document.getElementById('podium');
-                const podiumIcons = ['🥇', '🥈', '🥉'];
                 const podiumOrder = [1, 0, 2]; // tampilkan: 2nd, 1st, 3rd
 
                 podiumEl.innerHTML = podiumOrder.map(i => {
@@ -176,7 +175,6 @@
                 const listEl = document.getElementById('leaderboardList');
                 listEl.innerHTML = users.map(u => {
                     const isMe = u.uid === currentUid;
-                    const rankIcon = u.rank === 1 ? '🥇' : u.rank === 2 ? '🥈' : u.rank === 3 ? '🥉' : `#${u.rank}`;
                     return `
                         <div class="leaderboard-item flex items-center gap-4 py-3 px-2 border-b border-white/5 last:border-0 rounded-lg ${isMe ? 'bg-ng-red/10' : ''}">
                             <span class="text-lg w-8 text-center">${rankIcon}</span>

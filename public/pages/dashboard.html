@@ -136,25 +136,29 @@
             <div class="accent-line mb-6"></div>
 
             <!-- NAVIGASI -->
-            <nav class="flex-1 space-y-1">
-                <a href="/public/pages/dashboard.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
-                    <span>🏠</span> Dashboard
-                </a>
-                <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>🏆</span> Leaderboard
-                </a>
-                <!-- Link absensi — muncul saat ada event aktif -->
-                <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>📋</span> Absensi
-                </a>
-                <!-- Admin panel — hanya muncul untuk role admin ke atas -->
-                <a id="adminLink" href="/public/pages/admin.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>⚙️</span> Admin Panel
-                </a>
-                <a id="logsLink" href="/public/pages/logs.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>📊</span> Logs
-                </a>
-            </nav>
+           <nav class="flex-1 space-y-1">
+    <a href="/public/pages/dashboard.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
+        Dashboard
+    </a>
+
+    <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+        Leaderboard
+    </a>
+
+    <!-- Link absensi -->
+    <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+        Absensi
+    </a>
+
+    <!-- Admin panel -->
+    <a id="adminLink" href="/public/pages/admin.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+        Admin Panel
+    </a>
+
+    <a id="logsLink" href="/public/pages/logs.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+        Logs
+    </a>
+</nav>
 
             <!-- USER INFO & LOGOUT -->
             <div class="mt-auto">
@@ -167,7 +171,7 @@
                     </div>
                 </div>
                 <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2">
-                    <span>🚪</span> Keluar
+                Keluar
                 </button>
             </div>
         </aside>
@@ -199,7 +203,7 @@
                 <div class="stat-card glass rounded-xl p-5 col-span-2">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-gray-400 text-sm uppercase tracking-wider">Total XP</p>
-                        <span class="text-2xl">⚡</span>
+                        <span class="text-2xl"></span>
                     </div>
                     <p class="text-4xl font-bold text-ng-red" id="userXP">0</p>
                     <p class="text-gray-500 text-xs mt-1">Experience Points</p>
@@ -214,7 +218,7 @@
                 <div class="stat-card glass rounded-xl p-5">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-gray-400 text-sm uppercase tracking-wider">Rank</p>
-                        <span class="text-2xl">🏆</span>
+                        <span class="text-2xl"></span>
                     </div>
                     <p class="text-4xl font-bold text-yellow-400" id="userRank">#-</p>
                     <p class="text-gray-500 text-xs mt-1">Leaderboard</p>
@@ -224,7 +228,7 @@
                 <div class="stat-card glass rounded-xl p-5">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-gray-400 text-sm uppercase tracking-wider">Hadir</p>
-                        <span class="text-2xl">✅</span>
+                        <span class="text-2xl"></span>
                     </div>
                     <p class="text-4xl font-bold text-green-400" id="userAttendance">0</p>
                     <p class="text-gray-500 text-xs mt-1">Total kehadiran</p>

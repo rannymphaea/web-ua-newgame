@@ -116,19 +116,19 @@
             <div class="accent-line mb-6"></div>
             <nav class="flex-1 space-y-1">
                 <a href="/public/pages/dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>🏠</span> Dashboard
+                    <span></span> Dashboard
                 </a>
                 <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>🏆</span> Leaderboard
+                    <span></span> Leaderboard
                 </a>
                 <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>📋</span> Absensi
+                    <span></span> Absensi
                 </a>
                 <a href="/public/pages/admin.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
-                    <span>⚙️</span> Admin Panel
+                    <span></span> Admin Panel
                 </a>
                 <a href="/public/pages/logs.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span>📊</span> Logs
+                    <span></span> Logs
                 </a>
             </nav>
             <div class="mt-auto">
@@ -141,7 +141,7 @@
                     </div>
                 </div>
                 <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2">
-                    <span>🚪</span> Keluar
+                    <span></span> Keluar
                 </button>
             </div>
         </aside>
@@ -167,7 +167,7 @@
 
             <!-- AKSES DITOLAK (default, disembunyikan jika role valid) -->
             <div id="accessDenied" class="hidden glass rounded-xl p-8 text-center">
-                <div class="text-5xl mb-4">🚫</div>
+                <div class="text-5xl mb-4"></div>
                 <h3 class="text-xl font-bold text-red-400 mb-2">Akses Ditolak</h3>
                 <p class="text-gray-400">Kamu tidak memiliki izin untuk mengakses halaman ini.</p>
                 <a href="/public/pages/dashboard.html" class="inline-block mt-4 text-ng-red hover:underline">← Kembali ke Dashboard</a>
@@ -187,7 +187,7 @@
 
                 <!-- BUAT EVENT BARU -->
                 <div id="createEventSection" class="glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-4">🎯 Buat Event Baru</h3>
+                    <h3 class="text-lg font-bold mb-4"> Buat Event Baru</h3>
                     <div class="space-y-4">
                         <div>
                             <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Nama Event</label>
@@ -207,7 +207,7 @@
                             </div>
                         </div>
                         <button id="startEventBtn" class="btn-primary text-white font-bold px-6 py-3 rounded-lg w-full md:w-auto">
-                            🚀 Mulai Event
+                             Mulai Event
                         </button>
                     </div>
                 </div>
@@ -223,7 +223,7 @@
                             <div id="qrContainer"></div>
                             <!-- Overlay expired -->
                             <div id="qrExpiredOverlay" class="hidden absolute inset-0 bg-black/80 rounded-2xl flex items-center justify-center">
-                                <p class="text-white font-bold text-center">⏰<br>Memperbarui...</p>
+                                <p class="text-white font-bold text-center"><br>Memperbarui...</p>
                             </div>
                         </div>
 
@@ -246,26 +246,26 @@
 
                 <!-- TUTUP EVENT (muncul saat event aktif, hanya admin) -->
                 <div id="closeEventSection" class="hidden glass rounded-xl p-6 border border-red-500/20">
-                    <h3 class="text-lg font-bold mb-2 text-red-400">⚠️ Tutup Event</h3>
+                    <h3 class="text-lg font-bold mb-2 text-red-400"> Tutup Event</h3>
                     <p class="text-gray-400 text-sm mb-4">Menutup event akan menghitung XP semua anggota. Aksi ini membutuhkan persetujuan 2 admin berbeda.</p>
 
                     <!-- Status double approval -->
                     <div id="closeRequestStatus" class="hidden bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
-                        <p class="text-yellow-400 text-sm font-semibold mb-1">⏳ Menunggu Persetujuan</p>
+                        <p class="text-yellow-400 text-sm font-semibold mb-1"> Menunggu Persetujuan</p>
                         <p class="text-gray-400 text-xs" id="closeRequestInfo">-</p>
                         <button id="approveCloseBtn" class="mt-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-4 py-2 rounded-lg text-sm transition">
-                            ✅ Setujui Penutupan
+                            Setujui Penutupan
                         </button>
                     </div>
 
                     <button id="closeEventBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg transition">
-                        🔒 Request Tutup Event
+                         Request Tutup Event
                     </button>
                 </div>
 
                 <!-- ANOMALY ALERTS -->
                 <div class="glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-4">🤖 Anomaly Detection</h3>
+                    <h3 class="text-lg font-bold mb-4"> Anomaly Detection</h3>
                     <div id="anomalyList">
                         <p class="text-gray-500 text-sm text-center py-4">Tidak ada anomaly terdeteksi</p>
                     </div>
