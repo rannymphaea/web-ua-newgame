@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEWGAME - Logs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { 'ng-red': '#E63946', 'ng-blue': '#1D3557', 'ng-lightblue': '#457B9D' } } }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; }
+        .bg-logo { position: fixed; inset: 0; background: url('../../assets/logo.png') center/cover no-repeat; filter: blur(40px) brightness(0.08); transform: scale(1.2); z-index: 0; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-dark { background: rgba(0,0,0,0.3); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); }
+        .fade-in { animation: fadeIn 0.6s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-link { transition: all 0.2s ease; }
+        .nav-link:hover { background: rgba(230,57,70,0.15); color: #E63946; }
+        .nav-link.active { background: rgba(230,57,70,0.2); color: #E63946; border-left: 3px solid #E63946; }
+        .accent-line { height: 2px; background: linear-gradient(90deg, #E63946, #1D3557, #457B9D); border-radius: 999px; }
+        #sidebar { transition: transform 0.3s ease; }
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 50; transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-black min-h-screen text-white overflow-x-hidden">
+    <div class="bg-logo"></div>
+    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
+    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+
+    <div class="relative z-10 flex min-h-screen">
+        <aside id="sidebar" class="glass-dark w-64 min-h-screen flex flex-col p-6 md:relative md:transform-none">
+            <div class="flex items-center gap-3 mb-8">
+                <img src="../../assets/logo.png" alt="NEWGAME" class="w-10 h-10">
+                <div><h1 class="text-xl font-bold tracking-wider">NEWGAME</h1><p class="text-gray-500 text-xs">Learn Create Play</p></div>
+            </div>
+            <div class="accent-line mb-6"></div>
+            <nav class="flex-1 space-y-1">
+                <a href="/public/pages/dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span>🏠</span> Dashboard</a>
+                <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span>🏆</span> Leaderboard</a>
+                <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span>📋</span> Absensi</a>
+                <a href="/public/pages/admin.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span>⚙️</span> Admin Panel</a>
+                <a href="/public/pages/logs.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium"><span>📊</span> Logs</a>
+            </nav>
+            <div class="mt-auto">
+                <div class="accent-line mb-4"></div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-9 h-9 rounded-full bg-ng-red flex items-center justify-center text-sm font-bold" id="avatarInitial">?</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold truncate" id="sidebarName">Memuat...</p>
+                        <p class="text-xs text-gray-500 truncate" id="sidebarRole">-</p>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2"><span>🚪</span> Keluar</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-8 fade-in">
+            <div class="flex items-center justify-between mb-6 md:hidden">
+                <button onclick="openSidebar()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <img src="../../assets/logo.png" alt="NEWGAME" class="w-8 h-8">
+                <div class="w-6"></div>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold">Activity Logs 📊</h2>
+                <p class="text-gray-400 mt-1">Semua aktivitas sistem tercatat di sini</p>
+            </div>
+
+            <!-- FILTER -->
+            <div class="glass rounded-xl p-4 mb-6 flex gap-3 flex-wrap">
+                <select id="filterAction" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-ng-red">
+                    <option value="">Semua Aksi</option>
+                    <option value="attend">Absensi</option>
+                    <option value="start_event">Mulai Event</option>
+                    <option value="close_event">Tutup Event</option>
+                    <option value="change_role">Ubah Role</option>
+                    <option value="token_invalid">Token Invalid</option>
+                </select>
+                <button onclick="loadLogs()" class="bg-ng-red hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg transition">Filter</button>
+                <button onclick="exportCSV()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm px-4 py-2 rounded-lg transition">📥 Export CSV</button>
+            </div>
+
+            <!-- LOGS LIST -->
+            <div class="glass rounded-xl p-6">
+                <div id="logsList">
+                    <p class="text-gray-500 text-sm text-center py-8">Memuat logs...</p>
+                </div>
+                <button id="loadMoreBtn" class="hidden w-full mt-4 py-2 text-sm text-gray-400 hover:text-white border border-white/10 rounded-lg transition" onclick="loadMore()">
+                    Muat Lebih Banyak
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, getDocs, startAfter } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
+            authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
+            projectId: "qr-absensi-unandnewgame",
+            storageBucket: "qr-absensi-unandnewgame.firebasestorage.app",
+            messagingSenderId: "377822320778",
+            appId: "1:377822320778:web:f7305bb71019f670ccf573"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let lastDoc = null;
+        let allLogs = [];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user || !user.emailVerified) { window.location.href = '/public/pages/login.html'; return; }
+
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (!userDoc.exists()) { window.location.href = '/public/pages/login.html'; return; }
+
+            const data = userDoc.data();
+            if (!['admin', 'superadmin'].includes(data.role)) {
+                window.location.href = '/public/pages/dashboard.html';
+                return;
+            }
+
+            const name = data.displayName || user.displayName || 'User';
+            document.getElementById('sidebarName').textContent = name;
+            document.getElementById('sidebarRole').textContent = data.role;
+            document.getElementById('avatarInitial').textContent = name.charAt(0).toUpperCase();
+
+            await loadLogs();
+        });
+
+        const actionLabels = {
+            'attend': { label: '✅ Absensi', color: 'text-green-400 bg-green-500/10' },
+            'start_event': { label: '🚀 Mulai Event', color: 'text-blue-400 bg-blue-500/10' },
+            'close_event': { label: '🔒 Tutup Event', color: 'text-yellow-400 bg-yellow-500/10' },
+            'change_role': { label: '👑 Ubah Role', color: 'text-purple-400 bg-purple-500/10' },
+            'token_invalid': { label: '❌ Token Invalid', color: 'text-red-400 bg-red-500/10' },
+            'request_close_event': { label: '⏳ Request Tutup', color: 'text-orange-400 bg-orange-500/10' }
+        };
+
+        window.loadLogs = async function(append = false) {
+            try {
+                const filterAction = document.getElementById('filterAction').value;
+                let q;
+
+                if (filterAction) {
+                    q = query(collection(db, 'logs'), where('action', '==', filterAction), orderBy('timestamp', 'desc'), limit(20));
+                } else {
+                    q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'), limit(20));
+                }
+
+                if (append && lastDoc) q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'), startAfter(lastDoc), limit(20));
+
+                const snapshot = await getDocs(q);
+                if (snapshot.empty && !append) {
+                    document.getElementById('logsList').innerHTML = '<p class="text-gray-500 text-sm text-center py-8">Tidak ada log ditemukan</p>';
+                    return;
+                }
+
+                lastDoc = snapshot.docs[snapshot.docs.length - 1];
+                const newLogs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                if (append) allLogs = [...allLogs, ...newLogs];
+                else allLogs = newLogs;
+
+                renderLogs();
+                document.getElementById('loadMoreBtn').classList.toggle('hidden', snapshot.docs.length < 20);
+
+            } catch (error) {
+                console.error('Load logs error:', error);
+            }
+        };
+
+        function renderLogs() {
+            const list = document.getElementById('logsList');
+            list.innerHTML = allLogs.map(log => {
+                const action = actionLabels[log.action] || { label: log.action, color: 'text-gray-400 bg-gray-500/10' };
+                const time = log.timestamp ? log.timestamp.toDate().toLocaleString('id-ID') : '-';
+                const result = log.result === 'success' ? '✅' : log.result === 'failed' ? '❌' : '⏳';
+                return `
+                    <div class="flex items-start gap-4 py-3 border-b border-white/5 last:border-0">
+                        <span class="text-lg mt-0.5">${result}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap mb-1">
+                                <span class="text-xs px-2 py-0.5 rounded-full ${action.color} font-medium">${action.label}</span>
+                                <span class="text-xs text-gray-500">${time}</span>
+                            </div>
+                            <p class="text-xs text-gray-500 truncate">User: ${log.userId?.substring(0, 16)}...</p>
+                            ${log.eventId ? `<p class="text-xs text-gray-600">Event: ${log.eventId?.substring(0, 16)}...</p>` : ''}
+                            ${log.newRole ? `<p class="text-xs text-purple-400">→ Role baru: ${log.newRole}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.loadMore = () => loadLogs(true);
+
+        window.exportCSV = function() {
+            if (allLogs.length === 0) return;
+            const headers = ['Timestamp', 'Action', 'UserId', 'EventId', 'Result'];
+            const rows = allLogs.map(l => [
+                l.timestamp ? l.timestamp.toDate().toISOString() : '-',
+                l.action || '-',
+                l.userId || '-',
+                l.eventId || '-',
+                l.result || '-'
+            ]);
+            const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `newgame-logs-${Date.now()}.csv`;
+            a.click();
+        };
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = '/public/pages/login.html';
+        });
+
+        window.openSidebar = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.remove('hidden'); };
+        window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.add('hidden'); };
+    </script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEWGAME - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ng-red': '#E63946',
+                        'ng-blue': '#1D3557',
+                        'ng-lightblue': '#457B9D',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; }
+
+        .bg-logo {
+            position: fixed;
+            inset: 0;
+            background: url('../../assets/logo unandnewgame.png') center/cover no-repeat;
+            filter: blur(40px) brightness(0.08);
+            transform: scale(1.2);
+            z-index: 0;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .xp-bar-fill {
+            background: linear-gradient(90deg, #E63946, #457B9D);
+            transition: width 1s ease;
+            border-radius: 999px;
+        }
+
+        .nav-link {
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(230, 57, 70, 0.15);
+            color: #E63946;
+        }
+
+        .nav-link.active {
+            background: rgba(230, 57, 70, 0.2);
+            color: #E63946;
+            border-left: 3px solid #E63946;
+        }
+
+        .stat-card {
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .accent-line {
+            height: 2px;
+            background: linear-gradient(90deg, #E63946, #1D3557, #457B9D);
+            border-radius: 999px;
+        }
+
+        /* Sidebar mobile */
+        #sidebar {
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-black min-h-screen text-white overflow-x-hidden">
+
+    <!-- BACKGROUND -->
+    <div class="bg-logo"></div>
+    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
+
+    <!-- OVERLAY saat sidebar mobile terbuka -->
+    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+
+    <div class="relative z-10 flex min-h-screen">
+
+        <!-- ==================== SIDEBAR ==================== -->
+        <aside id="sidebar" class="glass-dark w-64 min-h-screen flex flex-col p-6 md:relative md:transform-none">
+
+            <!-- BRAND -->
+            <div class="flex items-center gap-3 mb-8">
+                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-10 h-10">
+                <div>
+                    <h1 class="text-xl font-bold tracking-wider">NEWGAME</h1>
+                    <p class="text-gray-500 text-xs">Learn Create Play</p>
+                </div>
+            </div>
+
+            <div class="accent-line mb-6"></div>
+
+            <!-- NAVIGASI -->
+            <nav class="flex-1 space-y-1">
+                <a href="/public/pages/dashboard.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
+                    <span>🏠</span> Dashboard
+                </a>
+                <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+                    <span>🏆</span> Leaderboard
+                </a>
+                <!-- Link absensi — muncul saat ada event aktif -->
+                <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+                    <span>📋</span> Absensi
+                </a>
+                <!-- Admin panel — hanya muncul untuk role admin ke atas -->
+                <a id="adminLink" href="/public/pages/admin.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+                    <span>⚙️</span> Admin Panel
+                </a>
+                <a id="logsLink" href="/public/pages/logs.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
+                    <span>📊</span> Logs
+                </a>
+            </nav>
+
+            <!-- USER INFO & LOGOUT -->
+            <div class="mt-auto">
+                <div class="accent-line mb-4"></div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-9 h-9 rounded-full bg-ng-red flex items-center justify-center text-sm font-bold" id="avatarInitial">?</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold truncate" id="sidebarName">Memuat...</p>
+                        <p class="text-xs text-gray-500 truncate" id="sidebarRole">member</p>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2">
+                    <span>🚪</span> Keluar
+                </button>
+            </div>
+        </aside>
+
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <main class="flex-1 p-6 md:p-8 fade-in">
+
+            <!-- HEADER MOBILE -->
+            <div class="flex items-center justify-between mb-6 md:hidden">
+                <button onclick="openSidebar()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-8 h-8">
+                <div class="w-6"></div>
+            </div>
+
+            <!-- GREETING -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold">Halo, <span id="userName" class="text-ng-red">Player</span>! 👋</h2>
+                <p class="text-gray-400 mt-1" id="userEmail">Memuat data...</p>
+            </div>
+
+            <!-- STAT CARDS -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+                <!-- XP -->
+                <div class="stat-card glass rounded-xl p-5 col-span-2">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-gray-400 text-sm uppercase tracking-wider">Total XP</p>
+                        <span class="text-2xl">⚡</span>
+                    </div>
+                    <p class="text-4xl font-bold text-ng-red" id="userXP">0</p>
+                    <p class="text-gray-500 text-xs mt-1">Experience Points</p>
+                    <!-- XP Bar -->
+                    <div class="mt-3 bg-white/10 rounded-full h-2">
+                        <div class="xp-bar-fill h-2" id="xpBar" style="width: 0%"></div>
+                    </div>
+                    <p class="text-gray-600 text-xs mt-1" id="xpBarLabel">Level 1</p>
+                </div>
+
+                <!-- RANK -->
+                <div class="stat-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-gray-400 text-sm uppercase tracking-wider">Rank</p>
+                        <span class="text-2xl">🏆</span>
+                    </div>
+                    <p class="text-4xl font-bold text-yellow-400" id="userRank">#-</p>
+                    <p class="text-gray-500 text-xs mt-1">Leaderboard</p>
+                </div>
+
+                <!-- HADIR -->
+                <div class="stat-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-gray-400 text-sm uppercase tracking-wider">Hadir</p>
+                        <span class="text-2xl">✅</span>
+                    </div>
+                    <p class="text-4xl font-bold text-green-400" id="userAttendance">0</p>
+                    <p class="text-gray-500 text-xs mt-1">Total kehadiran</p>
+                </div>
+
+            </div>
+
+            <!-- ROLE BADGE & INFO -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-bold mb-4">Profil Member</h3>
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-ng-red to-ng-blue flex items-center justify-center text-2xl font-bold" id="profileAvatar">?</div>
+                    <div>
+                        <p class="text-xl font-bold" id="profileName">Memuat...</p>
+                        <p class="text-gray-400 text-sm" id="profileEmail">-</p>
+                        <div class="mt-2">
+                            <span id="roleBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                member
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENT AKTIF (jika ada) -->
+            <div id="activeEventCard" class="hidden glass rounded-xl p-6 mb-6 border border-green-500/30">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                            <span class="text-green-400 text-xs uppercase tracking-wider font-semibold">Event Aktif</span>
+                        </div>
+                        <h3 class="text-xl font-bold" id="eventName">-</h3>
+                        <p class="text-gray-400 text-sm" id="eventTime">-</p>
+                    </div>
+                    <a href="/index.html" class="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-lg transition">
+                        Absen Sekarang →
+                    </a>
+                </div>
+            </div>
+
+            <!-- RIWAYAT KEHADIRAN -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-bold mb-4">Riwayat Kehadiran</h3>
+                <div id="attendanceList">
+                    <p class="text-gray-500 text-sm text-center py-8">Belum ada riwayat kehadiran</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import {
+            getAuth,
+            onAuthStateChanged,
+            signOut
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            collection,
+            query,
+            where,
+            orderBy,
+            limit,
+            getDocs,
+            CACHE_SIZE_UNLIMITED,
+            initializeFirestore
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // ==========================================
+        // KONFIGURASI FIREBASE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
+            authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
+            projectId: "qr-absensi-unandnewgame",
+            storageBucket: "qr-absensi-unandnewgame.firebasestorage.app",
+            messagingSenderId: "377822320778",
+            appId: "1:377822320778:web:f7305bb71019f670ccf573"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ==========================================
+        // CEK AUTH — jika tidak login, redirect ke login
+        // ==========================================
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = '/public/pages/login.html';
+                return;
+            }
+
+            if (!user.emailVerified) {
+                await signOut(auth);
+                window.location.href = '/public/pages/login.html';
+                return;
+            }
+
+            // Load semua data user
+            await loadUserData(user);
+            await loadActiveEvent();
+            await loadAttendanceHistory(user.uid);
+            await loadRank(user.uid);
+        });
+
+        // ==========================================
+        // LOAD DATA USER DARI FIRESTORE
+        // ==========================================
+        async function loadUserData(user) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+                if (!userDoc.exists()) {
+                    window.location.href = '/public/pages/login.html';
+                    return;
+                }
+
+                const data = userDoc.data();
+                const name = data.displayName || user.displayName || 'Player';
+                const role = data.role || 'member';
+                const xp = data.xpCache || 0;
+                const attendance = data.attendanceCount || 0;
+
+                // Update UI nama
+                document.getElementById('userName').textContent = name;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('profileName').textContent = name;
+                document.getElementById('profileEmail').textContent = user.email;
+                document.getElementById('sidebarName').textContent = name;
+                document.getElementById('sidebarRole').textContent = role;
+
+                // Avatar initial
+                const initial = name.charAt(0).toUpperCase();
+                document.getElementById('avatarInitial').textContent = initial;
+                document.getElementById('profileAvatar').textContent = initial;
+
+                // XP
+                document.getElementById('userXP').textContent = xp;
+                document.getElementById('userAttendance').textContent = attendance;
+
+                // XP Bar — setiap 100 XP = 1 level
+                const level = Math.floor(xp / 100) + 1;
+                const progress = (xp % 100);
+                document.getElementById('xpBar').style.width = progress + '%';
+                document.getElementById('xpBarLabel').textContent = `Level ${level} — ${progress}/100 XP ke level berikutnya`;
+
+                // Role badge warna
+                const roleBadge = document.getElementById('roleBadge');
+                const roleColors = {
+                    'member': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                    'pengurus': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                    'admin': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                    'superadmin': 'bg-red-500/20 text-red-400 border-red-500/30'
+                };
+                roleBadge.className = `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${roleColors[role] || roleColors['member']}`;
+                roleBadge.textContent = role;
+
+                // Tampilkan menu admin jika role admin/superadmin
+                if (['admin', 'superadmin'].includes(role)) {
+                    document.getElementById('adminLink').classList.remove('hidden');
+                    document.getElementById('logsLink').classList.remove('hidden');
+                }
+
+                // Tampilkan menu logs jika pengurus ke atas
+                if (role === 'pengurus') {
+                    document.getElementById('adminLink').classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // ==========================================
+        // LOAD EVENT AKTIF
+        // ==========================================
+        async function loadActiveEvent() {
+            try {
+                const eventsRef = collection(db, 'events');
+                const q = query(eventsRef, where('status', '==', 'active'), limit(1));
+                const snapshot = await getDocs(q);
+
+                if (!snapshot.empty) {
+                    const event = snapshot.docs[0].data();
+                    document.getElementById('activeEventCard').classList.remove('hidden');
+                    document.getElementById('eventName').textContent = event.name || 'Event Aktif';
+
+                    // Format waktu
+                    if (event.startTime) {
+                        const time = event.startTime.toDate().toLocaleString('id-ID');
+                        document.getElementById('eventTime').textContent = `Dimulai: ${time}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading active event:', error);
+            }
+        }
+
+        // ==========================================
+        // LOAD RIWAYAT KEHADIRAN
+        // ==========================================
+        async function loadAttendanceHistory(uid) {
+            try {
+                const attendanceRef = collection(db, 'attendance');
+                const q = query(
+                    attendanceRef,
+                    where('userId', '==', uid),
+                    orderBy('attendedAt', 'desc'),
+                    limit(10)
+                );
+                const snapshot = await getDocs(q);
+
+                const list = document.getElementById('attendanceList');
+
+                if (snapshot.empty) {
+                    list.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">Belum ada riwayat kehadiran</p>';
+                    return;
+                }
+
+                // Status warna
+                const statusConfig = {
+                    'present': { label: 'Hadir', color: 'text-green-400', bg: 'bg-green-500/10', icon: '✅' },
+                    'absent': { label: 'Tidak Hadir', color: 'text-red-400', bg: 'bg-red-500/10', icon: '❌' },
+                    'excused': { label: 'Izin', color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: '📝' }
+                };
+
+                list.innerHTML = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const status = statusConfig[data.status] || statusConfig['absent'];
+                    const date = data.attendedAt ? data.attendedAt.toDate().toLocaleDateString('id-ID', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    }) : '-';
+                    const xpChange = data.xpChange > 0 ? `+${data.xpChange}` : data.xpChange;
+
+                    return `
+                        <div class="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">${status.icon}</span>
+                                <div>
+                                    <p class="text-sm font-medium">${data.eventName || 'Event'}</p>
+                                    <p class="text-xs text-gray-500">${date}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs px-2 py-1 rounded-full ${status.bg} ${status.color}">${status.label}</span>
+                                <p class="text-xs mt-1 ${data.xpChange >= 0 ? 'text-green-400' : 'text-red-400'}">${xpChange} XP</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+            }
+        }
+
+        // ==========================================
+        // LOAD RANK USER
+        // ==========================================
+        async function loadRank(uid) {
+            try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, orderBy('xpCache', 'desc'));
+                const snapshot = await getDocs(q);
+
+                let rank = '-';
+                snapshot.docs.forEach((doc, index) => {
+                    if (doc.id === uid) rank = index + 1;
+                });
+
+                document.getElementById('userRank').textContent = `#${rank}`;
+            } catch (error) {
+                console.error('Error loading rank:', error);
+            }
+        }
+
+        // ==========================================
+        // LOGOUT
+        // ==========================================
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = '/public/pages/login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        // ==========================================
+        // SIDEBAR MOBILE
+        // ==========================================
+        window.openSidebar = () => {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.remove('hidden');
+        };
+
+        window.closeSidebar = () => {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.add('hidden');
+        };
+    </script>
+
+</body>
+</html>

@@ -1,11 +1,459 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi QR</title>
+    <title>NEWGAME - Absensi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { 'ng-red': '#E63946', 'ng-blue': '#1D3557' } } }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2 { font-family: 'Rajdhani', sans-serif; }
+        .bg-logo { position: fixed; inset: 0; background: url('/assets/logo.png') center/cover no-repeat; filter: blur(40px) brightness(0.08); transform: scale(1.2); z-index: 0; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .fade-in { animation: fadeIn 0.6s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-primary { background: linear-gradient(135deg, #E63946, #c1121f); transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(230,57,70,0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .accent-line { height: 2px; background: linear-gradient(90deg, #E63946, #1D3557, #457B9D); border-radius: 999px; }
+        .pulse-ring { animation: pulseRing 2s ease infinite; }
+        @keyframes pulseRing { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+    </style>
 </head>
-<body>
-    
+<body class="bg-black min-h-screen flex items-center justify-center text-white">
+    <div class="bg-logo"></div>
+    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
+
+    <div class="relative z-10 w-full max-w-md mx-4 fade-in">
+
+        <!-- BRAND -->
+        <div class="text-center mb-8">
+            <img src="/assets/logo.png" alt="NEWGAME" class="w-16 h-16 mx-auto mb-3 drop-shadow-2xl">
+            <h1 class="text-3xl font-bold tracking-wider">NEWGAME</h1>
+            <div class="accent-line w-20 mx-auto mt-2"></div>
+        </div>
+
+        <!-- CARD -->
+        <div class="glass rounded-2xl p-8 shadow-2xl">
+
+            <!-- STATE: LOADING -->
+            <div id="stateLoading" class="text-center py-8">
+                <div class="w-12 h-12 border-4 border-ng-red border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-gray-400">Memverifikasi...</p>
+            </div>
+
+            <!-- STATE: TIDAK LOGIN -->
+            <div id="stateNotLoggedIn" class="hidden text-center py-4">
+                <div class="text-5xl mb-4">🔐</div>
+                <h2 class="text-xl font-bold mb-2">Perlu Login</h2>
+                <p class="text-gray-400 text-sm mb-6">Kamu harus login dulu untuk absensi</p>
+                <a href="/public/pages/login.html" class="btn-primary block text-center text-white font-bold py-3 rounded-lg">
+                    Login Sekarang
+                </a>
+            </div>
+
+            <!-- STATE: TIDAK ADA TOKEN -->
+            <div id="stateNoToken" class="hidden text-center py-4">
+                <div class="text-5xl mb-4">📱</div>
+                <h2 class="text-xl font-bold mb-2">Scan QR Dulu</h2>
+                <p class="text-gray-400 text-sm mb-6">Halaman ini hanya bisa diakses melalui QR code yang ditampilkan pengurus</p>
+                <a href="/public/pages/dashboard.html" class="text-ng-red hover:underline text-sm">← Kembali ke Dashboard</a>
+            </div>
+
+            <!-- STATE: SIAP ABSEN -->
+            <div id="stateReady" class="hidden">
+                <div class="text-center mb-6">
+                    <!-- Pulse indicator -->
+                    <div class="relative w-16 h-16 mx-auto mb-4">
+                        <div class="pulse-ring absolute inset-0 rounded-full bg-green-400 opacity-30"></div>
+                        <div class="absolute inset-0 rounded-full bg-green-400 opacity-20"></div>
+                        <div class="relative w-full h-full rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center text-2xl">✅</div>
+                    </div>
+                    <h2 class="text-xl font-bold text-green-400">QR Valid!</h2>
+                    <p class="text-gray-400 text-sm mt-1">Token terverifikasi — klik tombol untuk absen</p>
+                </div>
+
+                <!-- Info event -->
+                <div class="bg-white/5 rounded-xl p-4 mb-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Event</p>
+                    <p class="font-bold text-lg" id="eventNameDisplay">-</p>
+                    <p class="text-green-400 text-sm mt-1">+<span id="xpRewardDisplay">10</span> XP jika hadir</p>
+                </div>
+
+                <!-- Info user -->
+                <div class="bg-white/5 rounded-xl p-4 mb-6 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-ng-red to-ng-blue flex items-center justify-center font-bold" id="userAvatarDisplay">?</div>
+                    <div>
+                        <p class="font-semibold" id="userNameDisplay">-</p>
+                        <p class="text-gray-400 text-xs" id="userEmailDisplay">-</p>
+                    </div>
+                </div>
+
+                <!-- Tombol absen -->
+                <button id="attendBtn" class="btn-primary w-full text-white font-bold py-4 rounded-xl text-lg">
+                    🎯 Absen Sekarang
+                </button>
+
+                <!-- Timer token -->
+                <p class="text-center text-gray-600 text-xs mt-3" id="tokenTimer">Token berlaku sementara</p>
+            </div>
+
+            <!-- STATE: SUKSES -->
+            <div id="stateSuccess" class="hidden text-center py-4">
+                <div class="text-6xl mb-4 animate-bounce">🎉</div>
+                <h2 class="text-2xl font-bold text-green-400 mb-2">Absensi Berhasil!</h2>
+                <p class="text-gray-400 text-sm mb-4" id="successMessage">-</p>
+                <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
+                    <p class="text-green-400 font-bold text-2xl" id="xpGained">+10 XP</p>
+                    <p class="text-gray-400 text-xs">ditambahkan ke akunmu</p>
+                </div>
+                <a href="/public/pages/dashboard.html" class="btn-primary block text-center text-white font-bold py-3 rounded-lg">
+                    Lihat Dashboard →
+                </a>
+            </div>
+
+            <!-- STATE: ERROR -->
+            <div id="stateError" class="hidden text-center py-4">
+                <div class="text-5xl mb-4">❌</div>
+                <h2 class="text-xl font-bold text-red-400 mb-2">Absensi Gagal</h2>
+                <p class="text-gray-400 text-sm mb-6" id="errorMessage">Terjadi kesalahan</p>
+                <a href="/public/pages/dashboard.html" class="text-ng-red hover:underline text-sm">← Kembali ke Dashboard</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import {
+            getFirestore, doc, getDoc, setDoc, addDoc,
+            collection, query, where, limit, getDocs,
+            runTransaction, serverTimestamp, Timestamp
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
+            authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
+            projectId: "qr-absensi-unandnewgame",
+            storageBucket: "qr-absensi-unandnewgame.firebasestorage.app",
+            messagingSenderId: "377822320778",
+            appId: "1:377822320778:web:f7305bb71019f670ccf573"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let tokenId = null;
+        let currentEvent = null;
+        let deviceFingerprint = null;
+
+        // ==========================================
+        // AMBIL TOKEN DARI URL FRAGMENT (#t=TOKEN)
+        // Fragment tidak dikirim ke server — aman
+        // ==========================================
+        function getTokenFromURL() {
+            const hash = window.location.hash;
+            if (!hash || !hash.startsWith('#t=')) return null;
+            return hash.substring(3);
+        }
+
+        // ==========================================
+        // GENERATE DEVICE FINGERPRINT
+        // Kombinasi beberapa sinyal device
+        // ==========================================
+        async function generateFingerprint() {
+            const components = [
+                navigator.userAgent,
+                screen.width + 'x' + screen.height,
+                Intl.DateTimeFormat().resolvedOptions().timeZone,
+                navigator.language,
+                navigator.hardwareConcurrency || 0
+            ];
+
+            // Canvas fingerprint
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillText('NEWGAME-fingerprint-2026', 2, 2);
+                components.push(canvas.toDataURL());
+            } catch (e) {}
+
+            const str = components.join('|');
+            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ==========================================
+        // TAMPILKAN STATE
+        // ==========================================
+        function showState(state) {
+            ['Loading', 'NotLoggedIn', 'NoToken', 'Ready', 'Success', 'Error'].forEach(s => {
+                document.getElementById(`state${s}`).classList.add('hidden');
+            });
+            document.getElementById(`state${state}`).classList.remove('hidden');
+        }
+
+        // ==========================================
+        // MAIN FLOW
+        // ==========================================
+        tokenId = getTokenFromURL();
+
+        // Cek koneksi internet
+        if (!navigator.onLine) {
+            showState('Error');
+            document.getElementById('errorMessage').textContent = 'Tidak ada koneksi internet. Absensi memerlukan koneksi aktif.';
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user || !user.emailVerified) {
+                showState('NotLoggedIn');
+                return;
+            }
+
+            if (!tokenId) {
+                showState('NoToken');
+                return;
+            }
+
+            currentUser = user;
+            deviceFingerprint = await generateFingerprint();
+
+            // Validasi token
+            await validateToken();
+        });
+
+        // ==========================================
+        // VALIDASI TOKEN
+        // ==========================================
+        async function validateToken() {
+            try {
+                const tokenDoc = await getDoc(doc(db, 'tokens', tokenId));
+
+                if (!tokenDoc.exists()) {
+                    showState('Error');
+                    document.getElementById('errorMessage').textContent = 'QR tidak valid. Minta pengurus tampilkan QR terbaru.';
+                    return;
+                }
+
+                const token = tokenDoc.data();
+
+                // Cek sudah dipakai
+                if (token.used) {
+                    showState('Error');
+                    document.getElementById('errorMessage').textContent = 'QR sudah digunakan. Minta QR baru dari pengurus.';
+                    return;
+                }
+
+                // Cek expired — gunakan waktu server
+                const now = new Date();
+                const expiresAt = token.expiresAt instanceof Timestamp
+                    ? token.expiresAt.toDate()
+                    : new Date(token.expiresAt);
+
+                if (now > expiresAt) {
+                    showState('Error');
+                    document.getElementById('errorMessage').textContent = 'QR sudah expired. Minta QR baru dari pengurus.';
+                    return;
+                }
+
+                // Cek device binding
+                if (token.deviceFingerprint && token.deviceFingerprint !== deviceFingerprint) {
+                    showState('Error');
+                    document.getElementById('errorMessage').textContent = 'QR ini sudah digunakan perangkat lain.';
+                    logAnomaly('device_mismatch', 3);
+                    return;
+                }
+
+                // Ambil event aktif
+                const eventDoc = await getDoc(doc(db, 'events', token.eventId));
+                if (!eventDoc.exists() || eventDoc.data().status !== 'active') {
+                    showState('Error');
+                    document.getElementById('errorMessage').textContent = 'Event tidak aktif atau sudah ditutup.';
+                    return;
+                }
+
+                currentEvent = { id: eventDoc.id, ...eventDoc.data() };
+
+                // Cek sudah absen
+                const attendanceId = `${currentEvent.id}_${currentUser.uid}`;
+                const existingAttendance = await getDoc(doc(db, 'attendance', attendanceId));
+                if (existingAttendance.exists()) {
+                    showState('Error');
+                    document.getElementById('errorMessage').textContent = 'Kamu sudah absen di event ini.';
+                    return;
+                }
+
+                // Cek user aktif
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (!userDoc.exists() || userDoc.data().status === 'suspended') {
+                    showState('Error');
+                    document.getElementById('errorMessage').textContent = 'Akun kamu tidak aktif.';
+                    return;
+                }
+
+                const userData = userDoc.data();
+
+                // Tampilkan UI siap absen
+                document.getElementById('eventNameDisplay').textContent = currentEvent.name;
+                document.getElementById('xpRewardDisplay').textContent = currentEvent.xpReward || 10;
+                document.getElementById('userNameDisplay').textContent = userData.displayName || currentUser.displayName;
+                document.getElementById('userEmailDisplay').textContent = currentUser.email;
+                document.getElementById('userAvatarDisplay').textContent = (userData.displayName || 'U').charAt(0).toUpperCase();
+
+                // Hitung sisa waktu token
+                const secondsLeft = Math.max(0, Math.floor((expiresAt - now) / 1000));
+                document.getElementById('tokenTimer').textContent = `Token berlaku ${secondsLeft} detik lagi`;
+
+                showState('Ready');
+
+            } catch (error) {
+                console.error('Validate token error:', error);
+                showState('Error');
+                document.getElementById('errorMessage').textContent = 'Terjadi kesalahan. Coba lagi.';
+            }
+        }
+
+        // ==========================================
+        // PROSES ABSEN — ATOMIC TRANSACTION
+        // ==========================================
+        document.getElementById('attendBtn').addEventListener('click', async () => {
+            if (!currentUser || !tokenId || !currentEvent) return;
+
+            // Cek internet sekali lagi sebelum submit
+            if (!navigator.onLine) {
+                showState('Error');
+                document.getElementById('errorMessage').textContent = 'Koneksi internet terputus. Coba lagi.';
+                return;
+            }
+
+            const btn = document.getElementById('attendBtn');
+            btn.disabled = true;
+            btn.textContent = 'Memproses...';
+
+            try {
+                const attendanceId = `${currentEvent.id}_${currentUser.uid}`;
+
+                await runTransaction(db, async (transaction) => {
+                    // Baca semua dokumen yang diperlukan
+                    const tokenRef = doc(db, 'tokens', tokenId);
+                    const attendanceRef = doc(db, 'attendance', attendanceId);
+                    const eventRef = doc(db, 'events', currentEvent.id);
+                    const userRef = doc(db, 'users', currentUser.uid);
+
+                    const [tokenSnap, attendanceSnap, eventSnap, userSnap] = await Promise.all([
+                        transaction.get(tokenRef),
+                        transaction.get(attendanceRef),
+                        transaction.get(eventRef),
+                        transaction.get(userRef)
+                    ]);
+
+                    // Validasi dalam transaction — mencegah race condition
+                    if (!tokenSnap.exists()) throw new Error('Token tidak ditemukan');
+                    if (tokenSnap.data().used) throw new Error('Token sudah digunakan');
+                    if (attendanceSnap.exists()) throw new Error('Sudah absen');
+                    if (!eventSnap.exists() || eventSnap.data().status !== 'active') throw new Error('Event tidak aktif');
+
+                    // Cek expired menggunakan server timestamp
+                    const expiresAt = tokenSnap.data().expiresAt instanceof Timestamp
+                        ? tokenSnap.data().expiresAt.toDate()
+                        : new Date(tokenSnap.data().expiresAt);
+                    if (new Date() > expiresAt) throw new Error('Token expired');
+
+                    const xpReward = eventSnap.data().xpReward || 10;
+                    const currentXP = userSnap.data().xpCache || 0;
+
+                    // Tulis semua sekaligus — atomic
+                    transaction.update(tokenRef, {
+                        used: true,
+                        usedBy: currentUser.uid,
+                        usedAt: serverTimestamp(),
+                        deviceFingerprint: deviceFingerprint
+                    });
+
+                    transaction.set(attendanceRef, {
+                        eventId: currentEvent.id,
+                        eventName: currentEvent.name,
+                        userId: currentUser.uid,
+                        status: 'present',
+                        xpChange: xpReward,
+                        deviceFingerprint: deviceFingerprint,
+                        attendedAt: serverTimestamp()
+                    });
+
+                    transaction.update(userRef, {
+                        xpCache: currentXP + xpReward,
+                        attendanceCount: (userSnap.data().attendanceCount || 0) + 1
+                    });
+                });
+
+                // Log sukses
+                await addDoc(collection(db, 'logs'), {
+                    userId: currentUser.uid,
+                    eventId: currentEvent.id,
+                    action: 'attend',
+                    result: 'success',
+                    deviceFingerprint: deviceFingerprint,
+                    timestamp: serverTimestamp()
+                });
+
+                // Tampilkan sukses
+                document.getElementById('successMessage').textContent = `Kamu berhasil absen di ${currentEvent.name}`;
+                document.getElementById('xpGained').textContent = `+${currentEvent.xpReward || 10} XP`;
+                showState('Success');
+
+                // Hapus token dari URL
+                history.replaceState(null, '', window.location.pathname);
+
+            } catch (error) {
+                console.error('Attend error:', error);
+
+                // Log gagal
+                await addDoc(collection(db, 'logs'), {
+                    userId: currentUser.uid,
+                    eventId: currentEvent?.id || null,
+                    action: 'attend',
+                    result: 'failed',
+                    reason: error.message,
+                    timestamp: serverTimestamp()
+                });
+
+                showState('Error');
+                const messages = {
+                    'Token sudah digunakan': 'QR sudah digunakan orang lain.',
+                    'Sudah absen': 'Kamu sudah absen di event ini.',
+                    'Token expired': 'QR sudah expired. Minta QR baru.',
+                    'Event tidak aktif': 'Event sudah ditutup.'
+                };
+                document.getElementById('errorMessage').textContent = messages[error.message] || 'Gagal absen. Coba lagi.';
+            }
+        });
+
+        // ==========================================
+        // LOG ANOMALY
+        // ==========================================
+        async function logAnomaly(reason, score) {
+            try {
+                await addDoc(collection(db, 'anomalies'), {
+                    userId: currentUser?.uid || 'unknown',
+                    reasons: [reason],
+                    score: score,
+                    deviceFingerprint: deviceFingerprint,
+                    timestamp: serverTimestamp()
+                });
+            } catch (e) {}
+        }
+    </script>
 </body>
 </html>
