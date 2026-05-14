@@ -1,168 +1,298 @@
-````markdown id="jlwmmk"
 # NEWGAME Attendance System
 
-Modern organization attendance platform powered by Firebase, QR technology, and realtime validation.
+<p align="center">
+  <img src="./assets/logo.png" width="150" alt="NEWGAME Logo">
+</p>
+
+<h1 align="center">NEWGAME Attendance System</h1>
 
 <p align="center">
-  <img src="./assets/logo.png" width="140" alt="NEWGAME Logo">
+  Modern QR-based attendance platform powered by Firebase
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel">
+  <img src="https://img.shields.io/badge/Status-Development-blue?style=for-the-badge">
   <img src="https://img.shields.io/badge/Firebase-Backend-orange?style=for-the-badge&logo=firebase">
-  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Vercel-Hosting-black?style=for-the-badge&logo=vercel">
+  <img src="https://img.shields.io/badge/TailwindCSS-UI-38bdf8?style=for-the-badge&logo=tailwindcss">
 </p>
 
 ---
 
-## ✨ Overview
+## Overview
 
-NEWGAME Attendance System is a secure QR-based attendance web application designed for organizations and communities that require realtime attendance tracking, role-based management, and scalable Firebase infrastructure.
+NEWGAME Attendance System is a secure realtime attendance platform designed for organizations and communities that require:
+
+- QR-based attendance validation
+- Realtime monitoring
+- Role-based management
+- XP and leaderboard system
+- Firebase cloud infrastructure
 
 Built using lightweight modern web technologies without heavy frontend frameworks.
 
 ---
 
-# 🚀 Features
+# Features
 
 ## Authentication
+
 - Email & Password Authentication
 - Google Sign-In
 - Email Verification
+- Password Reset
 - Session Validation
 
+---
+
 ## Attendance System
+
 - Dynamic QR Attendance
 - QR Auto Refresh Every 12 Seconds
-- Firestore Transaction Validation
+- Realtime Attendance Validation
 - Duplicate Attendance Prevention
-- Realtime Attendance Logging
+- Secure Firestore Transactions
+- Device Fingerprint Validation
+
+---
 
 ## Dashboard
-- XP & Rank System
+
+- XP & Ranking System
 - Attendance History
 - User Statistics
-- Realtime Leaderboard
+- Leaderboard
+- Realtime Updates
+
+---
 
 ## Admin Panel
+
 - Event Management
-- Dynamic QR Generator
-- Double Approval Event Closing
-- CSV Export Logs
+- QR Generator
 - Attendance Monitoring
+- CSV Import & Export
+- Leave Approval System
+- Manual XP Management
+- Logs & Audit Tracking
+
+---
 
 ## Security
+
 - Firestore Security Rules
+- Firebase Custom Claims
 - Role-Based Access Control
 - Secure Token Validation
-- Anomaly Detection System
+- Anomaly Detection
 - Protected Admin Routes
 
 ---
 
-# 🛠️ Technology Stack
+# Technology Stack
 
 | Layer | Technology |
 |---|---|
 | Frontend | HTML5 + JavaScript ES Modules |
-| Styling | Tailwind CSS CDN |
-| Backend | Firebase Authentication + Firestore |
+| Styling | TailwindCSS |
+| Backend | Firebase |
+| Database | Cloud Firestore |
+| Authentication | Firebase Authentication |
+| Server Logic | Firebase Cloud Functions |
 | Hosting | Vercel |
 | QR Engine | QRCode.js |
 
 ---
 
-# 📁 Project Structure
+# Project Structure
 
 ```txt
 absensi-qr/
+│
 ├── assets/
 │   └── logo.png
 │
-├── firebase/
-│   ├── config.js
-│   └── service.js
-│
-├── utils/
-│   ├── token.js
-│   └── validator.js
+├── functions/
+│   ├── index.js
+│   ├── package.json
+│   └── node_modules/
 │
 ├── public/
 │   ├── pages/
 │   │   ├── login.html
 │   │   ├── dashboard.html
 │   │   ├── admin.html
+│   │   ├── members.html
 │   │   ├── leaderboard.html
-│   │   └── logs.html
+│   │   ├── logs.html
+│   │   ├── change-password.html
+│   │   └── scan.html
 │   │
-│   ├── app.js
-│   └── style.css
+│   ├── js/
+│   └── css/
 │
-├── index.html
-├── .env
+├── firestore.rules
+├── firebase.json
+├── .firebaserc
 ├── .gitignore
-└── vercel.json
+├── vercel.json
+└── README.md
 ```
 
 ---
 
-# 🔐 Role Hierarchy
+# Role Hierarchy
 
 ```txt
-member → pengurus → admin → superadmin
+member
+   ↓
+pengurus
+   ↓
+inventori
+   ↓
+admin
+   ↓
+superadmin
+   ↓
+presiden
 ```
 
-Each role has isolated permissions to ensure secure operational access.
+Each role has isolated permissions enforced using Firebase Custom Claims and Firestore Security Rules.
 
 ---
 
-# ⚙️ Environment Setup
+# Firebase Setup
 
-Create a `.env` file in the project root:
+## 1. Create Firebase Project
 
-```env
-VITE_FIREBASE_API_KEY=YOUR_API_KEY
-VITE_FIREBASE_AUTH_DOMAIN=YOUR_PROJECT.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
-VITE_FIREBASE_STORAGE_BUCKET=YOUR_PROJECT.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
-VITE_FIREBASE_APP_ID=YOUR_APP_ID
-VITE_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID
-```
+Open Firebase Console:
 
----
-
-# 🔥 Firebase Configuration
-
-## Create Firebase Project
-
-Open:
-
+```txt
 https://console.firebase.google.com
+```
 
 Enable:
+
 - Authentication
 - Firestore Database
-- Google Authentication Provider
+- Cloud Functions
 
 ---
 
-## Register Web Application
+## 2. Register Web App
 
 Navigate to:
 
 ```txt
-Project Settings → General → Your Apps → Web App
+Project Settings
+→ General
+→ Your Apps
 ```
 
-Copy the Firebase configuration into your `.env` file.
+Copy the Firebase SDK configuration.
 
 ---
 
-# 📦 GitHub Setup
+## 3. Insert Firebase Config
 
-## Initialize Git
+Replace this section inside your project:
+
+```js
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+```
+
+---
+
+# Firestore Collections
+
+```txt
+users
+events
+attendance
+tokens
+logs
+xpHistory
+anomalies
+notifications
+leaveRequests
+members
+```
+
+---
+
+# Local Development
+
+## Install Firebase CLI
+
+```bash
+npm install -g firebase-tools
+```
+
+---
+
+## Login Firebase
+
+```bash
+firebase login
+```
+
+---
+
+## Install Dependencies
+
+```bash
+cd functions
+npm install
+```
+
+---
+
+## Run Emulator
+
+```bash
+firebase emulators:start
+```
+
+Open Emulator UI:
+
+```txt
+http://127.0.0.1:4000
+```
+
+---
+
+# Attendance Workflow
+
+```txt
+Admin creates event
+        ↓
+Generate secure QR token
+        ↓
+Member scans QR
+        ↓
+Cloud Function validates request
+        ↓
+Firestore transaction executes
+        ↓
+Attendance recorded
+        ↓
+XP updated
+        ↓
+Logs stored
+```
+
+---
+
+# GitHub Setup
+
+## Initialize Repository
 
 ```bash
 git init
@@ -170,96 +300,76 @@ git init
 
 ---
 
-## Commit Project
+## Add Files
 
 ```bash
 git add .
+```
+
+---
+
+## Commit
+
+```bash
 git commit -m "initial commit"
 ```
 
 ---
 
-## Connect Repository
+## Connect Remote Repository
+
+```bash
+git remote add origin https://github.com/USERNAME/web-ua-newgame.git
+```
+
+---
+
+## Push Project
 
 ```bash
 git branch -M main
-git remote add origin https://github.com/USERNAME/absensi-qr.git
 git push -u origin main
 ```
 
-Replace:
-
-```txt
-USERNAME
-```
-
-with your GitHub username.
-
 ---
 
-# 🚀 Deploy to Vercel
+# Deploy to Vercel
 
-## Login to Vercel
+## Install Vercel CLI
 
-https://vercel.com
-
-Sign in using GitHub.
-
----
-
-## Import Repository
-
-- Click `Add New Project`
-- Select `absensi-qr`
-- Click `Deploy`
-
----
-
-## Configure Environment Variables
-
-Navigate to:
-
-```txt
-Settings → Environment Variables
-```
-
-Import your `.env` file or add variables manually.
-
----
-
-## Redeploy Project
-
-Navigate to:
-
-```txt
-Deployments → Redeploy
+```bash
+npm install -g vercel
 ```
 
 ---
 
-# 🔒 Firebase Authorized Domain
+## Login
 
-Open:
-
-```txt
-Firebase Console → Authentication → Settings → Authorized Domains
-```
-
-Add your Vercel domain:
-
-```txt
-absensi-qr-puce.vercel.app
+```bash
+vercel login
 ```
 
 ---
 
-# 🛡️ Security Headers
+## Deploy
 
-Create:
-
-```txt
-vercel.json
+```bash
+vercel
 ```
+
+---
+
+## Production Deploy
+
+```bash
+vercel --prod
+```
+
+---
+
+# Recommended Security Headers
+
+Create `vercel.json`
 
 ```json
 {
@@ -267,10 +377,22 @@ vercel.json
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "no-referrer" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
       ]
     }
   ]
@@ -279,52 +401,39 @@ vercel.json
 
 ---
 
-# 🧠 Firestore Collections
+# Cloud Functions
 
-```txt
-users
-events
-attendance
-tokens
-logs
-anomalies
-```
-
----
-
-# 📊 Attendance Workflow
-
-```txt
-Admin Creates Event
-        ↓
-Dynamic QR Generated
-        ↓
-Member Scans QR
-        ↓
-Firestore Transaction Validation
-        ↓
-Attendance Recorded
-        ↓
-XP & Logs Updated
-```
+| Function | Purpose |
+|---|---|
+| `processAttendance` | Validate attendance transaction |
+| `generateToken` | Generate secure QR token |
+| `closeEvent` | Close event & distribute XP |
+| `editXPManual` | Manual XP editing |
+| `importMembers` | CSV member import |
+| `approveLeaveRequest` | Approve/reject leave |
+| `cleanupExpiredTokens` | Cleanup expired tokens |
+| `onUserCreated` | Set initial custom claims |
+| `onRoleUpdated` | Sync updated roles |
 
 ---
 
-# 📈 Future Improvements
+# Future Improvements
 
 - Progressive Web App (PWA)
-- Offline Attendance Sync
 - Push Notifications
-- Multi-Organization Support
+- Multi-organization support
 - Advanced Analytics Dashboard
-- AI-Based Anomaly Detection
-- Device Fingerprinting
+- Offline Attendance Sync
+- Better Device Fingerprinting
 
 ---
 
-# 🌌 NEWGAME
+# License
 
-Secure. Lightweight. Realtime.
+MIT License
 
-Built for modern organizations that need fast and scalable attendance management infrastructure.
-````
+---
+
+# NEWGAME
+
+Let's Create, Let's Play.
