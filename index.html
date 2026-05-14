@@ -1,459 +1,582 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEWGAME - Absensi</title>
+    <title>NEWGAME - Scan QR</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { colors: { 'ng-red': '#E63946', 'ng-blue': '#1D3557' } } }
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        h1, h2 { font-family: 'Rajdhani', sans-serif; }
-        .bg-logo { position: fixed; inset: 0; background: url('/assets/logo unandnewgame.png') center/cover no-repeat; filter: blur(40px) brightness(0.08); transform: scale(1.2); z-index: 0; }
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .fade-in { animation: fadeIn 0.6s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .btn-primary { background: linear-gradient(135deg, #E63946, #c1121f); transition: all 0.3s ease; }
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        h1,h2,h3 { font-family: 'Rajdhani', sans-serif; }
+        body { background: #070910; }
+        .bg-logo { position: fixed; inset: 0; background: url('assets/logo.png') center/cover no-repeat; filter: blur(24px) brightness(0.1); transform: scale(1.1); z-index: 0; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        .accent-bar { height: 3px; background: linear-gradient(90deg,#E63946,#1D3557,#457B9D); }
+        .btn-primary { background: linear-gradient(135deg,#E63946,#c1121f); color:white; font-weight:600; padding:12px 24px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; font-size:15px; display:inline-flex; align-items:center; gap:8px; }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(230,57,70,0.4); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .accent-line { height: 2px; background: linear-gradient(90deg, #E63946, #1D3557, #457B9D); border-radius: 999px; }
-        .pulse-ring { animation: pulseRing 2s ease infinite; }
-        @keyframes pulseRing { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        .btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+        .btn-secondary { background:rgba(255,255,255,0.08); color:#d1d5db; font-weight:500; padding:10px 20px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); cursor:pointer; transition:all 0.2s; font-size:14px; display:inline-flex; align-items:center; gap:8px; }
+        .btn-secondary:hover { background:rgba(255,255,255,0.14); color:white; }
+
+        /* Scanner box */
+        #reader { border-radius: 16px; overflow: hidden; }
+        #reader video { border-radius: 16px; }
+        #reader img { display: none; }
+
+        /* State cards */
+        .state-card { display:none; }
+        .state-card.active { display:block; }
+
+        /* Result animation */
+        @keyframes successPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+        .success-anim { animation: successPulse 0.6s ease; }
+
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);} }
+        .error-anim { animation: shake 0.4s ease; }
+
+        /* XP gain popup */
+        @keyframes xpFloat { 0%{opacity:1;transform:translateY(0);} 100%{opacity:0;transform:translateY(-60px);} }
+        .xp-float { animation: xpFloat 2s ease forwards; position:fixed; z-index:200; font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; color:#4ade80; pointer-events:none; }
+
+        /* Scanner overlay */
+        .scan-corner { position:absolute; width:24px; height:24px; border-color:#E63946; border-style:solid; }
+        .scan-corner.tl { top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0; }
+        .scan-corner.tr { top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0; }
+        .scan-corner.bl { bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px; }
+        .scan-corner.br { bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0; }
+
+        @keyframes scanLine { 0%{top:10%;} 50%{top:85%;} 100%{top:10%;} }
+        .scan-line { position:absolute; left:5%;right:5%;height:2px;background:linear-gradient(90deg,transparent,#E63946,transparent);animation:scanLine 2.5s ease-in-out infinite; border-radius:1px; }
     </style>
 </head>
-<body class="bg-black min-h-screen flex items-center justify-center text-white">
-    <div class="bg-logo"></div>
-    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
+<body class="text-white min-h-screen">
+<div class="bg-logo"></div>
+<div class="accent-bar fixed top-0 left-0 right-0 z-50"></div>
 
-    <div class="relative z-10 w-full max-w-md mx-4 fade-in">
+<!-- XP Float container -->
+<div id="xpFloatContainer"></div>
 
-        <!-- BRAND -->
-        <div class="text-center mb-8">
-            <img src="/assets/logo unandnewgame.png" alt="NEWGAME" class="w-16 h-16 mx-auto mb-3 drop-shadow-2xl">
-            <h1 class="text-3xl font-bold tracking-wider">NEWGAME</h1>
-            <div class="accent-line w-20 mx-auto mt-2"></div>
+<div class="relative z-10 min-h-screen flex flex-col">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between p-4 border-b border-white/5" style="background:rgba(7,9,16,0.8);backdrop-filter:blur(12px);">
+        <div class="flex items-center gap-3">
+            <img src="assets/logo.png" alt="NEWGAME" class="w-8 h-8">
+            <div>
+                <h1 class="text-lg font-bold text-white" style="font-family:'Rajdhani',sans-serif;">NEWGAME</h1>
+                <p class="text-gray-500 text-xs">QR Attendance</p>
+            </div>
         </div>
-
-        <!-- CARD -->
-        <div class="glass rounded-2xl p-8 shadow-2xl">
-
-            <!-- STATE: LOADING -->
-            <div id="stateLoading" class="text-center py-8">
-                <div class="w-12 h-12 border-4 border-ng-red border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-gray-400">Memverifikasi...</p>
+        <div class="flex items-center gap-3">
+            <div class="text-right hidden sm:block">
+                <p class="text-white text-sm font-semibold" id="topbarName">-</p>
+                <p class="text-gray-500 text-xs" id="topbarDivision">-</p>
             </div>
+            <a href="public/pages/dashboard.html" class="btn-secondary text-sm py-2 px-3">Dashboard</a>
+        </div>
+    </div>
 
-            <!-- STATE: TIDAK LOGIN -->
-            <div id="stateNotLoggedIn" class="hidden text-center py-4">
-                <div class="text-5xl mb-4">🔐</div>
-                <h2 class="text-xl font-bold mb-2">Perlu Login</h2>
-                <p class="text-gray-400 text-sm mb-6">Kamu harus login dulu untuk absensi</p>
-                <a href="/public/pages/login.html" class="btn-primary block text-center text-white font-bold py-3 rounded-lg">
-                    Login Sekarang
-                </a>
-            </div>
+    <!-- Main content -->
+    <div class="flex-1 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm">
 
-            <!-- STATE: TIDAK ADA TOKEN -->
-            <div id="stateNoToken" class="hidden text-center py-4">
-                <div class="text-5xl mb-4">📱</div>
-                <h2 class="text-xl font-bold mb-2">Scan QR Dulu</h2>
-                <p class="text-gray-400 text-sm mb-6">Halaman ini hanya bisa diakses melalui QR code yang ditampilkan pengurus</p>
-                <a href="/public/pages/dashboard.html" class="text-ng-red hover:underline text-sm">← Kembali ke Dashboard</a>
-            </div>
-
-            <!-- STATE: SIAP ABSEN -->
-            <div id="stateReady" class="hidden">
-                <div class="text-center mb-6">
-                    <!-- Pulse indicator -->
-                    <div class="relative w-16 h-16 mx-auto mb-4">
-                        <div class="pulse-ring absolute inset-0 rounded-full bg-green-400 opacity-30"></div>
-                        <div class="absolute inset-0 rounded-full bg-green-400 opacity-20"></div>
-                        <div class="relative w-full h-full rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center text-2xl">✅</div>
-                    </div>
-                    <h2 class="text-xl font-bold text-green-400">QR Valid!</h2>
-                    <p class="text-gray-400 text-sm mt-1">Token terverifikasi — klik tombol untuk absen</p>
+            <!-- STATE: Not logged in -->
+            <div class="state-card glass rounded-2xl p-8 text-center" id="stateNotLoggedIn">
+                <div class="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
+                <h2 class="text-xl font-bold text-white mb-2">Sign In Required</h2>
+                <p class="text-gray-400 text-sm mb-6">You need to be signed in to scan attendance QR codes.</p>
+                <a href="public/pages/login.html" class="btn-primary w-full justify-center">Sign In</a>
+            </div>
 
-                <!-- Info event -->
-                <div class="bg-white/5 rounded-xl p-4 mb-6">
-                    <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Event</p>
-                    <p class="font-bold text-lg" id="eventNameDisplay">-</p>
-                    <p class="text-green-400 text-sm mt-1">+<span id="xpRewardDisplay">10</span> XP jika hadir</p>
+            <!-- STATE: Loading -->
+            <div class="state-card glass rounded-2xl p-8 text-center" id="stateLoading">
+                <div class="w-10 h-10 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-gray-400 text-sm">Checking your session...</p>
+            </div>
+
+            <!-- STATE: No active event -->
+            <div class="state-card glass rounded-2xl p-8 text-center" id="stateNoEvent">
+                <div class="w-16 h-16 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 </div>
+                <h2 class="text-xl font-bold text-white mb-2">No Active Event</h2>
+                <p class="text-gray-400 text-sm mb-6">There are no events running right now. Check back later or contact your admin.</p>
+                <button onclick="checkActiveEvent()" class="btn-secondary w-full justify-center">Refresh</button>
+            </div>
 
-                <!-- Info user -->
-                <div class="bg-white/5 rounded-xl p-4 mb-6 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-ng-red to-ng-blue flex items-center justify-center font-bold" id="userAvatarDisplay">?</div>
-                    <div>
-                        <p class="font-semibold" id="userNameDisplay">-</p>
-                        <p class="text-gray-400 text-xs" id="userEmailDisplay">-</p>
+            <!-- STATE: Scanner ready -->
+            <div class="state-card glass rounded-2xl overflow-hidden" id="stateScanner">
+                <!-- Event info header -->
+                <div class="p-5 border-b border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                        <div>
+                            <p class="text-white font-semibold text-sm" id="eventNameDisplay">-</p>
+                            <p class="text-gray-400 text-xs" id="eventXPDisplay">+- XP for attendance</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Tombol absen -->
-                <button id="attendBtn" class="btn-primary w-full text-white font-bold py-4 rounded-xl text-lg">
-                    🎯 Absen Sekarang
-                </button>
-
-                <!-- Timer token -->
-                <p class="text-center text-gray-600 text-xs mt-3" id="tokenTimer">Token berlaku sementara</p>
-            </div>
-
-            <!-- STATE: SUKSES -->
-            <div id="stateSuccess" class="hidden text-center py-4">
-                <div class="text-6xl mb-4 animate-bounce">🎉</div>
-                <h2 class="text-2xl font-bold text-green-400 mb-2">Absensi Berhasil!</h2>
-                <p class="text-gray-400 text-sm mb-4" id="successMessage">-</p>
-                <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
-                    <p class="text-green-400 font-bold text-2xl" id="xpGained">+10 XP</p>
-                    <p class="text-gray-400 text-xs">ditambahkan ke akunmu</p>
+                <!-- Scanner area -->
+                <div class="p-4">
+                    <div class="relative mb-4" style="border-radius:12px;overflow:hidden;">
+                        <div id="reader" style="width:100%;"></div>
+                        <!-- Corner overlays -->
+                        <div class="scan-corner tl"></div>
+                        <div class="scan-corner tr"></div>
+                        <div class="scan-corner bl"></div>
+                        <div class="scan-corner br"></div>
+                        <div class="scan-line" id="scanLine"></div>
+                    </div>
+                    <p class="text-gray-400 text-xs text-center">Point your camera at the QR code displayed on screen</p>
                 </div>
-                <a href="/public/pages/dashboard.html" class="btn-primary block text-center text-white font-bold py-3 rounded-lg">
-                    Lihat Dashboard →
-                </a>
+
+                <!-- Manual token input (fallback) -->
+                <div class="p-4 pt-0">
+                    <details class="text-xs text-gray-600">
+                        <summary class="cursor-pointer hover:text-gray-400 transition">Having trouble scanning?</summary>
+                        <div class="mt-3 space-y-2">
+                            <input type="text" id="manualTokenInput" placeholder="Enter token manually..." style="background:rgba(255,255,255,0.05);color:white;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);font-size:12px;width:100%;">
+                            <button onclick="processManualToken()" class="btn-secondary text-xs w-full justify-center py-2">Submit Token</button>
+                        </div>
+                    </details>
+                </div>
             </div>
 
-            <!-- STATE: ERROR -->
-            <div id="stateError" class="hidden text-center py-4">
-                <div class="text-5xl mb-4">❌</div>
-                <h2 class="text-xl font-bold text-red-400 mb-2">Absensi Gagal</h2>
-                <p class="text-gray-400 text-sm mb-6" id="errorMessage">Terjadi kesalahan</p>
-                <a href="/public/pages/dashboard.html" class="text-ng-red hover:underline text-sm">← Kembali ke Dashboard</a>
+            <!-- STATE: Processing -->
+            <div class="state-card glass rounded-2xl p-8 text-center" id="stateProcessing">
+                <div class="w-12 h-12 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h2 class="text-xl font-bold text-white mb-2">Processing...</h2>
+                <p class="text-gray-400 text-sm">Verifying your attendance</p>
+            </div>
+
+            <!-- STATE: Success -->
+            <div class="state-card glass rounded-2xl p-8 text-center success-anim" id="stateSuccess">
+                <div class="w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-1" style="font-family:'Rajdhani',sans-serif;">Attendance Recorded!</h2>
+                <p class="text-gray-400 text-sm mb-4" id="successEventName">-</p>
+                <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-4">
+                    <p class="text-green-400 text-xs uppercase tracking-wider mb-1">XP Earned</p>
+                    <p class="text-4xl font-bold text-green-400" style="font-family:'Rajdhani',sans-serif;" id="successXP">+0</p>
+                    <p class="text-gray-400 text-xs mt-1" id="successStreak">-</p>
+                </div>
+                <div class="text-left space-y-2 mb-6">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Total XP</span>
+                        <span class="text-white font-bold" id="successTotalXP">-</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Current Level</span>
+                        <span class="text-white font-bold" id="successLevel">-</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Streak</span>
+                        <span class="text-white font-bold" id="successStreakCount">- days</span>
+                    </div>
+                </div>
+                <button onclick="resetToScanner()" class="btn-primary w-full justify-center">Done</button>
+            </div>
+
+            <!-- STATE: Error -->
+            <div class="state-card glass rounded-2xl p-8 text-center error-anim" id="stateError">
+                <div class="w-20 h-20 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2" style="font-family:'Rajdhani',sans-serif;">Failed</h2>
+                <p class="text-red-400 text-sm mb-6" id="errorMessage">Something went wrong</p>
+                <button onclick="resetToScanner()" class="btn-primary w-full justify-center">Try Again</button>
+            </div>
+
+            <!-- STATE: Already attended -->
+            <div class="state-card glass rounded-2xl p-8 text-center" id="stateAlreadyAttended">
+                <div class="w-20 h-20 rounded-full bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Already Recorded</h2>
+                <p class="text-blue-400 text-sm mb-4">Your attendance for this event has already been recorded.</p>
+                <a href="public/pages/dashboard.html" class="btn-secondary w-full justify-center">Go to Dashboard</a>
             </div>
 
         </div>
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import {
-            getFirestore, doc, getDoc, setDoc, addDoc,
-            collection, query, where, limit, getDocs,
-            runTransaction, serverTimestamp, Timestamp
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import {
+        getFirestore, doc, getDoc, setDoc, updateDoc, addDoc,
+        collection, query, where, limit, getDocs, serverTimestamp, Timestamp, writeBatch
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        const firebaseConfig = {
+    const firebaseConfig = {
             apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
             authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
             projectId: "qr-absensi-unandnewgame",
             storageBucket: "qr-absensi-unandnewgame.firebasestorage.app",
             messagingSenderId: "377822320778",
             appId: "1:377822320778:web:f7305bb71019f670ccf573"
-        };
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        let currentUser = null;
-        let tokenId = null;
-        let currentEvent = null;
-        let deviceFingerprint = null;
+    let currentUser = null;
+    let userData = null;
+    let activeEvent = null;
+    let scanner = null;
+    let isProcessing = false;
+    let deviceFingerprint = null;
 
-        // ==========================================
-        // AMBIL TOKEN DARI URL FRAGMENT (#t=TOKEN)
-        // Fragment tidak dikirim ke server — aman
-        // ==========================================
-        function getTokenFromURL() {
-            const hash = window.location.hash;
-            if (!hash || !hash.startsWith('#t=')) return null;
-            return hash.substring(3);
+    // ============================================================
+    // Tampilkan satu state, sembunyikan yang lain
+    // ============================================================
+    function showState(name) {
+        document.querySelectorAll('.state-card').forEach(c => c.classList.remove('active'));
+        const el = document.getElementById(`state${name}`);
+        if (el) el.classList.add('active');
+    }
+
+    showState('Loading');
+
+    // ============================================================
+    // Generate device fingerprint
+    // ============================================================
+    async function genFingerprint() {
+        const components = [
+            navigator.userAgent,
+            screen.width + 'x' + screen.height,
+            Intl.DateTimeFormat().resolvedOptions().timeZone,
+            navigator.language,
+            navigator.hardwareConcurrency || 0
+        ];
+        try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.font = '14px Arial';
+            ctx.fillText('NEWGAME-fp', 2, 2);
+            components.push(canvas.toDataURL());
+        } catch (e) {}
+        const str = components.join('|');
+        const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    // ============================================================
+    // Auth check
+    // ============================================================
+    onAuthStateChanged(auth, async (user) => {
+        if (!user || !user.emailVerified) {
+            showState('NotLoggedIn');
+            return;
         }
 
-        // ==========================================
-        // GENERATE DEVICE FINGERPRINT
-        // Kombinasi beberapa sinyal device
-        // ==========================================
-        async function generateFingerprint() {
-            const components = [
-                navigator.userAgent,
-                screen.width + 'x' + screen.height,
-                Intl.DateTimeFormat().resolvedOptions().timeZone,
-                navigator.language,
-                navigator.hardwareConcurrency || 0
-            ];
-
-            // Canvas fingerprint
-            try {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.textBaseline = 'top';
-                ctx.font = '14px Arial';
-                ctx.fillText('NEWGAME-fingerprint-2026', 2, 2);
-                components.push(canvas.toDataURL());
-            } catch (e) {}
-
-            const str = components.join('|');
-            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists() || userDoc.data().status === 'suspended') {
+            await signOut(auth);
+            showState('NotLoggedIn');
+            return;
         }
 
-        // ==========================================
-        // TAMPILKAN STATE
-        // ==========================================
-        function showState(state) {
-            ['Loading', 'NotLoggedIn', 'NoToken', 'Ready', 'Success', 'Error'].forEach(s => {
-                document.getElementById(`state${s}`).classList.add('hidden');
-            });
-            document.getElementById(`state${state}`).classList.remove('hidden');
-        }
+        currentUser = user;
+        userData = userDoc.data();
+        deviceFingerprint = await genFingerprint();
 
-        // ==========================================
-        // MAIN FLOW
-        // ==========================================
-        tokenId = getTokenFromURL();
+        // Render topbar
+        document.getElementById('topbarName').textContent = userData.name || user.email;
+        document.getElementById('topbarDivision').textContent = userData.division || '-';
 
-        // Cek koneksi internet
-        if (!navigator.onLine) {
-            showState('Error');
-            document.getElementById('errorMessage').textContent = 'Tidak ada koneksi internet. Absensi memerlukan koneksi aktif.';
-        }
+        await checkActiveEvent();
+        setupAutoLogout();
+    });
 
-        onAuthStateChanged(auth, async (user) => {
-            if (!user || !user.emailVerified) {
-                showState('NotLoggedIn');
+    // ============================================================
+    // Cek event aktif
+    // ============================================================
+    window.checkActiveEvent = async function() {
+        showState('Loading');
+        try {
+            const q = query(collection(db, 'events'), where('status', '==', 'active'), limit(1));
+            const snap = await getDocs(q);
+
+            if (snap.empty) {
+                showState('NoEvent');
                 return;
             }
 
-            if (!tokenId) {
-                showState('NoToken');
+            activeEvent = { id: snap.docs[0].id, ...snap.docs[0].data() };
+            document.getElementById('eventNameDisplay').textContent = activeEvent.name;
+            document.getElementById('eventXPDisplay').textContent = `+${activeEvent.xpReward || 10} XP for attendance`;
+
+            // Cek apakah sudah hadir
+            const attId = `${activeEvent.id}_${currentUser.uid}`;
+            const attDoc = await getDoc(doc(db, 'attendance', attId));
+            if (attDoc.exists()) {
+                showState('AlreadyAttended');
                 return;
             }
 
-            currentUser = user;
-            deviceFingerprint = await generateFingerprint();
+            showState('Scanner');
+            startScanner();
+
+        } catch (err) {
+            console.error('checkActiveEvent error:', err);
+            showState('NoEvent');
+        }
+    };
+
+    // ============================================================
+    // Start QR scanner
+    // ============================================================
+    function startScanner() {
+        if (scanner) { try { scanner.stop(); } catch(e){} }
+
+        scanner = new Html5Qrcode('reader');
+        scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+                if (isProcessing) return;
+                processQR(decodedText);
+            },
+            (err) => {}
+        ).catch(err => {
+            console.error('Camera error:', err);
+        });
+    }
+
+    // ============================================================
+    // Proses QR yang di-scan
+    // ============================================================
+    async function processQR(text) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        // Stop scanner segera
+        try { if (scanner) scanner.stop(); } catch(e){}
+
+        showState('Processing');
+
+        try {
+            // Extract token dari URL atau langsung token ID
+            let tokenId = text;
+            if (text.includes('token=')) {
+                const url = new URL(text);
+                tokenId = url.searchParams.get('token');
+            }
+
+            if (!tokenId) throw new Error('Invalid QR code format');
+
+            await processAttendance(tokenId);
+
+        } catch (err) {
+            console.error('processQR error:', err);
+            showError(err.message || 'Invalid QR code');
+        }
+    }
+
+    window.processManualToken = function() {
+        const token = document.getElementById('manualTokenInput').value.trim();
+        if (!token) return;
+        processQR(token);
+    };
+
+    // ============================================================
+    // Validasi dan proses absensi — semua di client
+    // Logika sama seperti yang ada di Cloud Functions
+    // ============================================================
+    async function processAttendance(tokenId) {
+        try {
+            const tokenRef = doc(db, 'tokens', tokenId);
+            const userRef = doc(db, 'users', currentUser.uid);
+
+            const [tokenSnap, userSnap] = await Promise.all([
+                getDoc(tokenRef),
+                getDoc(userRef)
+            ]);
 
             // Validasi token
-            await validateToken();
-        });
+            if (!tokenSnap.exists()) throw new Error('Invalid QR code');
+            const token = tokenSnap.data();
+            if (token.used) throw new Error('QR code already used — wait for next refresh');
 
-        // ==========================================
-        // VALIDASI TOKEN
-        // ==========================================
-        async function validateToken() {
-            try {
-                const tokenDoc = await getDoc(doc(db, 'tokens', tokenId));
+            // Validasi expiry menggunakan timestamp dari server
+            const now = new Date();
+            const expiresAt = token.expiresAt.toDate ? token.expiresAt.toDate() : new Date(token.expiresAt.seconds * 1000);
+            if (now > expiresAt) throw new Error('QR code has expired — wait for next refresh');
 
-                if (!tokenDoc.exists()) {
-                    showState('Error');
-                    document.getElementById('errorMessage').textContent = 'QR tidak valid. Minta pengurus tampilkan QR terbaru.';
-                    return;
-                }
-
-                const token = tokenDoc.data();
-
-                // Cek sudah dipakai
-                if (token.used) {
-                    showState('Error');
-                    document.getElementById('errorMessage').textContent = 'QR sudah digunakan. Minta QR baru dari pengurus.';
-                    return;
-                }
-
-                // Cek expired — gunakan waktu server
-                const now = new Date();
-                const expiresAt = token.expiresAt instanceof Timestamp
-                    ? token.expiresAt.toDate()
-                    : new Date(token.expiresAt);
-
-                if (now > expiresAt) {
-                    showState('Error');
-                    document.getElementById('errorMessage').textContent = 'QR sudah expired. Minta QR baru dari pengurus.';
-                    return;
-                }
-
-                // Cek device binding
-                if (token.deviceFingerprint && token.deviceFingerprint !== deviceFingerprint) {
-                    showState('Error');
-                    document.getElementById('errorMessage').textContent = 'QR ini sudah digunakan perangkat lain.';
-                    logAnomaly('device_mismatch', 3);
-                    return;
-                }
-
-                // Ambil event aktif
-                const eventDoc = await getDoc(doc(db, 'events', token.eventId));
-                if (!eventDoc.exists() || eventDoc.data().status !== 'active') {
-                    showState('Error');
-                    document.getElementById('errorMessage').textContent = 'Event tidak aktif atau sudah ditutup.';
-                    return;
-                }
-
-                currentEvent = { id: eventDoc.id, ...eventDoc.data() };
-
-                // Cek sudah absen
-                const attendanceId = `${currentEvent.id}_${currentUser.uid}`;
-                const existingAttendance = await getDoc(doc(db, 'attendance', attendanceId));
-                if (existingAttendance.exists()) {
-                    showState('Error');
-                    document.getElementById('errorMessage').textContent = 'Kamu sudah absen di event ini.';
-                    return;
-                }
-
-                // Cek user aktif
-                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                if (!userDoc.exists() || userDoc.data().status === 'suspended') {
-                    showState('Error');
-                    document.getElementById('errorMessage').textContent = 'Akun kamu tidak aktif.';
-                    return;
-                }
-
-                const userData = userDoc.data();
-
-                // Tampilkan UI siap absen
-                document.getElementById('eventNameDisplay').textContent = currentEvent.name;
-                document.getElementById('xpRewardDisplay').textContent = currentEvent.xpReward || 10;
-                document.getElementById('userNameDisplay').textContent = userData.displayName || currentUser.displayName;
-                document.getElementById('userEmailDisplay').textContent = currentUser.email;
-                document.getElementById('userAvatarDisplay').textContent = (userData.displayName || 'U').charAt(0).toUpperCase();
-
-                // Hitung sisa waktu token
-                const secondsLeft = Math.max(0, Math.floor((expiresAt - now) / 1000));
-                document.getElementById('tokenTimer').textContent = `Token berlaku ${secondsLeft} detik lagi`;
-
-                showState('Ready');
-
-            } catch (error) {
-                console.error('Validate token error:', error);
-                showState('Error');
-                document.getElementById('errorMessage').textContent = 'Terjadi kesalahan. Coba lagi.';
+            // Validasi event masih aktif
+            const eventSnap = await getDoc(doc(db, 'events', token.eventId));
+            if (!eventSnap.exists() || eventSnap.data().status !== 'active') {
+                throw new Error('Event is no longer active');
             }
-        }
 
-        // ==========================================
-        // PROSES ABSEN — ATOMIC TRANSACTION
-        // ==========================================
-        document.getElementById('attendBtn').addEventListener('click', async () => {
-            if (!currentUser || !tokenId || !currentEvent) return;
+            // Validasi user
+            if (!userSnap.exists()) throw new Error('Account not found');
+            const user = userSnap.data();
+            if (user.status === 'suspended') throw new Error('Your account has been suspended');
 
-            // Cek internet sekali lagi sebelum submit
-            if (!navigator.onLine) {
-                showState('Error');
-                document.getElementById('errorMessage').textContent = 'Koneksi internet terputus. Coba lagi.';
+            // Cek double attend
+            const attId = `${token.eventId}_${currentUser.uid}`;
+            const attSnap = await getDoc(doc(db, 'attendance', attId));
+            if (attSnap.exists()) {
+                showState('AlreadyAttended');
+                isProcessing = false;
                 return;
             }
 
-            const btn = document.getElementById('attendBtn');
-            btn.disabled = true;
-            btn.textContent = 'Memproses...';
+            // Hitung XP dan streak
+            const event = eventSnap.data();
+            const xpReward = event.xpReward || 10;
+            const currentXP = user.xpCache || 0;
+            const currentStreak = user.streak || 0;
+            let newStreak = 1;
+            let streakBonus = 0;
 
-            try {
-                const attendanceId = `${currentEvent.id}_${currentUser.uid}`;
-
-                await runTransaction(db, async (transaction) => {
-                    // Baca semua dokumen yang diperlukan
-                    const tokenRef = doc(db, 'tokens', tokenId);
-                    const attendanceRef = doc(db, 'attendance', attendanceId);
-                    const eventRef = doc(db, 'events', currentEvent.id);
-                    const userRef = doc(db, 'users', currentUser.uid);
-
-                    const [tokenSnap, attendanceSnap, eventSnap, userSnap] = await Promise.all([
-                        transaction.get(tokenRef),
-                        transaction.get(attendanceRef),
-                        transaction.get(eventRef),
-                        transaction.get(userRef)
-                    ]);
-
-                    // Validasi dalam transaction — mencegah race condition
-                    if (!tokenSnap.exists()) throw new Error('Token tidak ditemukan');
-                    if (tokenSnap.data().used) throw new Error('Token sudah digunakan');
-                    if (attendanceSnap.exists()) throw new Error('Sudah absen');
-                    if (!eventSnap.exists() || eventSnap.data().status !== 'active') throw new Error('Event tidak aktif');
-
-                    // Cek expired menggunakan server timestamp
-                    const expiresAt = tokenSnap.data().expiresAt instanceof Timestamp
-                        ? tokenSnap.data().expiresAt.toDate()
-                        : new Date(tokenSnap.data().expiresAt);
-                    if (new Date() > expiresAt) throw new Error('Token expired');
-
-                    const xpReward = eventSnap.data().xpReward || 10;
-                    const currentXP = userSnap.data().xpCache || 0;
-
-                    // Tulis semua sekaligus — atomic
-                    transaction.update(tokenRef, {
-                        used: true,
-                        usedBy: currentUser.uid,
-                        usedAt: serverTimestamp(),
-                        deviceFingerprint: deviceFingerprint
-                    });
-
-                    transaction.set(attendanceRef, {
-                        eventId: currentEvent.id,
-                        eventName: currentEvent.name,
-                        userId: currentUser.uid,
-                        status: 'present',
-                        xpChange: xpReward,
-                        deviceFingerprint: deviceFingerprint,
-                        attendedAt: serverTimestamp()
-                    });
-
-                    transaction.update(userRef, {
-                        xpCache: currentXP + xpReward,
-                        attendanceCount: (userSnap.data().attendanceCount || 0) + 1
-                    });
-                });
-
-                // Log sukses
-                await addDoc(collection(db, 'logs'), {
-                    userId: currentUser.uid,
-                    eventId: currentEvent.id,
-                    action: 'attend',
-                    result: 'success',
-                    deviceFingerprint: deviceFingerprint,
-                    timestamp: serverTimestamp()
-                });
-
-                // Tampilkan sukses
-                document.getElementById('successMessage').textContent = `Kamu berhasil absen di ${currentEvent.name}`;
-                document.getElementById('xpGained').textContent = `+${currentEvent.xpReward || 10} XP`;
-                showState('Success');
-
-                // Hapus token dari URL
-                history.replaceState(null, '', window.location.pathname);
-
-            } catch (error) {
-                console.error('Attend error:', error);
-
-                // Log gagal
-                await addDoc(collection(db, 'logs'), {
-                    userId: currentUser.uid,
-                    eventId: currentEvent?.id || null,
-                    action: 'attend',
-                    result: 'failed',
-                    reason: error.message,
-                    timestamp: serverTimestamp()
-                });
-
-                showState('Error');
-                const messages = {
-                    'Token sudah digunakan': 'QR sudah digunakan orang lain.',
-                    'Sudah absen': 'Kamu sudah absen di event ini.',
-                    'Token expired': 'QR sudah expired. Minta QR baru.',
-                    'Event tidak aktif': 'Event sudah ditutup.'
-                };
-                document.getElementById('errorMessage').textContent = messages[error.message] || 'Gagal absen. Coba lagi.';
+            if (user.lastAttendedAt) {
+                const lastDate = user.lastAttendedAt.toDate ? user.lastAttendedAt.toDate() : new Date(user.lastAttendedAt.seconds * 1000);
+                const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 7) {
+                    newStreak = currentStreak + 1;
+                    if (newStreak % 5 === 0) streakBonus = 5;
+                }
             }
-        });
 
-        // ==========================================
-        // LOG ANOMALY
-        // ==========================================
-        async function logAnomaly(reason, score) {
-            try {
-                await addDoc(collection(db, 'anomalies'), {
-                    userId: currentUser?.uid || 'unknown',
-                    reasons: [reason],
-                    score: score,
-                    deviceFingerprint: deviceFingerprint,
-                    timestamp: serverTimestamp()
-                });
-            } catch (e) {}
+            const totalXP = currentXP + xpReward + streakBonus;
+            const level = Math.floor(totalXP / 100) + 1;
+
+            // Tulis semua data sekaligus
+            const batch = writeBatch(db);
+
+            // Mark token as used
+            batch.update(tokenRef, {
+                used: true,
+                usedBy: currentUser.uid,
+                usedAt: Timestamp.now(),
+                deviceFingerprint
+            });
+
+            // Buat attendance record
+            batch.set(doc(db, 'attendance', attId), {
+                eventId: token.eventId,
+                eventName: event.name,
+                userId: currentUser.uid,
+                status: 'present',
+                xpChange: xpReward + streakBonus,
+                streakBonus,
+                deviceFingerprint,
+                attendedAt: Timestamp.now()
+            });
+
+            // Update user XP dan streak
+            batch.update(userRef, {
+                xpCache: totalXP,
+                attendanceCount: (user.attendanceCount || 0) + 1,
+                streak: newStreak,
+                lastAttendedAt: Timestamp.now()
+            });
+
+            // XP history
+            const xpHistRef = doc(collection(db, 'xpHistory'));
+            batch.set(xpHistRef, {
+                userId: currentUser.uid,
+                eventId: token.eventId,
+                change: xpReward + streakBonus,
+                reason: `Attended: ${event.name}`,
+                type: 'attendance',
+                timestamp: Timestamp.now()
+            });
+
+            await batch.commit();
+
+            // Log
+            await addDoc(collection(db, 'logs'), {
+                userId: currentUser.uid,
+                action: 'attend',
+                result: 'success',
+                eventId: token.eventId,
+                eventName: event.name,
+                deviceFingerprint,
+                timestamp: Timestamp.now()
+            });
+
+            // Tampilkan sukses
+            showSuccessState({
+                xpGained: xpReward + streakBonus,
+                streakBonus,
+                newStreak,
+                totalXP,
+                level,
+                eventName: event.name
+            });
+
+        } catch (err) {
+            console.error('processAttendance error:', err);
+            showError(err.message);
         }
-    </script>
+    }
+
+    // ============================================================
+    // Tampilkan state sukses
+    // ============================================================
+    function showSuccessState(result) {
+        document.getElementById('successEventName').textContent = result.eventName;
+        document.getElementById('successXP').textContent = `+${result.xpGained}`;
+        document.getElementById('successTotalXP').textContent = `${result.totalXP} XP`;
+        document.getElementById('successLevel').textContent = `Level ${result.level}`;
+        document.getElementById('successStreakCount').textContent = `${result.newStreak} day${result.newStreak !== 1 ? 's' : ''}`;
+        document.getElementById('successStreak').textContent =
+            result.streakBonus > 0 ? `Streak bonus: +${result.streakBonus} XP` : `Streak: ${result.newStreak} days`;
+
+        showState('Success');
+        isProcessing = false;
+
+        // XP float animation
+        spawnXPFloat(`+${result.xpGained} XP`);
+    }
+
+    function showError(msg) {
+        document.getElementById('errorMessage').textContent = msg;
+        showState('Error');
+        isProcessing = false;
+    }
+
+    function spawnXPFloat(text) {
+        const el = document.createElement('div');
+        el.className = 'xp-float';
+        el.textContent = text;
+        el.style.cssText = `top:40%;left:50%;transform:translateX(-50%);`;
+        document.getElementById('xpFloatContainer').appendChild(el);
+        setTimeout(() => el.remove(), 2000);
+    }
+
+    window.resetToScanner = async function() {
+        isProcessing = false;
+        await checkActiveEvent();
+    };
+
+    // ============================================================
+    // Auto logout 30 menit
+    // ============================================================
+    function setupAutoLogout() {
+        let t;
+        const r = () => {
+            clearTimeout(t);
+            t = setTimeout(async () => {
+                try { if (scanner) scanner.stop(); } catch(e){}
+                await signOut(auth);
+                window.location.href = 'public/pages/login.html';
+            }, 30 * 60 * 1000);
+        };
+        ['click','keypress','scroll','touchstart'].forEach(e => document.addEventListener(e, r));
+        r();
+    }
+</script>
 </body>
 </html>

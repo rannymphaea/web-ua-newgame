@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEWGAME - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -21,522 +22,927 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; }
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        h1,h2,h3,h4 { font-family: 'Rajdhani', sans-serif; }
 
-        .bg-logo {
+        body { background: #090b10; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: rgba(255,255,255,0.03);
+            border-right: 1px solid rgba(255,255,255,0.07);
+            min-height: 100vh;
             position: fixed;
-            inset: 0;
-            background: url('../../assets/logo unandnewgame.png') center/cover no-repeat;
-            filter: blur(40px) brightness(0.08);
-            transform: scale(1.2);
-            z-index: 0;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .glass-dark {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .fade-in {
-            animation: fadeIn 0.6s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .xp-bar-fill {
-            background: linear-gradient(90deg, #E63946, #457B9D);
-            transition: width 1s ease;
-            border-radius: 999px;
-        }
-
-        .nav-link {
-            transition: all 0.2s ease;
-        }
-
-        .nav-link:hover {
-            background: rgba(230, 57, 70, 0.15);
-            color: #E63946;
-        }
-
-        .nav-link.active {
-            background: rgba(230, 57, 70, 0.2);
-            color: #E63946;
-            border-left: 3px solid #E63946;
-        }
-
-        .stat-card {
-            transition: transform 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .accent-line {
-            height: 2px;
-            background: linear-gradient(90deg, #E63946, #1D3557, #457B9D);
-            border-radius: 999px;
-        }
-
-        /* Sidebar mobile */
-        #sidebar {
+            left: 0; top: 0;
+            display: flex; flex-direction: column;
+            z-index: 40;
             transition: transform 0.3s ease;
         }
+        .sidebar.hidden-mobile { transform: translateX(-100%); }
 
-        @media (max-width: 768px) {
-            #sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                height: 100vh;
-                z-index: 50;
-                transform: translateX(-100%);
-            }
-            #sidebar.open {
-                transform: translateX(0);
-            }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px; border-radius: 8px;
+            color: #6b7280; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+            text-decoration: none;
         }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(230,57,70,0.15); color: #E63946; border-left: 2px solid #E63946; }
+
+        /* Cards */
+        .glass-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+        }
+
+        /* Main content */
+        .main-content { margin-left: 240px; min-height: 100vh; }
+
+        /* Badge role */
+        .role-badge {
+            font-size: 10px; font-weight: 700; letter-spacing: 1px;
+            padding: 2px 8px; border-radius: 999px; text-transform: uppercase;
+        }
+        .role-presiden { background: rgba(234,179,8,0.2); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+        .role-superadmin { background: rgba(168,85,247,0.2); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+        .role-admin { background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+        .role-inventori { background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .role-member { background: rgba(107,114,128,0.2); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+        .role-npc { background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+
+        /* XP Bar */
+        .xp-bar-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
+        .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #E63946, #f59e0b); border-radius: 999px; transition: width 0.8s ease; }
+
+        /* Stat card accent */
+        .stat-accent-red { border-left: 3px solid #E63946; }
+        .stat-accent-blue { border-left: 3px solid #457B9D; }
+        .stat-accent-green { border-left: 3px solid #10b981; }
+        .stat-accent-yellow { border-left: 3px solid #f59e0b; }
+
+        /* Attendance badge */
+        .badge-present { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .badge-absent { background: rgba(230,57,70,0.15); color: #E63946; border: 1px solid rgba(230,57,70,0.3); }
+        .badge-excused { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+
+        /* Notification dot */
+        .notif-dot { width: 8px; height: 8px; background: #E63946; border-radius: 50%; position: absolute; top: 0; right: 0; }
+
+        /* Achievement */
+        .achievement-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px; padding: 10px 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .achievement-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+        /* Leave form */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        /* Streak flame animation */
+        @keyframes pulse-red { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+        .streak-flame { animation: pulse-red 2s ease-in-out infinite; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+        }
+
+        /* Notification dropdown */
+        .notif-dropdown { position: absolute; right: 0; top: 48px; width: 320px; z-index: 50; background: #111827; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: none; }
+        .notif-dropdown.show { display: block; }
+
+        input, select, textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 8px;
+            padding: 10px 14px;
+            width: 100%;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #E63946;
+            box-shadow: 0 0 0 2px rgba(230,57,70,0.2);
+        }
+        select option { background: #1f2937; }
     </style>
 </head>
-<body class="bg-black min-h-screen text-white overflow-x-hidden">
+<body class="text-white">
 
-    <!-- BACKGROUND -->
-    <div class="bg-logo"></div>
-    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
-
-    <!-- OVERLAY saat sidebar mobile terbuka -->
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
-
-    <div class="relative z-10 flex min-h-screen">
-
-        <!-- ==================== SIDEBAR ==================== -->
-        <aside id="sidebar" class="glass-dark w-64 min-h-screen flex flex-col p-6 md:relative md:transform-none">
-
-            <!-- BRAND -->
-            <div class="flex items-center gap-3 mb-8">
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-10 h-10">
-                <div>
-                    <h1 class="text-xl font-bold tracking-wider">NEWGAME</h1>
-                    <p class="text-gray-500 text-xs">Learn Create Play</p>
-                </div>
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar" id="sidebar">
+    <div class="p-5 border-b border-white/7">
+        <div class="flex items-center gap-3">
+            <img src="../../assets/logo.png" alt="NEWGAME" class="w-9 h-9">
+            <div>
+                <h2 class="text-white font-bold text-base tracking-wide" style="font-family:'Rajdhani',sans-serif;">NEWGAME</h2>
+                <p class="text-gray-500 text-xs">Member Portal</p>
             </div>
-
-            <div class="accent-line mb-6"></div>
-
-            <!-- NAVIGASI -->
-           <nav class="flex-1 space-y-1">
-    <a href="/public/pages/dashboard.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
-        Dashboard
-    </a>
-
-    <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-        Leaderboard
-    </a>
-
-    <!-- Link absensi -->
-    <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-        Absensi
-    </a>
-
-    <!-- Admin panel -->
-    <a id="adminLink" href="/public/pages/admin.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-        Admin Panel
-    </a>
-
-    <a id="logsLink" href="/public/pages/logs.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-        Logs
-    </a>
-</nav>
-
-            <!-- USER INFO & LOGOUT -->
-            <div class="mt-auto">
-                <div class="accent-line mb-4"></div>
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-9 h-9 rounded-full bg-ng-red flex items-center justify-center text-sm font-bold" id="avatarInitial">?</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold truncate" id="sidebarName">Memuat...</p>
-                        <p class="text-xs text-gray-500 truncate" id="sidebarRole">member</p>
-                    </div>
-                </div>
-                <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2">
-                Keluar
-                </button>
-            </div>
-        </aside>
-
-        <!-- ==================== MAIN CONTENT ==================== -->
-        <main class="flex-1 p-6 md:p-8 fade-in">
-
-            <!-- HEADER MOBILE -->
-            <div class="flex items-center justify-between mb-6 md:hidden">
-                <button onclick="openSidebar()" class="text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-8 h-8">
-                <div class="w-6"></div>
-            </div>
-
-            <!-- GREETING -->
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold">Halo, <span id="userName" class="text-ng-red">Player</span></h2>
-                <p class="text-gray-400 mt-1" id="userEmail">Memuat data...</p>
-            </div>
-
-            <!-- STAT CARDS -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-
-                <!-- XP -->
-                <div class="stat-card glass rounded-xl p-5 col-span-2">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-gray-400 text-sm uppercase tracking-wider">Total XP</p>
-                        <span class="text-2xl"></span>
-                    </div>
-                    <p class="text-4xl font-bold text-ng-red" id="userXP">0</p>
-                    <p class="text-gray-500 text-xs mt-1">Experience Points</p>
-                    <!-- XP Bar -->
-                    <div class="mt-3 bg-white/10 rounded-full h-2">
-                        <div class="xp-bar-fill h-2" id="xpBar" style="width: 0%"></div>
-                    </div>
-                    <p class="text-gray-600 text-xs mt-1" id="xpBarLabel">Level 1</p>
-                </div>
-
-                <!-- RANK -->
-                <div class="stat-card glass rounded-xl p-5">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-gray-400 text-sm uppercase tracking-wider">Rank</p>
-                        <span class="text-2xl"></span>
-                    </div>
-                    <p class="text-4xl font-bold text-yellow-400" id="userRank">#-</p>
-                    <p class="text-gray-500 text-xs mt-1">Leaderboard</p>
-                </div>
-
-                <!-- HADIR -->
-                <div class="stat-card glass rounded-xl p-5">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-gray-400 text-sm uppercase tracking-wider">Hadir</p>
-                        <span class="text-2xl"></span>
-                    </div>
-                    <p class="text-4xl font-bold text-green-400" id="userAttendance">0</p>
-                    <p class="text-gray-500 text-xs mt-1">Total kehadiran</p>
-                </div>
-
-            </div>
-
-            <!-- ROLE BADGE & INFO -->
-            <div class="glass rounded-xl p-6 mb-6">
-                <h3 class="text-lg font-bold mb-4">Profil Member</h3>
-                <div class="flex items-center gap-4 flex-wrap">
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-ng-red to-ng-blue flex items-center justify-center text-2xl font-bold" id="profileAvatar">?</div>
-                    <div>
-                        <p class="text-xl font-bold" id="profileName">Memuat...</p>
-                        <p class="text-gray-400 text-sm" id="profileEmail">-</p>
-                        <div class="mt-2">
-                            <span id="roleBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                                member
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- EVENT AKTIF (jika ada) -->
-            <div id="activeEventCard" class="hidden glass rounded-xl p-6 mb-6 border border-green-500/30">
-                <div class="flex items-center justify-between flex-wrap gap-4">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                            <span class="text-green-400 text-xs uppercase tracking-wider font-semibold">Event Aktif</span>
-                        </div>
-                        <h3 class="text-xl font-bold" id="eventName">-</h3>
-                        <p class="text-gray-400 text-sm" id="eventTime">-</p>
-                    </div>
-                    <a href="/index.html" class="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-lg transition">
-                        Absen Sekarang →
-                    </a>
-                </div>
-            </div>
-
-            <!-- RIWAYAT KEHADIRAN -->
-            <div class="glass rounded-xl p-6">
-                <h3 class="text-lg font-bold mb-4">Riwayat Kehadiran</h3>
-                <div id="attendanceList">
-                    <p class="text-gray-500 text-sm text-center py-8">Belum ada riwayat kehadiran</p>
-                </div>
-            </div>
-
-        </main>
+        </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import {
-            getAuth,
-            onAuthStateChanged,
-            signOut
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import {
-            getFirestore,
-            doc,
-            getDoc,
-            collection,
-            query,
-            where,
-            orderBy,
-            limit,
-            getDocs,
-            CACHE_SIZE_UNLIMITED,
-            initializeFirestore
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    <nav class="p-3 flex-1 overflow-y-auto">
+        <p class="text-gray-600 text-xs uppercase tracking-widest px-2 mb-2 mt-1">Main</p>
+        <a href="dashboard.html" class="nav-item active">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+            Dashboard
+        </a>
+        <a href="../../index.html" class="nav-item">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m-7-8H4m16 0h-1M6.34 6.34l-.71-.71m12.73 12.73l-.71-.71M6.34 17.66l-.71.71M19.07 4.93l-.71.71"/></svg>
+            Scan QR
+        </a>
+        <a href="leaderboard.html" class="nav-item">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-8-5v5M8 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2h-2"/></svg>
+            Leaderboard
+        </a>
 
-        // ==========================================
-        // KONFIGURASI FIREBASE
-        // ==========================================
-        const firebaseConfig = {
+        <!-- Admin link — ditampilkan hanya untuk role tertentu -->
+        <div id="adminNav" class="hidden">
+            <p class="text-gray-600 text-xs uppercase tracking-widest px-2 mb-2 mt-4">Management</p>
+            <a href="admin.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+                Admin Panel
+            </a>
+            <a href="members.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                Members
+            </a>
+            <a href="logs.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                System Logs
+            </a>
+        </div>
+    </nav>
+
+    <div class="p-3 border-t border-white/7">
+        <button onclick="handleLogout()" class="nav-item w-full text-left hover:text-red-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Sign Out
+        </button>
+    </div>
+</aside>
+
+<!-- Mobile overlay -->
+<div id="mobileOverlay" class="fixed inset-0 bg-black/50 z-30 hidden" onclick="toggleSidebar()"></div>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<main class="main-content p-6">
+
+    <!-- Top bar -->
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <div>
+                <h1 class="text-2xl font-bold text-white" style="font-family:'Rajdhani',sans-serif;">Dashboard</h1>
+                <p class="text-gray-500 text-xs" id="currentDate">Loading...</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- Notifikasi -->
+            <div class="relative">
+                <button onclick="toggleNotif()" class="w-9 h-9 rounded-lg glass-card flex items-center justify-center text-gray-400 hover:text-white transition relative">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    <span id="notifBadge" class="hidden notif-dot"></span>
+                </button>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="p-3 border-b border-white/10 flex items-center justify-between">
+                        <p class="text-sm font-semibold text-white">Notifications</p>
+                        <button onclick="markAllRead()" class="text-xs text-gray-400 hover:text-white">Mark all read</button>
+                    </div>
+                    <div id="notifList" class="max-h-64 overflow-y-auto p-2">
+                        <p class="text-gray-500 text-xs text-center py-4">No notifications</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Avatar -->
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 to-blue-800 flex items-center justify-center text-white font-bold text-sm" id="avatarInitial">?</div>
+                <div class="hidden sm:block">
+                    <p class="text-sm font-semibold text-white leading-tight" id="headerName">Loading...</p>
+                    <span class="role-badge role-member" id="headerRole">member</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loadingState" class="text-center py-20">
+        <div class="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p class="text-gray-500 text-sm">Loading your data...</p>
+    </div>
+
+    <!-- Main dashboard content -->
+    <div id="dashContent" class="hidden">
+
+        <!-- Profile card -->
+        <div class="glass-card p-5 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-red-600 to-blue-800 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0" id="profileInitial">?</div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        <h2 class="text-xl font-bold text-white" id="profileName">-</h2>
+                        <span class="role-badge role-member" id="profileRoleBadge">member</span>
+                        <span id="npcBadge" class="hidden text-xs font-bold px-2 py-0.5 rounded-full" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">NPC</span>
+                    </div>
+                    <p class="text-gray-400 text-sm" id="profileDivision">-</p>
+                    <p class="text-gray-500 text-xs" id="profileTeam">-</p>
+                    <!-- XP progress bar -->
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs text-gray-400">Level <span id="profileLevel">1</span></span>
+                            <span class="text-xs text-gray-400"><span id="profileXP">0</span> / <span id="profileNextXP">100</span> XP</span>
+                        </div>
+                        <div class="xp-bar-bg">
+                            <div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Streak -->
+                <div class="flex-shrink-0 text-center glass-card p-3 min-w-20">
+                    <div class="streak-flame text-2xl mb-0.5">&#128293;</div>
+                    <p class="text-2xl font-bold text-white" id="streakCount">0</p>
+                    <p class="text-gray-500 text-xs">day streak</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card stat-accent-red p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Total XP</p>
+                <p class="text-2xl font-bold text-white" id="statXP">0</p>
+                <p class="text-gray-500 text-xs mt-1">Rank #<span id="statRank">-</span></p>
+            </div>
+            <div class="glass-card stat-accent-blue p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Attended</p>
+                <p class="text-2xl font-bold text-white" id="statAttended">0</p>
+                <p class="text-gray-500 text-xs mt-1">events</p>
+            </div>
+            <div class="glass-card stat-accent-green p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Attendance Rate</p>
+                <p class="text-2xl font-bold text-white" id="statRate">0%</p>
+                <p class="text-gray-500 text-xs mt-1">of all events</p>
+            </div>
+            <div class="glass-card stat-accent-yellow p-4">
+                <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Best Streak</p>
+                <p class="text-2xl font-bold text-white" id="statBestStreak">0</p>
+                <p class="text-gray-500 text-xs mt-1">days</p>
+            </div>
+        </div>
+
+        <!-- Two columns -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+            <!-- XP Chart — 2/3 width -->
+            <div class="glass-card p-5 lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-white">XP History</h3>
+                    <select id="chartFilter" onchange="updateChart()" class="text-xs py-1 px-2 w-auto" style="width:auto;">
+                        <option value="6">Last 6 months</option>
+                        <option value="3">Last 3 months</option>
+                        <option value="12">Last 12 months</option>
+                    </select>
+                </div>
+                <canvas id="xpChart" height="160"></canvas>
+            </div>
+
+            <!-- Quick actions — 1/3 width -->
+            <div class="glass-card p-5">
+                <h3 class="text-base font-bold text-white mb-4">Quick Actions</h3>
+                <div class="space-y-2">
+                    <a href="../../index.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition cursor-pointer group">
+                        <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition">
+                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m-7-8H4m16 0h-1M6.34 6.34l-.71-.71m12.73 12.73l-.71-.71M6.34 17.66l-.71.71M19.07 4.93l-.71.71"/></svg>
+                        </div>
+                        <span class="text-sm text-gray-300 group-hover:text-white transition">Scan QR Attendance</span>
+                    </a>
+                    <div onclick="openLeaveModal()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition cursor-pointer group">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition">
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <span class="text-sm text-gray-300 group-hover:text-white transition">Submit Leave Request</span>
+                    </div>
+                    <a href="leaderboard.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition cursor-pointer group">
+                        <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center group-hover:bg-yellow-500/30 transition">
+                            <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <span class="text-sm text-gray-300 group-hover:text-white transition">View Leaderboard</span>
+                    </a>
+                </div>
+
+                <!-- Active event info -->
+                <div id="activeEventCard" class="hidden mt-4 p-3 rounded-lg" style="background:rgba(230,57,70,0.1);border:1px solid rgba(230,57,70,0.2);">
+                    <p class="text-xs text-red-400 font-bold uppercase tracking-wider mb-1">Event Active Now</p>
+                    <p class="text-white text-sm font-semibold" id="activeEventName">-</p>
+                    <p class="text-gray-400 text-xs" id="activeEventXP">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent attendance & Achievements -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Recent Attendance -->
+            <div class="glass-card p-5">
+                <h3 class="text-base font-bold text-white mb-4">Recent Attendance</h3>
+                <div id="attendanceList" class="space-y-2">
+                    <p class="text-gray-500 text-sm text-center py-4">No attendance records yet</p>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="glass-card p-5">
+                <h3 class="text-base font-bold text-white mb-4">Achievements</h3>
+                <div id="achievementList" class="space-y-2">
+                    <p class="text-gray-500 text-sm text-center py-4">No achievements yet — start attending events!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave requests section -->
+        <div class="glass-card p-5 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-bold text-white">My Leave Requests</h3>
+                <button onclick="openLeaveModal()" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold transition hover:opacity-90" style="background:linear-gradient(135deg,#E63946,#c1121f);">New Request</button>
+            </div>
+            <div id="leaveList">
+                <p class="text-gray-500 text-sm text-center py-4">No leave requests</p>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- ==================== LEAVE REQUEST MODAL ==================== -->
+<div class="modal-overlay" id="leaveModal">
+    <div class="glass-card w-full max-w-md mx-4 p-6" style="background:#111827;">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-white">Submit Leave Request</h3>
+            <button onclick="closeLeaveModal()" class="text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="leaveError" class="hidden bg-red-500/20 border border-red-500/50 text-red-400 px-3 py-2 rounded-lg mb-4 text-sm"></div>
+        <div class="mb-4">
+            <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Select Event</label>
+            <select id="leaveEventSelect">
+                <option value="">-- Select upcoming event --</option>
+            </select>
+        </div>
+        <div class="mb-6">
+            <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Reason</label>
+            <textarea id="leaveReason" rows="3" placeholder="Explain your reason for absence..."></textarea>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="closeLeaveModal()" class="flex-1 py-2.5 rounded-lg text-gray-400 border border-white/10 hover:text-white transition text-sm font-semibold">Cancel</button>
+            <button onclick="submitLeaveRequest()" class="flex-1 py-2.5 rounded-lg text-white font-semibold text-sm transition hover:opacity-90" style="background:linear-gradient(135deg,#E63946,#c1121f);">Submit Request</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== FIREBASE ==================== -->
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import {
+        getAuth, onAuthStateChanged, signOut
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import {
+        getFirestore, doc, getDoc, collection, query, where,
+        orderBy, limit, getDocs, addDoc, serverTimestamp, onSnapshot
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    // ============================================================
+    // Konfigurasi Firebase — ganti dengan nilai asli kamu
+    // ============================================================
+    const firebaseConfig = {
             apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
             authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
             projectId: "qr-absensi-unandnewgame",
             storageBucket: "qr-absensi-unandnewgame.firebasestorage.app",
             messagingSenderId: "377822320778",
             appId: "1:377822320778:web:f7305bb71019f670ccf573"
-        };
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        // ==========================================
-        // CEK AUTH — jika tidak login, redirect ke login
-        // ==========================================
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = '/public/pages/login.html';
-                return;
-            }
+    let currentUser = null;
+    let userData = null;
+    let xpHistoryData = [];
 
-            if (!user.emailVerified) {
+    // ============================================================
+    // Cek auth — redirect jika belum login
+    // ============================================================
+    onAuthStateChanged(auth, async (user) => {
+        if (!user || !user.emailVerified) {
+            window.location.href = '/public/pages/login.html';
+            return;
+        }
+        currentUser = user;
+        await loadDashboard();
+        setupAutoLogout();
+        loadNotifications();
+    });
+
+    // ============================================================
+    // Load semua data dashboard
+    // ============================================================
+    async function loadDashboard() {
+        try {
+            // Ambil data user
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (!userDoc.exists()) {
                 await signOut(auth);
                 window.location.href = '/public/pages/login.html';
                 return;
             }
 
-            // Load semua data user
-            await loadUserData(user);
-            await loadActiveEvent();
-            await loadAttendanceHistory(user.uid);
-            await loadRank(user.uid);
+            userData = userDoc.data();
+
+            // Redirect jika harus ganti password
+            if (userData.mustChangePassword) {
+                window.location.href = '/public/pages/change-password.html';
+                return;
+            }
+
+            // Tampilkan konten
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('dashContent').classList.remove('hidden');
+
+            renderProfile();
+            renderStats();
+            setupAdminNav();
+            await loadAttendanceHistory();
+            await loadXPHistory();
+            await loadLeaveRequests();
+            await loadAchievements();
+            checkActiveEvent();
+            renderDate();
+
+        } catch (error) {
+            console.error('Dashboard load error:', error);
+        }
+    }
+
+    // ============================================================
+    // Render profil user
+    // ============================================================
+    function renderProfile() {
+        const initial = userData.name ? userData.name[0].toUpperCase() : '?';
+        const xp = userData.xpCache || 0;
+        const level = Math.floor(xp / 100) + 1;
+        const progress = xp % 100;
+
+        document.getElementById('avatarInitial').textContent = initial;
+        document.getElementById('profileInitial').textContent = initial;
+        document.getElementById('headerName').textContent = userData.name;
+        document.getElementById('profileName').textContent = userData.name;
+        document.getElementById('profileDivision').textContent = userData.division || '-';
+        document.getElementById('profileTeam').textContent = userData.team ? `Team: ${userData.team}` : '';
+        document.getElementById('profileLevel').textContent = level;
+        document.getElementById('profileXP').textContent = xp;
+        document.getElementById('profileNextXP').textContent = level * 100;
+        document.getElementById('xpBarFill').style.width = `${progress}%`;
+        document.getElementById('streakCount').textContent = userData.streak || 0;
+
+        // Role badge
+        const role = userData.role || 'member';
+        const roleEls = [document.getElementById('headerRole'), document.getElementById('profileRoleBadge')];
+        roleEls.forEach(el => {
+            if (el) {
+                el.textContent = role;
+                el.className = `role-badge role-${role}`;
+            }
         });
 
-        // ==========================================
-        // LOAD DATA USER DARI FIRESTORE
-        // ==========================================
-        async function loadUserData(user) {
-            try {
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-
-                if (!userDoc.exists()) {
-                    window.location.href = '/public/pages/login.html';
-                    return;
-                }
-
-                const data = userDoc.data();
-                const name = data.displayName || user.displayName || 'Player';
-                const role = data.role || 'member';
-                const xp = data.xpCache || 0;
-                const attendance = data.attendanceCount || 0;
-
-                // Update UI nama
-                document.getElementById('userName').textContent = name;
-                document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('profileName').textContent = name;
-                document.getElementById('profileEmail').textContent = user.email;
-                document.getElementById('sidebarName').textContent = name;
-                document.getElementById('sidebarRole').textContent = role;
-
-                // Avatar initial
-                const initial = name.charAt(0).toUpperCase();
-                document.getElementById('avatarInitial').textContent = initial;
-                document.getElementById('profileAvatar').textContent = initial;
-
-                // XP
-                document.getElementById('userXP').textContent = xp;
-                document.getElementById('userAttendance').textContent = attendance;
-
-                // XP Bar — setiap 100 XP = 1 level
-                const level = Math.floor(xp / 100) + 1;
-                const progress = (xp % 100);
-                document.getElementById('xpBar').style.width = progress + '%';
-                document.getElementById('xpBarLabel').textContent = `Level ${level} — ${progress}/100 XP ke level berikutnya`;
-
-                // Role badge warna
-                const roleBadge = document.getElementById('roleBadge');
-                const roleColors = {
-                    'member': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                    'pengurus': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                    'admin': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-                    'superadmin': 'bg-red-500/20 text-red-400 border-red-500/30'
-                };
-                roleBadge.className = `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${roleColors[role] || roleColors['member']}`;
-                roleBadge.textContent = role;
-
-                // Tampilkan menu admin jika role admin/superadmin
-                if (['admin', 'superadmin'].includes(role)) {
-                    document.getElementById('adminLink').classList.remove('hidden');
-                    document.getElementById('logsLink').classList.remove('hidden');
-                }
-
-                // Tampilkan menu logs jika pengurus ke atas
-                if (role === 'pengurus') {
-                    document.getElementById('adminLink').classList.remove('hidden');
-                }
-
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
+        // NPC badge
+        if (role === 'npc') {
+            document.getElementById('npcBadge').classList.remove('hidden');
         }
 
-        // ==========================================
-        // LOAD EVENT AKTIF
-        // ==========================================
-        async function loadActiveEvent() {
-            try {
-                const eventsRef = collection(db, 'events');
-                const q = query(eventsRef, where('status', '==', 'active'), limit(1));
-                const snapshot = await getDocs(q);
+        // Stat XP
+        document.getElementById('statXP').textContent = xp;
+        document.getElementById('statAttended').textContent = userData.attendanceCount || 0;
+        document.getElementById('statBestStreak').textContent = userData.bestStreak || userData.streak || 0;
+    }
 
-                if (!snapshot.empty) {
-                    const event = snapshot.docs[0].data();
-                    document.getElementById('activeEventCard').classList.remove('hidden');
-                    document.getElementById('eventName').textContent = event.name || 'Event Aktif';
+    // ============================================================
+    // Render stats — attendance rate
+    // ============================================================
+    async function renderStats() {
+        try {
+            // Ambil total event yang sudah closed
+            const eventsSnap = await getDocs(query(
+                collection(db, 'events'),
+                where('status', '==', 'closed')
+            ));
+            const totalEvents = eventsSnap.size;
 
-                    // Format waktu
-                    if (event.startTime) {
-                        const time = event.startTime.toDate().toLocaleString('id-ID');
-                        document.getElementById('eventTime').textContent = `Dimulai: ${time}`;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading active event:', error);
+            const attended = userData.attendanceCount || 0;
+            const rate = totalEvents > 0 ? Math.round((attended / totalEvents) * 100) : 0;
+            document.getElementById('statRate').textContent = `${rate}%`;
+
+            // Hitung rank
+            const allUsersSnap = await getDocs(query(
+                collection(db, 'users'),
+                where('status', '==', 'active'),
+                orderBy('xpCache', 'desc')
+            ));
+            let rank = 1;
+            allUsersSnap.forEach(d => {
+                if ((d.data().xpCache || 0) > (userData.xpCache || 0)) rank++;
+            });
+            document.getElementById('statRank').textContent = rank;
+        } catch (e) {
+            console.error('Stats error:', e);
+        }
+    }
+
+    // ============================================================
+    // Load riwayat kehadiran
+    // ============================================================
+    async function loadAttendanceHistory() {
+        try {
+            const snap = await getDocs(query(
+                collection(db, 'attendance'),
+                where('userId', '==', currentUser.uid),
+                orderBy('attendedAt', 'desc'),
+                limit(10)
+            ));
+
+            const container = document.getElementById('attendanceList');
+
+            if (snap.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No attendance records yet</p>';
+                return;
             }
+
+            container.innerHTML = snap.docs.map(d => {
+                const a = d.data();
+                const status = a.status;
+                const badgeClass = status === 'present' ? 'badge-present' : status === 'excused' ? 'badge-excused' : 'badge-absent';
+                const xpText = a.xpChange > 0 ? `+${a.xpChange} XP` : a.xpChange < 0 ? `${a.xpChange} XP` : '0 XP';
+                const xpColor = a.xpChange > 0 ? 'text-green-400' : a.xpChange < 0 ? 'text-red-400' : 'text-gray-400';
+                const date = a.attendedAt ? formatDate(a.attendedAt.toDate()) : '-';
+                return `
+                <div class="flex items-center justify-between p-3 rounded-lg hover:bg-white/3 transition">
+                    <div class="min-w-0 mr-2">
+                        <p class="text-sm font-medium text-white truncate">${a.eventName || 'Event'}</p>
+                        <p class="text-xs text-gray-500">${date}</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs ${xpColor} font-semibold">${xpText}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}">${status}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (e) {
+            console.error('Attendance load error:', e);
+        }
+    }
+
+    // ============================================================
+    // Load riwayat XP untuk chart
+    // ============================================================
+    async function loadXPHistory() {
+        try {
+            const snap = await getDocs(query(
+                collection(db, 'xpHistory'),
+                where('userId', '==', currentUser.uid),
+                orderBy('timestamp', 'asc'),
+                limit(100)
+            ));
+
+            xpHistoryData = snap.docs.map(d => d.data());
+            renderXPChart(6);
+        } catch (e) {
+            console.error('XP history error:', e);
+            renderXPChart(6); // render kosong
+        }
+    }
+
+    // ============================================================
+    // Render XP Chart
+    // ============================================================
+    let xpChart = null;
+    window.updateChart = function() {
+        const months = parseInt(document.getElementById('chartFilter').value);
+        renderXPChart(months);
+    };
+
+    function renderXPChart(months) {
+        const labels = [];
+        const dataPoints = [];
+        const now = new Date();
+
+        for (let i = months - 1; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            labels.push(d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
+
+            const monthXP = xpHistoryData
+                .filter(h => {
+                    if (!h.timestamp) return false;
+                    const hDate = h.timestamp.toDate ? h.timestamp.toDate() : new Date(h.timestamp);
+                    return hDate.getFullYear() === d.getFullYear() && hDate.getMonth() === d.getMonth();
+                })
+                .reduce((sum, h) => sum + (h.change || 0), 0);
+            dataPoints.push(Math.max(0, monthXP));
         }
 
-        // ==========================================
-        // LOAD RIWAYAT KEHADIRAN
-        // ==========================================
-        async function loadAttendanceHistory(uid) {
-            try {
-                const attendanceRef = collection(db, 'attendance');
-                const q = query(
-                    attendanceRef,
-                    where('userId', '==', uid),
-                    orderBy('attendedAt', 'desc'),
-                    limit(10)
-                );
-                const snapshot = await getDocs(q);
+        const ctx = document.getElementById('xpChart').getContext('2d');
+        if (xpChart) xpChart.destroy();
 
-                const list = document.getElementById('attendanceList');
-
-                if (snapshot.empty) {
-                    list.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">Belum ada riwayat kehadiran</p>';
-                    return;
+        xpChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'XP Gained',
+                    data: dataPoints,
+                    backgroundColor: 'rgba(230,57,70,0.5)',
+                    borderColor: '#E63946',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: { size: 11 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: { size: 11 } }, beginAtZero: true }
                 }
+            }
+        });
+    }
 
-                // Status warna
-                const statusConfig = {
-                    'present': { label: 'Hadir', color: 'text-green-400', bg: 'bg-green-500/10', icon: '✅' },
-                    'absent': { label: 'Tidak Hadir', color: 'text-red-400', bg: 'bg-red-500/10', icon: '❌' },
-                    'excused': { label: 'Izin', color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: '📝' }
+    // ============================================================
+    // Load leave requests
+    // ============================================================
+    async function loadLeaveRequests() {
+        try {
+            const snap = await getDocs(query(
+                collection(db, 'leaveRequests'),
+                where('userId', '==', currentUser.uid),
+                orderBy('createdAt', 'desc'),
+                limit(5)
+            ));
+
+            const container = document.getElementById('leaveList');
+            if (snap.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No leave requests</p>';
+                return;
+            }
+
+            container.innerHTML = snap.docs.map(d => {
+                const r = d.data();
+                const statusColors = {
+                    pending: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30',
+                    approved: 'text-green-400 bg-green-400/10 border-green-400/30',
+                    rejected: 'text-red-400 bg-red-400/10 border-red-400/30',
+                    cancelled: 'text-gray-400 bg-gray-400/10 border-gray-400/30'
                 };
+                const date = r.createdAt ? formatDate(r.createdAt.toDate()) : '-';
+                return `
+                <div class="flex items-center justify-between p-3 rounded-lg hover:bg-white/3 transition">
+                    <div class="min-w-0 mr-2">
+                        <p class="text-sm font-medium text-white truncate">${r.eventName || 'Event'}</p>
+                        <p class="text-xs text-gray-500">${r.reason?.substring(0, 60) || '-'}</p>
+                        <p class="text-xs text-gray-600">${date}</p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full border font-medium flex-shrink-0 ${statusColors[r.status] || statusColors.pending}">${r.status}</span>
+                </div>`;
+            }).join('');
+        } catch (e) {
+            console.error('Leave requests error:', e);
+        }
+    }
 
-                list.innerHTML = snapshot.docs.map(doc => {
-                    const data = doc.data();
-                    const status = statusConfig[data.status] || statusConfig['absent'];
-                    const date = data.attendedAt ? data.attendedAt.toDate().toLocaleDateString('id-ID', {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                    }) : '-';
-                    const xpChange = data.xpChange > 0 ? `+${data.xpChange}` : data.xpChange;
+    // ============================================================
+    // Load achievements
+    // ============================================================
+    async function loadAchievements() {
+        // Achievement lokal berdasarkan data user — tidak butuh query tambahan
+        const xp = userData.xpCache || 0;
+        const attended = userData.attendanceCount || 0;
+        const streak = userData.streak || 0;
 
-                    return `
-                        <div class="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                            <div class="flex items-center gap-3">
-                                <span class="text-lg">${status.icon}</span>
-                                <div>
-                                    <p class="text-sm font-medium">${data.eventName || 'Event'}</p>
-                                    <p class="text-xs text-gray-500">${date}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-xs px-2 py-1 rounded-full ${status.bg} ${status.color}">${status.label}</span>
-                                <p class="text-xs mt-1 ${data.xpChange >= 0 ? 'text-green-400' : 'text-red-400'}">${xpChange} XP</p>
-                            </div>
-                        </div>
-                    `;
+        const achievements = [];
+
+        if (attended >= 1) achievements.push({ icon: '✓', label: 'First Attendance', desc: 'Attended your first event', color: 'bg-green-500/20' });
+        if (attended >= 5) achievements.push({ icon: '5', label: 'Five Events', desc: 'Attended 5 events', color: 'bg-blue-500/20' });
+        if (attended >= 10) achievements.push({ icon: '10', label: 'Ten Events', desc: 'Attended 10 events', color: 'bg-purple-500/20' });
+        if (streak >= 3) achievements.push({ icon: 'S', label: 'On a Roll', desc: '3+ day attendance streak', color: 'bg-orange-500/20' });
+        if (streak >= 7) achievements.push({ icon: 'S7', label: 'Week Warrior', desc: '7-day attendance streak', color: 'bg-red-500/20' });
+        if (xp >= 100) achievements.push({ icon: 'XP', label: 'Century', desc: 'Reached 100 XP', color: 'bg-yellow-500/20' });
+        if (xp >= 500) achievements.push({ icon: 'XP', label: 'Veteran', desc: 'Reached 500 XP', color: 'bg-yellow-500/20' });
+
+        const container = document.getElementById('achievementList');
+        if (achievements.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No achievements yet — start attending events!</p>';
+            return;
+        }
+
+        container.innerHTML = achievements.map(a => `
+            <div class="achievement-card">
+                <div class="achievement-icon ${a.color} text-white font-bold text-xs">${a.icon}</div>
+                <div>
+                    <p class="text-sm font-semibold text-white">${a.label}</p>
+                    <p class="text-xs text-gray-500">${a.desc}</p>
+                </div>
+            </div>`).join('');
+    }
+
+    // ============================================================
+    // Cek event aktif
+    // ============================================================
+    async function checkActiveEvent() {
+        try {
+            const snap = await getDocs(query(
+                collection(db, 'events'),
+                where('status', '==', 'active'),
+                limit(1)
+            ));
+
+            if (!snap.empty) {
+                const event = snap.docs[0].data();
+                document.getElementById('activeEventCard').classList.remove('hidden');
+                document.getElementById('activeEventName').textContent = event.name;
+                document.getElementById('activeEventXP').textContent = `+${event.xpReward || 10} XP for attendance`;
+            }
+        } catch (e) {}
+    }
+
+    // ============================================================
+    // Load notifikasi
+    // ============================================================
+    async function loadNotifications() {
+        try {
+            const snap = await getDocs(query(
+                collection(db, 'notifications'),
+                where('userId', '==', currentUser.uid),
+                where('read', '==', false),
+                orderBy('createdAt', 'desc'),
+                limit(10)
+            ));
+
+            if (!snap.empty) {
+                document.getElementById('notifBadge').classList.remove('hidden');
+                const container = document.getElementById('notifList');
+                container.innerHTML = snap.docs.map(d => {
+                    const n = d.data();
+                    return `<div class="p-3 hover:bg-white/5 rounded-lg transition cursor-pointer" onclick="markRead('${d.id}', this)">
+                        <p class="text-sm text-white">${n.message}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">${n.createdAt ? formatDate(n.createdAt.toDate()) : ''}</p>
+                    </div>`;
                 }).join('');
-
-            } catch (error) {
-                console.error('Error loading attendance:', error);
             }
+        } catch (e) {}
+    }
+
+    // ============================================================
+    // Setup admin nav — tampilkan hanya jika role yang sesuai
+    // ============================================================
+    function setupAdminNav() {
+        const role = userData.role || 'member';
+        if (['admin', 'inventori', 'superadmin', 'presiden'].includes(role)) {
+            document.getElementById('adminNav').classList.remove('hidden');
+        }
+    }
+
+    // ============================================================
+    // Submit leave request
+    // ============================================================
+    window.openLeaveModal = async function() {
+        // Load upcoming events
+        try {
+            const snap = await getDocs(query(
+                collection(db, 'events'),
+                where('status', 'in', ['scheduled', 'active'])
+            ));
+            const select = document.getElementById('leaveEventSelect');
+            select.innerHTML = '<option value="">-- Select event --</option>';
+            snap.forEach(d => {
+                const e = d.data();
+                select.innerHTML += `<option value="${d.id}" data-name="${e.name}">${e.name}</option>`;
+            });
+        } catch (e) {}
+        document.getElementById('leaveModal').classList.add('show');
+    };
+
+    window.closeLeaveModal = function() {
+        document.getElementById('leaveModal').classList.remove('show');
+    };
+
+    window.submitLeaveRequest = async function() {
+        const select = document.getElementById('leaveEventSelect');
+        const reason = document.getElementById('leaveReason').value.trim();
+        const eventId = select.value;
+        const eventName = select.options[select.selectedIndex]?.dataset.name || '';
+
+        if (!eventId) {
+            document.getElementById('leaveError').textContent = 'Please select an event';
+            document.getElementById('leaveError').classList.remove('hidden');
+            return;
+        }
+        if (!reason || reason.length < 5) {
+            document.getElementById('leaveError').textContent = 'Please provide a reason (min 5 characters)';
+            document.getElementById('leaveError').classList.remove('hidden');
+            return;
         }
 
-        // ==========================================
-        // LOAD RANK USER
-        // ==========================================
-        async function loadRank(uid) {
-            try {
-                const usersRef = collection(db, 'users');
-                const q = query(usersRef, orderBy('xpCache', 'desc'));
-                const snapshot = await getDocs(q);
+        try {
+            await addDoc(collection(db, 'leaveRequests'), {
+                userId: currentUser.uid,
+                userName: userData.name,
+                eventId,
+                eventName,
+                reason,
+                status: 'pending',
+                createdAt: serverTimestamp()
+            });
 
-                let rank = '-';
-                snapshot.docs.forEach((doc, index) => {
-                    if (doc.id === uid) rank = index + 1;
-                });
-
-                document.getElementById('userRank').textContent = `#${rank}`;
-            } catch (error) {
-                console.error('Error loading rank:', error);
-            }
+            closeLeaveModal();
+            await loadLeaveRequests();
+        } catch (e) {
+            document.getElementById('leaveError').textContent = 'Failed to submit. Please try again.';
+            document.getElementById('leaveError').classList.remove('hidden');
         }
+    };
 
-        // ==========================================
-        // LOGOUT
-        // ==========================================
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            try {
+    // ============================================================
+    // Helper: format tanggal
+    // ============================================================
+    function formatDate(date) {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderDate() {
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+
+    // ============================================================
+    // Auto logout setelah 30 menit tidak aktif
+    // ============================================================
+    function setupAutoLogout() {
+        let timer;
+        const reset = () => {
+            clearTimeout(timer);
+            timer = setTimeout(async () => {
                 await signOut(auth);
                 window.location.href = '/public/pages/login.html';
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        });
-
-        // ==========================================
-        // SIDEBAR MOBILE
-        // ==========================================
-        window.openSidebar = () => {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('overlay').classList.remove('hidden');
+            }, 30 * 60 * 1000);
         };
+        ['click','mousemove','keypress','scroll','touchstart'].forEach(e => document.addEventListener(e, reset));
+        reset();
+    }
 
-        window.closeSidebar = () => {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('overlay').classList.add('hidden');
-        };
-    </script>
+    window.handleLogout = async function() {
+        await signOut(auth);
+        window.location.href = '/public/pages/login.html';
+    };
 
+    window.toggleNotif = function() {
+        document.getElementById('notifDropdown').classList.toggle('show');
+    };
+
+    window.markAllRead = function() {
+        document.getElementById('notifDropdown').classList.remove('show');
+        document.getElementById('notifBadge').classList.add('hidden');
+    };
+
+    window.toggleSidebar = function() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileOverlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('hidden');
+    };
+
+    // Tutup dropdown saat klik luar
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#notifDropdown') && !e.target.closest('button[onclick="toggleNotif()"]')) {
+            document.getElementById('notifDropdown').classList.remove('show');
+        }
+    });
+</script>
 </body>
 </html>

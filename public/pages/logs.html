@@ -1,240 +1,344 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEWGAME - Logs</title>
+    <title>NEWGAME - System Logs</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { colors: { 'ng-red': '#E63946', 'ng-blue': '#1D3557', 'ng-lightblue': '#457B9D' } } }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
         * { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; }
-        .bg-logo { position: fixed; inset: 0; background: url('../../assets/logo unandnewgame.png') center/cover no-repeat; filter: blur(40px) brightness(0.08); transform: scale(1.2); z-index: 0; }
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .glass-dark { background: rgba(0,0,0,0.3); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); }
-        .fade-in { animation: fadeIn 0.6s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-link { transition: all 0.2s ease; }
-        .nav-link:hover { background: rgba(230,57,70,0.15); color: #E63946; }
-        .nav-link.active { background: rgba(230,57,70,0.2); color: #E63946; border-left: 3px solid #E63946; }
-        .accent-line { height: 2px; background: linear-gradient(90deg, #E63946, #1D3557, #457B9D); border-radius: 999px; }
-        #sidebar { transition: transform 0.3s ease; }
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 50; transform: translateX(-100%); }
-            #sidebar.open { transform: translateX(0); }
-        }
+        h1,h2,h3 { font-family: 'Rajdhani', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        body { background: #070910; }
+        .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+        .accent-bar { height: 3px; background: linear-gradient(90deg,#E63946,#1D3557,#457B9D); }
+        .sidebar { width:220px; position:fixed; left:0; top:0; height:100%; background:rgba(7,9,16,0.96); border-right:1px solid rgba(255,255,255,0.07); z-index:40; display:flex; flex-direction:column; transition:transform 0.3s; }
+        .nav-item { display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:8px; color:#6b7280; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; text-decoration:none; }
+        .nav-item:hover { background:rgba(255,255,255,0.05); color:#fff; }
+        .nav-item.active { background:rgba(230,57,70,0.15); color:#E63946; border-left:2px solid #E63946; }
+        .input-field { background:rgba(255,255,255,0.05); color:white; padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); font-size:13px; }
+        .input-field:focus { outline:none; border-color:#E63946; }
+        select.input-field option { background:#111827; }
+        .btn-secondary { background:rgba(255,255,255,0.07); color:#d1d5db; font-weight:500; padding:7px 14px; border-radius:8px; font-size:13px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+        .btn-secondary:hover { background:rgba(255,255,255,0.12); color:white; }
+        .badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+        .badge-success { background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); }
+        .badge-failed { background:rgba(220,38,38,0.15); color:#f87171; border:1px solid rgba(220,38,38,0.3); }
+        @media(max-width:768px){ .sidebar{ transform:translateX(-100%); } .sidebar.open{ transform:translateX(0); } .main{ margin-left:0!important; } }
     </style>
 </head>
-<body class="bg-black min-h-screen text-white overflow-x-hidden">
-    <div class="bg-logo"></div>
-    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<body class="text-white min-h-screen">
+<div class="accent-bar fixed top-0 left-0 right-0 z-50"></div>
 
-    <div class="relative z-10 flex min-h-screen">
-        <aside id="sidebar" class="glass-dark w-64 min-h-screen flex flex-col p-6 md:relative md:transform-none">
-            <div class="flex items-center gap-3 mb-8">
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-10 h-10">
-                <div><h1 class="text-xl font-bold tracking-wider">NEWGAME</h1><p class="text-gray-500 text-xs">Learn Create Play</p></div>
-            </div>
-            <div class="accent-line mb-6"></div>
-            <nav class="flex-1 space-y-1">
-                <a href="/public/pages/dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Dashboard</a>
-                <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Leaderboard</a>
-                <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Absensi</a>
-                <a href="/public/pages/admin.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Admin Panel</a>
-                <a href="/public/pages/logs.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium"><span></span> Logs</a>
-            </nav>
-            <div class="mt-auto">
-                <div class="accent-line mb-4"></div>
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-9 h-9 rounded-full bg-ng-red flex items-center justify-center text-sm font-bold" id="avatarInitial">?</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold truncate" id="sidebarName">Memuat...</p>
-                        <p class="text-xs text-gray-500 truncate" id="sidebarRole">-</p>
-                    </div>
+<div class="flex min-h-screen pt-[3px]">
+    <aside class="sidebar" id="sidebar">
+        <div class="p-5 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <img src="../../assets/logo.png" alt="NEWGAME" class="w-9 h-9">
+                <div>
+                    <h2 class="text-white font-bold text-base" style="font-family:'Rajdhani',sans-serif;">NEWGAME</h2>
+                    <p class="text-gray-500 text-xs mono">System Logs</p>
                 </div>
-                <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2"><span></span> Keluar</button>
             </div>
-        </aside>
+        </div>
+        <nav class="flex-1 p-3 space-y-1">
+            <a href="dashboard.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                Dashboard
+            </a>
+            <a href="admin.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+                Admin Panel
+            </a>
+            <a href="members.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Members
+            </a>
+            <a href="logs.html" class="nav-item active">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                System Logs
+            </a>
+        </nav>
+        <div class="p-3 border-t border-white/5">
+            <button onclick="handleLogout()" class="nav-item w-full text-left hover:text-red-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Sign Out
+            </button>
+        </div>
+    </aside>
 
-        <main class="flex-1 p-6 md:p-8 fade-in">
-            <div class="flex items-center justify-between mb-6 md:hidden">
-                <button onclick="openSidebar()" class="text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-8 h-8">
-                <div class="w-6"></div>
+    <main class="main flex-1 p-6 overflow-auto" style="margin-left:220px;">
+        <div class="md:hidden flex items-center gap-3 mb-4">
+            <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="text-gray-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <h1 class="text-xl font-bold text-white">System Logs</h1>
+        </div>
+
+        <div class="flex items-center justify-between mb-6">
+            <div class="hidden md:block">
+                <h1 class="text-2xl font-bold text-white">System Logs</h1>
+                <p class="text-gray-500 text-sm">Immutable audit trail — cannot be edited or deleted</p>
             </div>
+            <button onclick="exportLogs()" class="btn-secondary text-sm">Export CSV</button>
+        </div>
 
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold">Activity Logs </h2>
-                <p class="text-gray-400 mt-1">Semua aktivitas sistem tercatat di sini</p>
+        <!-- Filters -->
+        <div class="glass rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+            <select id="filterAction" class="input-field w-auto" onchange="loadLogs(true)">
+                <option value="">All Actions</option>
+                <option value="attend">Attend</option>
+                <option value="close_event">Close Event</option>
+                <option value="create_event">Create Event</option>
+                <option value="manual_xp_edit">XP Edit</option>
+                <option value="import_members">Import Members</option>
+                <option value="update_role">Role Update</option>
+                <option value="update_member">Member Update</option>
+                <option value="approve_leave">Approve Leave</option>
+                <option value="reject_leave">Reject Leave</option>
+                <option value="suspend_user">Suspend User</option>
+                <option value="set_initial_role">Set Role</option>
+            </select>
+            <select id="filterResult" class="input-field w-auto" onchange="loadLogs(true)">
+                <option value="">All Results</option>
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
+            </select>
+            <input type="date" id="filterDate" class="input-field w-auto" onchange="loadLogs(true)">
+            <input type="text" id="filterUser" placeholder="Filter by user ID..." class="input-field flex-1 min-w-[180px]" oninput="loadLogs(true)">
+            <button onclick="clearFilters()" class="btn-secondary text-sm">Clear</button>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" id="logStats">
+            <div class="glass rounded-xl p-4 text-center">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Total Logs</p>
+                <p class="text-2xl font-bold text-white" id="statTotal" style="font-family:'Rajdhani',sans-serif;">-</p>
             </div>
-
-            <!-- FILTER -->
-            <div class="glass rounded-xl p-4 mb-6 flex gap-3 flex-wrap">
-                <select id="filterAction" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-ng-red">
-                    <option value="">Semua Aksi</option>
-                    <option value="attend">Absensi</option>
-                    <option value="start_event">Mulai Event</option>
-                    <option value="close_event">Tutup Event</option>
-                    <option value="change_role">Ubah Role</option>
-                    <option value="token_invalid">Token Invalid</option>
-                </select>
-                <button onclick="loadLogs()" class="bg-ng-red hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg transition">Filter</button>
-                <button onclick="exportCSV()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm px-4 py-2 rounded-lg transition">📥 Export CSV</button>
+            <div class="glass rounded-xl p-4 text-center">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Success</p>
+                <p class="text-2xl font-bold text-green-400" id="statSuccess" style="font-family:'Rajdhani',sans-serif;">-</p>
             </div>
+            <div class="glass rounded-xl p-4 text-center">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Failed</p>
+                <p class="text-2xl font-bold text-red-400" id="statFailed" style="font-family:'Rajdhani',sans-serif;">-</p>
+            </div>
+            <div class="glass rounded-xl p-4 text-center">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Today</p>
+                <p class="text-2xl font-bold text-blue-400" id="statToday" style="font-family:'Rajdhani',sans-serif;">-</p>
+            </div>
+        </div>
 
-            <!-- LOGS LIST -->
-            <div class="glass rounded-xl p-6">
-                <div id="logsList">
-                    <p class="text-gray-500 text-sm text-center py-8">Memuat logs...</p>
+        <!-- Logs table -->
+        <div class="glass rounded-xl overflow-hidden">
+            <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                <span class="text-gray-400 text-sm" id="logsCountLabel">-</span>
+                <div class="flex items-center gap-2 text-xs text-gray-500 mono">
+                    <span>Read-only</span>
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
                 </div>
-                <button id="loadMoreBtn" class="hidden w-full mt-4 py-2 text-sm text-gray-400 hover:text-white border border-white/10 rounded-lg transition" onclick="loadMore()">
-                    Muat Lebih Banyak
-                </button>
             </div>
-        </main>
-    </div>
+            <div class="overflow-x-auto">
+                <table style="width:100%;border-collapse:separate;border-spacing:0;">
+                    <thead>
+                        <tr>
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Timestamp</th>
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">User</th>
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Action</th>
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Result</th>
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsBody">
+                        <tr><td colspan="5" style="padding:40px;text-align:center;color:#6b7280;">Loading logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-white/5 flex justify-center">
+                <button onclick="loadMore()" id="btnLoadMore" class="btn-secondary text-sm hidden">Load More</button>
+            </div>
+        </div>
+    </main>
+</div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, getDocs, startAfter } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import {
+        getFirestore, collection, doc, getDoc, getDocs,
+        query, where, orderBy, limit, startAfter
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        const firebaseConfig = {
+    const firebaseConfig = {
             apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
             authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
             projectId: "qr-absensi-unandnewgame",
             storageBucket: "qr-absensi-unandnewgame.firebasestorage.app",
             messagingSenderId: "377822320778",
             appId: "1:377822320778:web:f7305bb71019f670ccf573"
-        };
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        let lastDoc = null;
-        let allLogs = [];
+    let lastDoc = null;
+    let allLogsCache = [];
+    const PAGE = 50;
 
-        onAuthStateChanged(auth, async (user) => {
-            if (!user || !user.emailVerified) { window.location.href = '/public/pages/login.html'; return; }
-
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (!userDoc.exists()) { window.location.href = '/public/pages/login.html'; return; }
-
-            const data = userDoc.data();
-            if (!['admin', 'superadmin'].includes(data.role)) {
-                window.location.href = '/public/pages/dashboard.html';
-                return;
-            }
-
-            const name = data.displayName || user.displayName || 'User';
-            document.getElementById('sidebarName').textContent = name;
-            document.getElementById('sidebarRole').textContent = data.role;
-            document.getElementById('avatarInitial').textContent = name.charAt(0).toUpperCase();
-
-            await loadLogs();
-        });
-
-        const actionLabels = {
-            'attend': { label: '✅ Absensi', color: 'text-green-400 bg-green-500/10' },
-            'start_event': { label: ' Mulai Event', color: 'text-blue-400 bg-blue-500/10' },
-            'close_event': { label: ' Tutup Event', color: 'text-yellow-400 bg-yellow-500/10' },
-            'change_role': { label: ' Ubah Role', color: 'text-purple-400 bg-purple-500/10' },
-            'token_invalid': { label: ' Token Invalid', color: 'text-red-400 bg-red-500/10' },
-            'request_close_event': { label: ' Request Tutup', color: 'text-orange-400 bg-orange-500/10' }
-        };
-
-        window.loadLogs = async function(append = false) {
-            try {
-                const filterAction = document.getElementById('filterAction').value;
-                let q;
-
-                if (filterAction) {
-                    q = query(collection(db, 'logs'), where('action', '==', filterAction), orderBy('timestamp', 'desc'), limit(20));
-                } else {
-                    q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'), limit(20));
-                }
-
-                if (append && lastDoc) q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'), startAfter(lastDoc), limit(20));
-
-                const snapshot = await getDocs(q);
-                if (snapshot.empty && !append) {
-                    document.getElementById('logsList').innerHTML = '<p class="text-gray-500 text-sm text-center py-8">Tidak ada log ditemukan</p>';
-                    return;
-                }
-
-                lastDoc = snapshot.docs[snapshot.docs.length - 1];
-                const newLogs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                if (append) allLogs = [...allLogs, ...newLogs];
-                else allLogs = newLogs;
-
-                renderLogs();
-                document.getElementById('loadMoreBtn').classList.toggle('hidden', snapshot.docs.length < 20);
-
-            } catch (error) {
-                console.error('Load logs error:', error);
-            }
-        };
-
-        function renderLogs() {
-            const list = document.getElementById('logsList');
-            list.innerHTML = allLogs.map(log => {
-                const action = actionLabels[log.action] || { label: log.action, color: 'text-gray-400 bg-gray-500/10' };
-                const time = log.timestamp ? log.timestamp.toDate().toLocaleString('id-ID') : '-';
-                return `
-                    <div class="flex items-start gap-4 py-3 border-b border-white/5 last:border-0">
-                        <span class="text-lg mt-0.5">${result}</span>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap mb-1">
-                                <span class="text-xs px-2 py-0.5 rounded-full ${action.color} font-medium">${action.label}</span>
-                                <span class="text-xs text-gray-500">${time}</span>
-                            </div>
-                            <p class="text-xs text-gray-500 truncate">User: ${log.userId?.substring(0, 16)}...</p>
-                            ${log.eventId ? `<p class="text-xs text-gray-600">Event: ${log.eventId?.substring(0, 16)}...</p>` : ''}
-                            ${log.newRole ? `<p class="text-xs text-purple-400">→ Role baru: ${log.newRole}</p>` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
+    onAuthStateChanged(auth, async (user) => {
+        if (!user || !user.emailVerified) { window.location.href = '/public/pages/login.html'; return; }
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists()) { await signOut(auth); return; }
+        const data = userDoc.data();
+        if (!['admin','superadmin','presiden'].includes(data.role)) {
+            window.location.href = '/public/pages/dashboard.html';
+            return;
         }
+        await loadStats();
+        await loadLogs(true);
+        setupAutoLogout();
+    });
 
-        window.loadMore = () => loadLogs(true);
+    async function loadStats() {
+        try {
+            const snap = await getDocs(collection(db, 'logs'));
+            const logs = snap.docs.map(d => d.data());
+            const today = new Date();
+            today.setHours(0,0,0,0);
 
-        window.exportCSV = function() {
-            if (allLogs.length === 0) return;
-            const headers = ['Timestamp', 'Action', 'UserId', 'EventId', 'Result'];
-            const rows = allLogs.map(l => [
-                l.timestamp ? l.timestamp.toDate().toISOString() : '-',
-                l.action || '-',
-                l.userId || '-',
-                l.eventId || '-',
-                l.result || '-'
-            ]);
-            const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
+            document.getElementById('statTotal').textContent = logs.length;
+            document.getElementById('statSuccess').textContent = logs.filter(l => l.result === 'success').length;
+            document.getElementById('statFailed').textContent = logs.filter(l => l.result === 'failed').length;
+            document.getElementById('statToday').textContent = logs.filter(l => {
+                if (!l.timestamp) return false;
+                const d = l.timestamp.toDate ? l.timestamp.toDate() : new Date(l.timestamp.seconds * 1000);
+                return d >= today;
+            }).length;
+        } catch (e) { console.error(e); }
+    }
+
+    window.loadLogs = async function(reset = false) {
+        if (reset) { lastDoc = null; document.getElementById('logsBody').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:#6b7280;">Loading...</td></tr>'; }
+
+        const filterAction = document.getElementById('filterAction').value;
+        const filterResult = document.getElementById('filterResult').value;
+        const filterDate = document.getElementById('filterDate').value;
+        const filterUser = document.getElementById('filterUser').value.trim();
+
+        try {
+            let constraints = [orderBy('timestamp', 'desc'), limit(PAGE)];
+            if (filterAction) constraints.unshift(where('action', '==', filterAction));
+            if (filterResult) constraints.unshift(where('result', '==', filterResult));
+            if (lastDoc && !reset) constraints.push(startAfter(lastDoc));
+
+            const q = query(collection(db, 'logs'), ...constraints);
+            const snap = await getDocs(q);
+
+            let logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            // Filter tanggal dan user di client (Firestore range query terbatas)
+            if (filterDate) {
+                const day = new Date(filterDate);
+                day.setHours(0,0,0,0);
+                const dayEnd = new Date(filterDate);
+                dayEnd.setHours(23,59,59,999);
+                logs = logs.filter(l => {
+                    if (!l.timestamp) return false;
+                    const d = l.timestamp.toDate ? l.timestamp.toDate() : new Date(l.timestamp.seconds * 1000);
+                    return d >= day && d <= dayEnd;
+                });
+            }
+            if (filterUser) {
+                logs = logs.filter(l => (l.userId || '').toLowerCase().includes(filterUser.toLowerCase()));
+            }
+
+            lastDoc = snap.docs[snap.docs.length - 1] || null;
+            document.getElementById('btnLoadMore').classList.toggle('hidden', snap.size < PAGE);
+            document.getElementById('logsCountLabel').textContent = `Showing ${reset ? logs.length : '...'} logs`;
+
+            const actionColors = {
+                attend: '#4ade80', close_event: '#60a5fa', create_event: '#60a5fa',
+                manual_xp_edit: '#facc15', import_members: '#a78bfa',
+                update_role: '#fb923c', update_member: '#fb923c',
+                approve_leave: '#4ade80', reject_leave: '#f87171',
+                suspend_user: '#f87171', set_initial_role: '#34d399'
+            };
+
+            const rows = logs.map(l => {
+                const ts = l.timestamp ? (l.timestamp.toDate ? l.timestamp.toDate() : new Date(l.timestamp.seconds * 1000)).toLocaleString('en-US', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+                }) : '-';
+
+                const details = [
+                    l.reason, l.eventName, l.newRole ? `→ ${l.newRole}` : '',
+                    l.totalImported ? `${l.totalImported} members` : '',
+                    l.newXP !== undefined ? `XP: ${l.oldXP} → ${l.newXP}` : '',
+                    l.targetUserId ? `target: ${l.targetUserId.slice(0,8)}...` : ''
+                ].filter(Boolean).join(' | ');
+
+                const actionColor = actionColors[l.action] || '#9ca3af';
+
+                return `
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+                        <td style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#4b5563;">${ts}</td>
+                        <td style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6b7280;">${esc((l.userId || '-').slice(0,16))}${l.userId && l.userId.length > 16 ? '...' : ''}</td>
+                        <td style="padding:10px 14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:${actionColor};">${esc(l.action || '-')}</span></td>
+                        <td style="padding:10px 14px;"><span class="badge badge-${l.result === 'success' ? 'success' : 'failed'}">${l.result || '-'}</span></td>
+                        <td style="padding:10px 14px;font-size:12px;color:#6b7280;max-width:300px;" title="${esc(details)}">${esc(details.slice(0, 80))}${details.length > 80 ? '...' : ''}</td>
+                    </tr>`;
+            }).join('');
+
+            if (reset) {
+                document.getElementById('logsBody').innerHTML = rows || '<tr><td colspan="5" style="padding:40px;text-align:center;color:#6b7280;">No logs found</td></tr>';
+            } else {
+                document.getElementById('logsBody').innerHTML += rows;
+            }
+
+        } catch (err) {
+            console.error('loadLogs error:', err);
+            document.getElementById('logsBody').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:#f87171;">Failed to load logs</td></tr>';
+        }
+    };
+
+    window.loadMore = () => loadLogs(false);
+
+    window.clearFilters = function() {
+        document.getElementById('filterAction').value = '';
+        document.getElementById('filterResult').value = '';
+        document.getElementById('filterDate').value = '';
+        document.getElementById('filterUser').value = '';
+        loadLogs(true);
+    };
+
+    window.exportLogs = async function() {
+        try {
+            const snap = await getDocs(query(collection(db, 'logs'), orderBy('timestamp', 'desc'), limit(1000)));
+            const rows = [['Timestamp', 'User ID', 'Action', 'Result', 'Target User', 'Event', 'Reason', 'Old XP', 'New XP']];
+            snap.docs.forEach(d => {
+                const l = d.data();
+                const ts = l.timestamp ? (l.timestamp.toDate ? l.timestamp.toDate() : new Date(l.timestamp.seconds * 1000)).toISOString() : '';
+                rows.push([ts, l.userId || '', l.action || '', l.result || '', l.targetUserId || '', l.eventName || '', l.reason || '', l.oldXP ?? '', l.newXP ?? '']);
+            });
+            const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `newgame-logs-${Date.now()}.csv`;
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+            a.download = `system_logs_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
-        };
+        } catch (e) { alert('Export failed'); }
+    };
 
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.href = '/public/pages/login.html';
-        });
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-        window.openSidebar = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.remove('hidden'); };
-        window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.add('hidden'); };
-    </script>
+    function setupAutoLogout() {
+        let t;
+        const r = () => { clearTimeout(t); t = setTimeout(async () => { await signOut(auth); window.location.href='/public/pages/login.html'; }, 30*60*1000); };
+        ['click','keypress','scroll','touchstart'].forEach(e => document.addEventListener(e, r));
+        r();
+    }
+
+    window.handleLogout = async () => { await signOut(auth); window.location.href = '/public/pages/login.html'; };
+</script>
 </body>
 </html>

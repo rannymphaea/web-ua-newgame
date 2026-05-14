@@ -1,210 +1,386 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEWGAME - Leaderboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { colors: { 'ng-red': '#E63946', 'ng-blue': '#1D3557', 'ng-lightblue': '#457B9D' } } }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
         * { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; }
-        .bg-logo { position: fixed; inset: 0; background: url('../../assets/logo unandnewgame.png') center/cover no-repeat; filter: blur(40px) brightness(0.08); transform: scale(1.2); z-index: 0; }
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .glass-dark { background: rgba(0,0,0,0.3); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); }
-        .fade-in { animation: fadeIn 0.6s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-link { transition: all 0.2s ease; }
-        .nav-link:hover { background: rgba(230,57,70,0.15); color: #E63946; }
-        .nav-link.active { background: rgba(230,57,70,0.2); color: #E63946; border-left: 3px solid #E63946; }
-        .accent-line { height: 2px; background: linear-gradient(90deg, #E63946, #1D3557, #457B9D); border-radius: 999px; }
-        #sidebar { transition: transform 0.3s ease; }
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 50; transform: translateX(-100%); }
-            #sidebar.open { transform: translateX(0); }
-        }
-        .rank-1 { background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05)); border-color: rgba(255,215,0,0.3); }
-        .rank-2 { background: linear-gradient(135deg, rgba(192,192,192,0.15), rgba(192,192,192,0.05)); border-color: rgba(192,192,192,0.3); }
-        .rank-3 { background: linear-gradient(135deg, rgba(205,127,50,0.15), rgba(205,127,50,0.05)); border-color: rgba(205,127,50,0.3); }
-        .leaderboard-item { transition: transform 0.2s ease; }
-        .leaderboard-item:hover { transform: translateX(4px); }
+        h1,h2,h3 { font-family: 'Rajdhani', sans-serif; }
+        body { background: #070910; }
+        .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
+        .accent-bar { height: 3px; background: linear-gradient(90deg,#E63946,#1D3557,#457B9D); }
+        .input-field { background: rgba(255,255,255,0.05); color: white; padding: 9px 13px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 13px; transition: all 0.2s; }
+        .input-field:focus { outline: none; border-color: #E63946; }
+        select.input-field option { background: #111827; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 8px; color: #6b7280; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(230,57,70,0.15); color: #E63946; border-left: 2px solid #E63946; }
+        .sidebar { width: 220px; position: fixed; left: 0; top: 0; height: 100%; background: rgba(7,9,16,0.96); border-right: 1px solid rgba(255,255,255,0.07); z-index: 40; display: flex; flex-direction: column; transition: transform 0.3s; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+        .role-member { background: rgba(255,255,255,0.08); color: #9ca3af; border: 1px solid rgba(255,255,255,0.15); }
+        .role-admin { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .role-superadmin { background: rgba(230,57,70,0.15); color: #E63946; border: 1px solid rgba(230,57,70,0.3); }
+        .role-presiden { background: rgba(250,204,21,0.15); color: #fbbf24; border: 1px solid rgba(250,204,21,0.3); }
+        .role-inventori { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .role-npc { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+
+        /* Podium */
+        .podium-1 { background: linear-gradient(180deg, rgba(234,179,8,0.2) 0%, transparent 100%); border: 1px solid rgba(234,179,8,0.3); }
+        .podium-2 { background: linear-gradient(180deg, rgba(148,163,184,0.2) 0%, transparent 100%); border: 1px solid rgba(148,163,184,0.3); }
+        .podium-3 { background: linear-gradient(180deg, rgba(180,83,9,0.2) 0%, transparent 100%); border: 1px solid rgba(180,83,9,0.3); }
+
+        /* Highlight baris user sendiri */
+        .my-row { background: rgba(230,57,70,0.07); border-left: 3px solid #E63946; }
+
+        /* Rank number */
+        .rank-gold { color: #fbbf24; font-weight: 900; }
+        .rank-silver { color: #94a3b8; font-weight: 900; }
+        .rank-bronze { color: #b45309; font-weight: 900; }
+
+        @media(max-width:768px){ .sidebar{ transform: translateX(-100%); } .sidebar.open{ transform: translateX(0); } .main{ margin-left: 0!important; } }
     </style>
 </head>
-<body class="bg-black min-h-screen text-white overflow-x-hidden">
-    <div class="bg-logo"></div>
-    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<body class="text-white min-h-screen">
+<div class="accent-bar fixed top-0 left-0 right-0 z-50"></div>
 
-    <div class="relative z-10 flex min-h-screen">
-        <aside id="sidebar" class="glass-dark w-64 min-h-screen flex flex-col p-6 md:relative md:transform-none">
-            <div class="flex items-center gap-3 mb-8">
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-10 h-10">
-                <div><h1 class="text-xl font-bold tracking-wider">NEWGAME</h1><p class="text-gray-500 text-xs">Learn Create Play</p></div>
+<div class="flex min-h-screen pt-[3px]">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="p-5 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <img src="../../assets/logo.png" alt="NEWGAME" class="w-9 h-9">
+                <div>
+                    <h2 class="text-white font-bold text-base" style="font-family:'Rajdhani',sans-serif;">NEWGAME</h2>
+                    <p class="text-gray-500 text-xs">Leaderboard</p>
+                </div>
             </div>
-            <div class="accent-line mb-6"></div>
-            <nav class="flex-1 space-y-1">
-                <a href="/public/pages/dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Dashboard</a>
-                <a href="/public/pages/leaderboard.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium"><span></span> Leaderboard</a>
-                <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Absensi</a>
-                <a id="adminLink" href="/public/pages/admin.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Admin Panel</a>
-                <a id="logsLink" href="/public/pages/logs.html" class="nav-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400"><span></span> Logs</a>
-            </nav>
-            <div class="mt-auto">
-                <div class="accent-line mb-4"></div>
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-9 h-9 rounded-full bg-ng-red flex items-center justify-center text-sm font-bold" id="avatarInitial">?</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold truncate" id="sidebarName">Memuat...</p>
-                        <p class="text-xs text-gray-500 truncate" id="sidebarRole">-</p>
+        </div>
+        <nav class="flex-1 p-3 space-y-1">
+            <a href="dashboard.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                Dashboard
+            </a>
+            <a href="../../index.html" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                Scan QR
+            </a>
+            <a href="leaderboard.html" class="nav-item active">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Leaderboard
+            </a>
+        </nav>
+        <div class="p-3 border-t border-white/5">
+            <button onclick="handleLogout()" class="nav-item w-full text-left hover:text-red-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main flex-1 p-6 overflow-auto" style="margin-left:220px;">
+        <!-- Mobile header -->
+        <div class="md:hidden flex items-center gap-3 mb-4">
+            <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="text-gray-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <h1 class="text-xl font-bold text-white">Leaderboard</h1>
+        </div>
+
+        <div class="flex items-center justify-between mb-6">
+            <div class="hidden md:block">
+                <h1 class="text-2xl font-bold text-white">Leaderboard</h1>
+                <p class="text-gray-500 text-sm">Ranking based on total XP earned</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-500">
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                Updated live
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingState" class="text-center py-20">
+            <div class="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p class="text-gray-500 text-sm">Loading rankings...</p>
+        </div>
+
+        <div id="mainContent" class="hidden">
+            <!-- Podium TOP 3 -->
+            <div class="mb-8" id="podiumSection">
+                <div class="flex items-end justify-center gap-4 mb-2">
+                    <!-- 2nd place -->
+                    <div class="podium-2 rounded-xl p-5 text-center flex-1 max-w-44" id="podium2">
+                        <div class="text-3xl mb-2">&#129352;</div>
+                        <div class="w-12 h-12 rounded-full bg-gray-500/30 flex items-center justify-center text-white font-bold text-lg mx-auto mb-2" id="p2avatar">-</div>
+                        <p class="text-white font-semibold text-sm truncate" id="p2name">-</p>
+                        <p class="text-gray-400 text-xs" id="p2div">-</p>
+                        <p class="text-2xl font-bold mt-2" style="font-family:'Rajdhani',sans-serif;" id="p2xp">-</p>
+                        <p class="text-gray-400 text-xs">XP</p>
+                    </div>
+                    <!-- 1st place -->
+                    <div class="podium-1 rounded-xl p-5 text-center flex-1 max-w-52" id="podium1" style="transform: scale(1.05);">
+                        <div class="text-4xl mb-2">&#129351;</div>
+                        <div class="w-14 h-14 rounded-full bg-yellow-500/30 flex items-center justify-center text-white font-bold text-xl mx-auto mb-2" id="p1avatar">-</div>
+                        <p class="text-white font-bold text-base truncate" id="p1name">-</p>
+                        <p class="text-gray-400 text-xs" id="p1div">-</p>
+                        <p class="text-3xl font-bold mt-2 text-yellow-400" style="font-family:'Rajdhani',sans-serif;" id="p1xp">-</p>
+                        <p class="text-gray-400 text-xs">XP</p>
+                    </div>
+                    <!-- 3rd place -->
+                    <div class="podium-3 rounded-xl p-5 text-center flex-1 max-w-44" id="podium3">
+                        <div class="text-3xl mb-2">&#129353;</div>
+                        <div class="w-12 h-12 rounded-full bg-amber-900/40 flex items-center justify-center text-white font-bold text-lg mx-auto mb-2" id="p3avatar">-</div>
+                        <p class="text-white font-semibold text-sm truncate" id="p3name">-</p>
+                        <p class="text-gray-400 text-xs" id="p3div">-</p>
+                        <p class="text-2xl font-bold mt-2 text-amber-700" style="font-family:'Rajdhani',sans-serif;" id="p3xp">-</p>
+                        <p class="text-gray-400 text-xs">XP</p>
                     </div>
                 </div>
-                <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2"><span></span> Keluar</button>
-            </div>
-        </aside>
-
-        <main class="flex-1 p-6 md:p-8 fade-in">
-            <div class="flex items-center justify-between mb-6 md:hidden">
-                <button onclick="openSidebar()" class="text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-8 h-8">
-                <div class="w-6"></div>
             </div>
 
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold">Leaderboard </h2>
-                <p class="text-gray-400 mt-1">Ranking XP semua anggota NEWGAME</p>
-            </div>
-
-            <!-- TOP 3 PODIUM -->
-            <div id="podium" class="grid grid-cols-3 gap-4 mb-8"></div>
-
-            <!-- FULL LEADERBOARD -->
-            <div class="glass rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold">Semua Anggota</h3>
-                    <span id="totalMembers" class="text-gray-400 text-sm">- anggota</span>
-                </div>
-                <div id="leaderboardList">
-                    <p class="text-gray-500 text-sm text-center py-8">Memuat leaderboard...</p>
+            <!-- My rank highlight -->
+            <div id="myRankCard" class="glass rounded-xl p-4 mb-4 hidden" style="border: 1px solid rgba(230,57,70,0.4);">
+                <div class="flex items-center gap-3">
+                    <span class="text-red-400 text-xs uppercase font-bold tracking-wider">Your Rank</span>
+                    <div class="flex-1 flex items-center gap-3">
+                        <span class="text-white font-bold text-xl" style="font-family:'Rajdhani',sans-serif;" id="myRankNum">#-</span>
+                        <span class="text-white font-semibold text-sm" id="myRankName">-</span>
+                    </div>
+                    <span class="text-white font-bold" style="font-family:'Rajdhani',sans-serif;" id="myRankXP">- XP</span>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+            <!-- Filters -->
+            <div class="glass rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+                <input type="text" id="searchInput" placeholder="Search member..." class="input-field flex-1 min-w-[160px]" oninput="applyFilter()">
+                <select id="filterTeam" class="input-field w-auto" onchange="applyFilter()">
+                    <option value="">All Teams</option>
+                    <option value="Core">Core</option>
+                    <option value="Project">Project</option>
+                    <option value="Training">Training</option>
+                    <option value="FamilyGame">FamilyGame</option>
+                    <option value="Alliance">Alliance</option>
+                    <option value="Inventory">Inventory</option>
+                    <option value="DesignCraft">DesignCraft</option>
+                    <option value="NewMember">NewMember</option>
+                </select>
+                <select id="filterDivision" class="input-field w-auto" onchange="applyFilter()">
+                    <option value="">All Divisions</option>
+                </select>
+                <select id="filterShow" class="input-field w-auto" onchange="applyFilter()">
+                    <option value="all">Show All</option>
+                    <option value="top10">Top 10</option>
+                    <option value="top25">Top 25</option>
+                    <option value="top50">Top 50</option>
+                </select>
+            </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
-            authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
-            projectId: "qr-absensi-unandnewgame",
-            storageBucket: "qr-absensi-unandnewgame.firebasestorage.app",
-            messagingSenderId: "377822320778",
-            appId: "1:377822320778:web:f7305bb71019f670ccf573"
-        };
+            <!-- Ranking table -->
+            <div class="glass rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                    <span class="text-gray-400 text-sm" id="rankCountLabel">-</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table style="width:100%;border-collapse:separate;border-spacing:0;">
+                        <thead>
+                            <tr>
+                                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Rank</th>
+                                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Member</th>
+                                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Division</th>
+                                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Team</th>
+                                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Level</th>
+                                <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">XP</th>
+                                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid rgba(255,255,255,0.06);">Streak</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingBody">
+                            <tr><td colspan="7" style="padding:40px;text-align:center;color:#6b7280;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let currentUid = null;
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        onAuthStateChanged(auth, async (user) => {
-            if (!user || !user.emailVerified) { window.location.href = '/public/pages/login.html'; return; }
-            currentUid = user.uid;
+    const firebaseConfig = {
+        apiKey: "ISI_API_KEY_KAMU",
+        authDomain: "ISI_AUTH_DOMAIN_KAMU",
+        projectId: "ISI_PROJECT_ID_KAMU",
+        storageBucket: "ISI_STORAGE_BUCKET_KAMU",
+        messagingSenderId: "ISI_MESSAGING_SENDER_ID_KAMU",
+        appId: "ISI_APP_ID_KAMU"
+    };
 
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (!userDoc.exists()) { window.location.href = '/public/pages/login.html'; return; }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-            const data = userDoc.data();
-            const name = data.displayName || user.displayName || 'Player';
-            document.getElementById('sidebarName').textContent = name;
-            document.getElementById('sidebarRole').textContent = data.role || 'member';
-            document.getElementById('avatarInitial').textContent = name.charAt(0).toUpperCase();
+    let allRanked = [];
+    let currentUid = null;
 
-            if (['admin', 'superadmin'].includes(data.role)) {
-                document.getElementById('adminLink').classList.remove('hidden');
-                document.getElementById('logsLink').classList.remove('hidden');
+    onAuthStateChanged(auth, async (user) => {
+        if (!user || !user.emailVerified) {
+            window.location.href = '/public/pages/login.html';
+            return;
+        }
+        currentUid = user.uid;
+        await loadLeaderboard();
+        setupAutoLogout();
+    });
+
+    async function loadLeaderboard() {
+        try {
+            // Ambil semua user aktif, urutkan by XP
+            const snap = await getDocs(query(
+                collection(db, 'users'),
+                where('status', 'in', ['active', 'npc']),
+                orderBy('xpCache', 'desc')
+            ));
+
+            allRanked = snap.docs.map((d, i) => ({
+                uid: d.id,
+                rank: i + 1,
+                ...d.data()
+            }));
+
+            // Populate division filter
+            const divisions = [...new Set(allRanked.map(m => m.division).filter(Boolean))].sort();
+            const divSelect = document.getElementById('filterDivision');
+            divisions.forEach(div => {
+                const opt = document.createElement('option');
+                opt.value = div;
+                opt.textContent = div;
+                divSelect.appendChild(opt);
+            });
+
+            renderPodium();
+            renderMyRank();
+            applyFilter();
+
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+
+        } catch (err) {
+            console.error('Leaderboard error:', err);
+        }
+    }
+
+    function renderPodium() {
+        const top3 = allRanked.slice(0, 3);
+        const podiumOrder = [top3[1], top3[0], top3[2]]; // 2nd, 1st, 3rd
+
+        ['p2', 'p1', 'p3'].forEach((prefix, i) => {
+            const m = podiumOrder[i];
+            if (!m) {
+                document.getElementById(`podium${i === 1 ? 1 : i === 0 ? 2 : 3}`).style.opacity = '0.3';
+                return;
             }
-            if (data.role === 'pengurus') document.getElementById('adminLink').classList.remove('hidden');
+            document.getElementById(`${prefix}avatar`).textContent = (m.name || 'U')[0].toUpperCase();
+            document.getElementById(`${prefix}name`).textContent = m.name || '-';
+            document.getElementById(`${prefix}div`).textContent = m.division || '-';
+            document.getElementById(`${prefix}xp`).textContent = (m.xpCache || 0).toLocaleString();
+        });
+    }
 
-            await loadLeaderboard();
+    function renderMyRank() {
+        const me = allRanked.find(m => m.uid === currentUid);
+        if (!me) return;
+        document.getElementById('myRankCard').classList.remove('hidden');
+        document.getElementById('myRankNum').textContent = `#${me.rank}`;
+        document.getElementById('myRankName').textContent = me.name || '-';
+        document.getElementById('myRankXP').textContent = `${(me.xpCache || 0).toLocaleString()} XP`;
+    }
+
+    window.applyFilter = function() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const team = document.getElementById('filterTeam').value;
+        const division = document.getElementById('filterDivision').value;
+        const show = document.getElementById('filterShow').value;
+
+        let filtered = allRanked.filter(m => {
+            const matchSearch = !search || (m.name || '').toLowerCase().includes(search) || (m.memberId || '').toLowerCase().includes(search);
+            const matchTeam = !team || m.team === team;
+            const matchDiv = !division || m.division === division;
+            return matchSearch && matchTeam && matchDiv;
         });
 
-        async function loadLeaderboard() {
-            try {
-                const q = query(collection(db, 'users'), orderBy('xpCache', 'desc'));
-                const snapshot = await getDocs(q);
+        // Re-rank dalam filter
+        filtered = filtered.map((m, i) => ({ ...m, filteredRank: i + 1 }));
 
-                const users = snapshot.docs
-                    .map((doc, index) => ({ rank: index + 1, uid: doc.id, ...doc.data() }))
-                    .filter(u => u.status !== 'suspended');
+        if (show === 'top10') filtered = filtered.slice(0, 10);
+        else if (show === 'top25') filtered = filtered.slice(0, 25);
+        else if (show === 'top50') filtered = filtered.slice(0, 50);
 
-                document.getElementById('totalMembers').textContent = `${users.length} anggota`;
+        document.getElementById('rankCountLabel').textContent = `${filtered.length} member${filtered.length !== 1 ? 's' : ''}`;
+        renderRankingTable(filtered);
+    };
 
-                // Podium top 3
-                const podiumEl = document.getElementById('podium');
-                const podiumOrder = [1, 0, 2]; // tampilkan: 2nd, 1st, 3rd
-
-                podiumEl.innerHTML = podiumOrder.map(i => {
-                    const u = users[i];
-                    if (!u) return '<div></div>';
-                    const isMe = u.uid === currentUid;
-                    return `
-                        <div class="glass border rounded-xl p-4 text-center ${i === 0 ? 'rank-1 md:scale-110' : i === 1 ? 'rank-2' : 'rank-3'} ${isMe ? 'ring-2 ring-ng-red' : ''}">
-                            <div class="text-3xl mb-2">${podiumIcons[i]}</div>
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-ng-red to-ng-blue flex items-center justify-center text-lg font-bold mx-auto mb-2">
-                                ${(u.displayName || 'U').charAt(0).toUpperCase()}
-                            </div>
-                            <p class="font-bold text-sm truncate">${u.displayName || 'Unknown'}${isMe ? ' (Kamu)' : ''}</p>
-                            <p class="text-ng-red font-bold text-lg">${u.xpCache || 0} XP</p>
-                            <p class="text-gray-500 text-xs">${u.attendanceCount || 0}x hadir</p>
-                        </div>
-                    `;
-                }).join('');
-
-                // Full list
-                const listEl = document.getElementById('leaderboardList');
-                listEl.innerHTML = users.map(u => {
-                    const isMe = u.uid === currentUid;
-                    return `
-                        <div class="leaderboard-item flex items-center gap-4 py-3 px-2 border-b border-white/5 last:border-0 rounded-lg ${isMe ? 'bg-ng-red/10' : ''}">
-                            <span class="text-lg w-8 text-center">${rankIcon}</span>
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-ng-red to-ng-blue flex items-center justify-center text-sm font-bold flex-shrink-0">
-                                ${(u.displayName || 'U').charAt(0).toUpperCase()}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold truncate">${u.displayName || 'Unknown'}${isMe ? ' <span class="text-ng-red text-xs">(Kamu)</span>' : ''}</p>
-                                <p class="text-xs text-gray-500">${u.attendanceCount || 0}x hadir</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-ng-red">${u.xpCache || 0}</p>
-                                <p class="text-gray-500 text-xs">XP</p>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-            } catch (error) {
-                console.error('Leaderboard error:', error);
-            }
+    function renderRankingTable(members) {
+        if (members.length === 0) {
+            document.getElementById('rankingBody').innerHTML =
+                '<tr><td colspan="7" style="padding:40px;text-align:center;color:#6b7280;">No members match the filter</td></tr>';
+            return;
         }
 
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.href = '/public/pages/login.html';
-        });
+        document.getElementById('rankingBody').innerHTML = members.map((m, i) => {
+            const rank = m.filteredRank || m.rank;
+            const isMe = m.uid === currentUid;
+            const level = Math.floor((m.xpCache || 0) / 100) + 1;
 
-        window.openSidebar = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.remove('hidden'); };
-        window.closeSidebar = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.add('hidden'); };
-    </script>
+            let rankDisplay;
+            if (rank === 1) rankDisplay = `<span class="rank-gold" style="font-size:20px;font-family:'Rajdhani',sans-serif;">#1</span>`;
+            else if (rank === 2) rankDisplay = `<span class="rank-silver" style="font-size:18px;font-family:'Rajdhani',sans-serif;">#2</span>`;
+            else if (rank === 3) rankDisplay = `<span class="rank-bronze" style="font-size:18px;font-family:'Rajdhani',sans-serif;">#3</span>`;
+            else rankDisplay = `<span style="color:#6b7280;font-size:13px;font-weight:600;">#${rank}</span>`;
+
+            const rowStyle = isMe
+                ? 'background:rgba(230,57,70,0.07);border-left:3px solid #E63946;'
+                : 'border-bottom:1px solid rgba(255,255,255,0.04);';
+
+            return `
+                <tr style="${rowStyle}transition:background 0.15s;">
+                    <td style="padding:12px 14px;">${rankDisplay}${isMe ? ' <span style="font-size:10px;color:#E63946;font-weight:700;">(you)</span>' : ''}</td>
+                    <td style="padding:12px 14px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="width:32px;height:32px;border-radius:50%;background:rgba(230,57,70,0.2);border:1px solid rgba(230,57,70,0.3);display:flex;align-items:center;justify-content:center;color:#E63946;font-weight:700;font-size:12px;flex-shrink:0;">
+                                ${(m.name || 'U')[0].toUpperCase()}
+                            </div>
+                            <div>
+                                <p style="color:white;font-weight:600;font-size:13px;">${esc(m.name || '-')}${m.role === 'npc' ? ' <span style="font-size:10px;background:rgba(139,92,246,0.2);color:#a78bfa;padding:1px 6px;border-radius:999px;border:1px solid rgba(139,92,246,0.3);">NPC</span>' : ''}</p>
+                                <p style="color:#6b7280;font-size:11px;">${esc(m.memberId || '-')}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding:12px 14px;color:#9ca3af;font-size:12px;">${esc(m.division || '-')}</td>
+                    <td style="padding:12px 14px;color:#9ca3af;font-size:12px;">${esc(m.team || '-')}</td>
+                    <td style="padding:12px 14px;">
+                        <span style="background:rgba(230,57,70,0.1);color:#E63946;border:1px solid rgba(230,57,70,0.3);padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">Lv.${level}</span>
+                    </td>
+                    <td style="padding:12px 14px;text-align:right;color:white;font-weight:700;font-size:16px;font-family:'Rajdhani',sans-serif;">${(m.xpCache || 0).toLocaleString()}</td>
+                    <td style="padding:12px 14px;color:#f59e0b;font-size:13px;font-weight:600;">&#128293; ${m.streak || 0}</td>
+                </tr>`;
+        }).join('');
+    }
+
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function setupAutoLogout() {
+        let t;
+        const r = () => { clearTimeout(t); t = setTimeout(async () => { await signOut(auth); window.location.href='/public/pages/login.html'; }, 30*60*1000); };
+        ['click','keypress','scroll','touchstart'].forEach(e => document.addEventListener(e, r));
+        r();
+    }
+
+    window.handleLogout = async () => { await signOut(auth); window.location.href = '/public/pages/login.html'; };
+</script>
 </body>
 </html>

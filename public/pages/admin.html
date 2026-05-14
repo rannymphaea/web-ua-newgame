@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEWGAME - Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -20,289 +22,1011 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
         * { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; }
+        h1, h2, h3, h4, .font-display { font-family: 'Rajdhani', sans-serif; }
+        code, .mono { font-family: 'JetBrains Mono', monospace; }
 
-        .bg-logo {
-            position: fixed;
-            inset: 0;
-            background: url('../../assets/logo unandnewgame.png') center/cover no-repeat;
-            filter: blur(40px) brightness(0.08);
-            transform: scale(1.2);
-            z-index: 0;
-        }
+        /* ============================================================
+           Scrollbar kustom agar sesuai tema gelap
+        ============================================================ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(230,57,70,0.5); }
 
+        /* ============================================================
+           Glass card — dipakai di semua card panel
+        ============================================================ */
         .glass {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.04);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .glass-hover:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(230,57,70,0.3);
+            transition: all 0.2s ease;
         }
 
-        .glass-dark {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+        /* ============================================================
+           Sidebar navigation
+        ============================================================ */
+        .sidebar { width: 240px; min-width: 240px; }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px; border-radius: 8px;
+            color: #9ca3af; font-size: 14px; font-weight: 500;
+            transition: all 0.2s ease; cursor: pointer;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+        .nav-item.active {
+            background: rgba(230,57,70,0.15);
+            color: #E63946;
+            border-left: 3px solid #E63946;
+        }
+        .nav-section {
+            font-size: 10px; font-weight: 700; letter-spacing: 2px;
+            color: #4b5563; text-transform: uppercase; padding: 12px 16px 6px;
         }
 
-        .fade-in {
-            animation: fadeIn 0.6s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* ============================================================
+           Tombol utama
+        ============================================================ */
         .btn-primary {
             background: linear-gradient(135deg, #E63946, #c1121f);
-            transition: all 0.3s ease;
+            color: white; font-weight: 600; padding: 8px 18px;
+            border-radius: 8px; font-size: 14px;
+            transition: all 0.2s ease; border: none; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
         }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(230, 57, 70, 0.4);
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(230,57,70,0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.07);
+            color: #d1d5db; font-weight: 500; padding: 8px 18px;
+            border-radius: 8px; font-size: 14px;
+            transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
         }
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); color: white; }
+
+        .btn-danger {
+            background: rgba(220,38,38,0.15); color: #f87171;
+            font-weight: 500; padding: 6px 14px; border-radius: 6px;
+            font-size: 13px; border: 1px solid rgba(220,38,38,0.3);
+            transition: all 0.2s ease; cursor: pointer;
+        }
+        .btn-danger:hover { background: rgba(220,38,38,0.3); }
+
+        .btn-success {
+            background: rgba(34,197,94,0.15); color: #4ade80;
+            font-weight: 500; padding: 6px 14px; border-radius: 6px;
+            font-size: 13px; border: 1px solid rgba(34,197,94,0.3);
+            transition: all 0.2s ease; cursor: pointer;
+        }
+        .btn-success:hover { background: rgba(34,197,94,0.3); }
+
+        /* ============================================================
+           Input field
+        ============================================================ */
+        .input-field {
+            width: 100%; background: rgba(255,255,255,0.05);
+            color: white; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1); font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .input-field:focus { outline: none; border-color: #E63946; box-shadow: 0 0 0 2px rgba(230,57,70,0.2); }
+        .input-field::placeholder { color: #4b5563; }
+
+        select.input-field option { background: #111827; color: white; }
+
+        /* ============================================================
+           Badge status anggota
+        ============================================================ */
+        .badge {
+            display: inline-flex; align-items: center;
+            padding: 2px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .badge-active { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+        .badge-afk { background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
+        .badge-resign { background: rgba(107,114,128,0.15); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+        .badge-npc { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .badge-suspended { background: rgba(220,38,38,0.15); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
+
+        /* Badge role */
+        .role-presiden { background: rgba(250,204,21,0.15); color: #fbbf24; border: 1px solid rgba(250,204,21,0.3); }
+        .role-superadmin { background: rgba(230,57,70,0.15); color: #E63946; border: 1px solid rgba(230,57,70,0.3); }
+        .role-admin { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .role-inventori { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .role-member { background: rgba(255,255,255,0.08); color: #9ca3af; border: 1px solid rgba(255,255,255,0.15); }
+        .role-npc { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+
+        /* ============================================================
+           QR countdown ring
+        ============================================================ */
+        .qr-ring {
+            width: 260px; height: 260px;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qr-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+        .qr-ring-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 6; }
+        .qr-ring-progress {
+            fill: none; stroke: #E63946; stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 753; /* 2 * pi * r = 2 * pi * 120 */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+        }
+        #qrCanvas { border-radius: 12px; }
+
+        /* ============================================================
+           Table
+        ============================================================ */
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .data-table thead th {
+            padding: 10px 14px; text-align: left;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: #6b7280; border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .data-table tbody tr {
+            transition: background 0.15s ease;
+        }
+        .data-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .data-table tbody td {
+            padding: 12px 14px; font-size: 13px; color: #d1d5db;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
         }
 
-        .accent-line {
-            height: 2px;
-            background: linear-gradient(90deg, #E63946, #1D3557, #457B9D);
-            border-radius: 999px;
+        /* ============================================================
+           Modal overlay
+        ============================================================ */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 50;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-box {
+            background: #0f1117; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 28px; width: 100%; max-width: 520px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
         }
 
-        .nav-link { transition: all 0.2s ease; }
-        .nav-link:hover { background: rgba(230, 57, 70, 0.15); color: #E63946; }
-        .nav-link.active { background: rgba(230, 57, 70, 0.2); color: #E63946; border-left: 3px solid #E63946; }
+        /* ============================================================
+           Toast notification
+        ============================================================ */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 100;
+            padding: 12px 20px; border-radius: 10px;
+            font-size: 14px; font-weight: 500;
+            display: flex; align-items: center; gap: 10px;
+            animation: toastIn 0.3s ease;
+            min-width: 280px; max-width: 400px;
+        }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #4ade80; }
+        .toast-error { background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.4); color: #f87171; }
+        .toast-info { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); color: #60a5fa; }
 
-        #sidebar { transition: transform 0.3s ease; }
+        /* ============================================================
+           Animasi fade in untuk tiap section
+        ============================================================ */
+        .section-fade { animation: fadeSection 0.3s ease; }
+        @keyframes fadeSection { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ============================================================
+           Mobile hamburger
+        ============================================================ */
         @media (max-width: 768px) {
-            #sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 50; transform: translateX(-100%); }
-            #sidebar.open { transform: translateX(0); }
+            .sidebar { position: fixed; left: -240px; top: 0; height: 100%; z-index: 40; transition: left 0.3s ease; background: #0a0c12; }
+            .sidebar.open { left: 0; }
         }
 
-        /* QR Container */
-        #qrContainer canvas {
-            border-radius: 12px;
+        /* ============================================================
+           Stat card gradient border
+        ============================================================ */
+        .stat-card {
+            position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(230,57,70,0.3), transparent, rgba(69,123,157,0.2));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
         }
 
-        /* Countdown timer */
-        .countdown-ring {
-            transition: stroke-dashoffset 1s linear;
+        /* ============================================================
+           CSV drop zone
+        ============================================================ */
+        .drop-zone {
+            border: 2px dashed rgba(255,255,255,0.12); border-radius: 12px;
+            padding: 40px; text-align: center;
+            transition: all 0.2s ease; cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: #E63946;
+            background: rgba(230,57,70,0.05);
+        }
+
+        /* ============================================================
+           Accent bar di atas halaman
+        ============================================================ */
+        .accent-bar {
+            height: 3px;
+            background: linear-gradient(90deg, #E63946 0%, #1D3557 50%, #457B9D 100%);
         }
     </style>
 </head>
-<body class="bg-black min-h-screen text-white overflow-x-hidden">
 
-    <div class="bg-logo"></div>
-    <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.1) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.2) 0%, transparent 50%);"></div>
+<body class="bg-gray-950 text-white min-h-screen" style="background: #070910;">
 
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+    <!-- Accent bar atas -->
+    <div class="accent-bar fixed top-0 left-0 right-0 z-50"></div>
 
-    <div class="relative z-10 flex min-h-screen">
+    <!-- Toast container -->
+    <div id="toastContainer"></div>
 
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="glass-dark w-64 min-h-screen flex flex-col p-6 md:relative md:transform-none">
-            <div class="flex items-center gap-3 mb-8">
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-10 h-10">
-                <div>
-                    <h1 class="text-xl font-bold tracking-wider">NEWGAME</h1>
-                    <p class="text-gray-500 text-xs">Learn Create Play</p>
-                </div>
-            </div>
-            <div class="accent-line mb-6"></div>
-            <nav class="flex-1 space-y-1">
-                <a href="/public/pages/dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span></span> Dashboard
-                </a>
-                <a href="/public/pages/leaderboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span></span> Leaderboard
-                </a>
-                <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span></span> Absensi
-                </a>
-                <a href="/public/pages/admin.html" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
-                    <span></span> Admin Panel
-                </a>
-                <a href="/public/pages/logs.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400">
-                    <span></span> Logs
-                </a>
-            </nav>
-            <div class="mt-auto">
-                <div class="accent-line mb-4"></div>
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-9 h-9 rounded-full bg-ng-red flex items-center justify-center text-sm font-bold" id="avatarInitial">?</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold truncate" id="sidebarName">Memuat...</p>
-                        <p class="text-xs text-gray-500 truncate" id="sidebarRole">-</p>
+    <!-- Loading overlay saat auth check -->
+    <div id="loadingOverlay" class="fixed inset-0 z-50 bg-gray-950 flex items-center justify-center" style="background: #070910;">
+        <div class="text-center">
+            <div class="w-12 h-12 border-2 border-ng-red border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-400 text-sm">Loading panel...</p>
+        </div>
+    </div>
+
+    <!-- Layout utama -->
+    <div class="flex min-h-screen pt-[3px]">
+
+        <!-- ============================================================
+             SIDEBAR
+        ============================================================ -->
+        <aside class="sidebar glass flex flex-col fixed left-0 top-[3px] h-full z-40 overflow-y-auto" id="sidebar">
+
+            <!-- Brand -->
+            <div class="p-5 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <img src="../../assets/logo.png" alt="NEWGAME" class="w-9 h-9">
+                    <div>
+                        <h2 class="font-display text-lg font-bold text-white leading-none">NEWGAME</h2>
+                        <p class="text-xs text-gray-500 mono">Admin Panel</p>
                     </div>
                 </div>
-                <button id="logoutBtn" class="w-full text-left px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition flex items-center gap-2">
-                    <span></span> Keluar
+            </div>
+
+            <!-- User info mini -->
+            <div class="p-4 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-ng-red/20 border border-ng-red/30 flex items-center justify-center text-ng-red font-bold text-sm" id="sidebarAvatar">-</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-white truncate" id="sidebarName">Loading...</p>
+                        <span class="badge text-xs" id="sidebarRoleBadge">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-3 space-y-1">
+                <p class="nav-section">Overview</p>
+                <div class="nav-item active" onclick="showSection('overview')" id="nav-overview">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Dashboard
+                </div>
+
+                <p class="nav-section" id="nav-section-events">Events</p>
+                <div class="nav-item" onclick="showSection('events')" id="nav-events">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Events
+                </div>
+                <div class="nav-item" onclick="showSection('qr')" id="nav-qr">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                    QR Scanner
+                </div>
+
+                <p class="nav-section" id="nav-section-members">Members</p>
+                <div class="nav-item" onclick="showSection('members')" id="nav-members">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Members
+                </div>
+                <div class="nav-item" onclick="showSection('import')" id="nav-import">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Import CSV
+                </div>
+
+                <p class="nav-section" id="nav-section-xp">XP Management</p>
+                <div class="nav-item" onclick="showSection('xp')" id="nav-xp">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                    Edit XP
+                </div>
+
+                <p class="nav-section" id="nav-section-admin">Administration</p>
+                <div class="nav-item" onclick="showSection('leave')" id="nav-leave">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    Leave Requests
+                </div>
+                <div class="nav-item" onclick="showSection('anomalies')" id="nav-anomalies">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Anomalies
+                </div>
+                <div class="nav-item" onclick="showSection('logs')" id="nav-logs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    System Logs
+                </div>
+            </nav>
+
+            <!-- Tombol logout dan kembali ke dashboard -->
+            <div class="p-4 border-t border-white/5 space-y-2">
+                <button onclick="goToDashboard()" class="btn-secondary w-full text-xs justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Back to Dashboard
+                </button>
+                <button onclick="handleLogout()" class="btn-danger w-full text-xs justify-center flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Sign Out
                 </button>
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <main class="flex-1 p-6 md:p-8 fade-in">
+        <!-- ============================================================
+             MAIN CONTENT
+        ============================================================ -->
+        <main class="flex-1 ml-[240px] p-6 overflow-auto" id="mainContent" style="margin-left: 240px;">
 
-            <!-- HEADER MOBILE -->
-            <div class="flex items-center justify-between mb-6 md:hidden">
-                <button onclick="openSidebar()" class="text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
+            <!-- Mobile header -->
+            <div class="md:hidden flex items-center justify-between mb-4">
+                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="btn-secondary py-2 px-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-8 h-8">
-                <div class="w-6"></div>
+                <h1 class="font-display text-xl font-bold text-white">Admin Panel</h1>
+                <div class="w-10"></div>
             </div>
 
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold">Admin Panel </h2>
-                <p class="text-gray-400 mt-1">Kelola event dan absensi organisasi</p>
-            </div>
-
-            <!-- AKSES DITOLAK (default, disembunyikan jika role valid) -->
-            <div id="accessDenied" class="hidden glass rounded-xl p-8 text-center">
-                <div class="text-5xl mb-4"></div>
-                <h3 class="text-xl font-bold text-red-400 mb-2">Akses Ditolak</h3>
-                <p class="text-gray-400">Kamu tidak memiliki izin untuk mengakses halaman ini.</p>
-                <a href="/public/pages/dashboard.html" class="inline-block mt-4 text-ng-red hover:underline">← Kembali ke Dashboard</a>
-            </div>
-
-            <!-- PANEL UTAMA -->
-            <div id="adminPanel" class="hidden space-y-6">
-
-                <!-- NOTIFIKASI -->
-                <div id="notification" class="hidden px-4 py-3 rounded-lg text-sm font-medium"></div>
-
-                <!-- STATUS EVENT SAAT INI -->
-                <div class="glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-4">Status Event</h3>
-                    <div id="currentEventStatus" class="text-gray-400 text-sm">Memuat...</div>
-                </div>
-
-                <!-- BUAT EVENT BARU -->
-                <div id="createEventSection" class="glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-4"> Buat Event Baru</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Nama Event</label>
-                            <input type="text" id="eventName" placeholder="Contoh: Rapat Bulanan Juni 2026"
-                                class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition placeholder-gray-600">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">XP Hadir</label>
-                                <input type="number" id="xpReward" value="10"
-                                    class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition">
-                            </div>
-                            <div>
-                                <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Penalti Absen</label>
-                                <input type="number" id="xpPenalty" value="5"
-                                    class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition">
-                            </div>
-                        </div>
-                        <button id="startEventBtn" class="btn-primary text-white font-bold px-6 py-3 rounded-lg w-full md:w-auto">
-                             Mulai Event
-                        </button>
+            <!-- ==================== SECTION: OVERVIEW ==================== -->
+            <section id="section-overview" class="section-fade">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">Dashboard Overview</h2>
+                        <p class="text-gray-500 text-sm" id="overviewDate">Loading date...</p>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                        <span class="text-green-400 text-xs font-semibold">System Active</span>
                     </div>
                 </div>
 
-                <!-- GENERATE QR (muncul saat event aktif) -->
-                <div id="qrSection" class="hidden glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-2">📱 QR Absensi</h3>
-                    <p class="text-gray-400 text-sm mb-6">QR otomatis refresh setiap 12 detik. Screenshot tidak berguna.</p>
-
-                    <div class="flex flex-col items-center">
-                        <!-- QR Code -->
-                        <div class="bg-white p-4 rounded-2xl mb-4 relative">
-                            <div id="qrContainer"></div>
-                            <!-- Overlay expired -->
-                            <div id="qrExpiredOverlay" class="hidden absolute inset-0 bg-black/80 rounded-2xl flex items-center justify-center">
-                                <p class="text-white font-bold text-center"><br>Memperbarui...</p>
-                            </div>
-                        </div>
-
-                        <!-- Countdown Timer -->
-                        <div class="flex items-center gap-3 mb-4">
-                            <svg class="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
-                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/>
-                                <circle id="countdownRing" cx="18" cy="18" r="15.9" fill="none" stroke="#E63946" stroke-width="3"
-                                    stroke-dasharray="100 100" stroke-dashoffset="0" class="countdown-ring"/>
-                            </svg>
-                            <div>
-                                <p class="text-2xl font-bold" id="countdownText">12</p>
-                                <p class="text-gray-400 text-xs">detik tersisa</p>
-                            </div>
-                        </div>
-
-                        <p class="text-gray-500 text-xs text-center" id="tokenInfo">Generating...</p>
+                <!-- Stat cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="glass stat-card rounded-xl p-5">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Total Members</p>
+                        <p class="text-3xl font-display font-bold text-white" id="statTotalMembers">-</p>
+                        <p class="text-green-400 text-xs mt-1" id="statActiveMembers">- active</p>
+                    </div>
+                    <div class="glass stat-card rounded-xl p-5">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Total Events</p>
+                        <p class="text-3xl font-display font-bold text-white" id="statTotalEvents">-</p>
+                        <p class="text-blue-400 text-xs mt-1" id="statActiveEvent">No active event</p>
+                    </div>
+                    <div class="glass stat-card rounded-xl p-5">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Pending Leaves</p>
+                        <p class="text-3xl font-display font-bold text-white" id="statPendingLeaves">-</p>
+                        <p class="text-yellow-400 text-xs mt-1">Awaiting approval</p>
+                    </div>
+                    <div class="glass stat-card rounded-xl p-5">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Anomalies</p>
+                        <p class="text-3xl font-display font-bold text-white" id="statAnomalies">-</p>
+                        <p class="text-red-400 text-xs mt-1">Flagged actions</p>
                     </div>
                 </div>
 
-                <!-- TUTUP EVENT (muncul saat event aktif, hanya admin) -->
-                <div id="closeEventSection" class="hidden glass rounded-xl p-6 border border-red-500/20">
-                    <h3 class="text-lg font-bold mb-2 text-red-400"> Tutup Event</h3>
-                    <p class="text-gray-400 text-sm mb-4">Menutup event akan menghitung XP semua anggota. Aksi ini membutuhkan persetujuan 2 admin berbeda.</p>
-
-                    <!-- Status double approval -->
-                    <div id="closeRequestStatus" class="hidden bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
-                        <p class="text-yellow-400 text-sm font-semibold mb-1"> Menunggu Persetujuan</p>
-                        <p class="text-gray-400 text-xs" id="closeRequestInfo">-</p>
-                        <button id="approveCloseBtn" class="mt-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-4 py-2 rounded-lg text-sm transition">
-                            Setujui Penutupan
-                        </button>
+                <!-- Active event info + quick actions -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="glass rounded-xl p-5">
+                        <h3 class="font-display text-lg font-bold text-white mb-3">Active Event</h3>
+                        <div id="activeEventInfo">
+                            <p class="text-gray-500 text-sm">No active event at the moment.</p>
+                        </div>
                     </div>
+                    <div class="glass rounded-xl p-5">
+                        <h3 class="font-display text-lg font-bold text-white mb-3">Quick Actions</h3>
+                        <div class="space-y-2" id="quickActions">
+                            <button onclick="showSection('events')" class="btn-secondary w-full justify-start text-sm">
+                                Create New Event
+                            </button>
+                            <button onclick="showSection('members')" class="btn-secondary w-full justify-start text-sm">
+                                Manage Members
+                            </button>
+                            <button onclick="showSection('import')" class="btn-secondary w-full justify-start text-sm">
+                                Import CSV Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-                    <button id="closeEventBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg transition">
-                         Request Tutup Event
+            <!-- ==================== SECTION: EVENTS ==================== -->
+            <section id="section-events" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">Event Management</h2>
+                        <p class="text-gray-500 text-sm">Create and manage attendance events</p>
+                    </div>
+                    <button onclick="openModal('modalCreateEvent')" class="btn-primary" id="btnCreateEvent">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        New Event
                     </button>
                 </div>
 
-                <!-- ANOMALY ALERTS -->
-                <div class="glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-4"> Anomaly Detection</h3>
-                    <div id="anomalyList">
-                        <p class="text-gray-500 text-sm text-center py-4">Tidak ada anomaly terdeteksi</p>
+                <!-- Daftar event -->
+                <div class="glass rounded-xl overflow-hidden">
+                    <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                        <h3 class="font-semibold text-white text-sm">All Events</h3>
+                        <span class="text-gray-500 text-xs" id="eventCount">Loading...</span>
+                    </div>
+                    <div id="eventList" class="p-4">
+                        <p class="text-gray-500 text-sm">Loading events...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SECTION: QR SCANNER ==================== -->
+            <section id="section-qr" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">QR Attendance</h2>
+                        <p class="text-gray-500 text-sm">Generate rotating QR codes for attendance</p>
                     </div>
                 </div>
 
-                <!-- DAFTAR USER (superadmin only) -->
-                <div id="userManagementSection" class="hidden glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-4"> Manajemen User</h3>
-                    <div id="userList" class="space-y-3">
-                        <p class="text-gray-500 text-sm text-center py-4">Memuat...</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- QR Display -->
+                    <div class="glass rounded-xl p-6 flex flex-col items-center">
+                        <h3 class="font-display text-lg font-bold text-white mb-4">Live QR Code</h3>
+
+                        <div id="noActiveEventQR" class="">
+                            <p class="text-gray-500 text-sm text-center mb-4">No active event. Start an event to generate QR.</p>
+                            <button onclick="showSection('events')" class="btn-secondary text-sm">Go to Events</button>
+                        </div>
+
+                        <div id="qrDisplay" class="hidden flex-col items-center">
+                            <div class="qr-ring mb-4">
+                                <svg viewBox="0 0 260 260" width="260" height="260">
+                                    <circle class="qr-ring-track" cx="130" cy="130" r="120"/>
+                                    <circle class="qr-ring-progress" id="qrProgressRing" cx="130" cy="130" r="120"/>
+                                </svg>
+                                <div id="qrCanvas" class="w-[220px] h-[220px] bg-white rounded-xl p-2 flex items-center justify-center">
+                                    <p class="text-gray-400 text-sm text-center">Generating...</p>
+                                </div>
+                            </div>
+
+                            <div class="text-center mb-4">
+                                <p class="text-white font-semibold" id="qrEventName">Event Name</p>
+                                <p class="text-gray-400 text-xs mono" id="qrTokenId">Token: -</p>
+                                <div class="flex items-center justify-center gap-2 mt-1">
+                                    <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                                    <span id="qrCountdownText" class="text-green-400 text-sm font-bold mono">-- sec</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button onclick="generateNewToken()" class="btn-primary text-sm" id="btnGenQR">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    Refresh QR
+                                </button>
+                                <button onclick="closeActiveEvent()" class="btn-danger text-sm" id="btnCloseEvent">
+                                    Close Event
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attendance list realtime -->
+                    <div class="glass rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display text-lg font-bold text-white">Present</h3>
+                            <span class="badge badge-active" id="presentCount">0 members</span>
+                        </div>
+                        <div id="presentList" class="space-y-2 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500 text-sm">No attendance records yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SECTION: MEMBERS ==================== -->
+            <section id="section-members" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">Member Management</h2>
+                        <p class="text-gray-500 text-sm">View, filter, and manage all registered members</p>
                     </div>
                 </div>
 
-            </div>
+                <!-- Filter bar -->
+                <div class="glass rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+                    <input type="text" id="memberSearch" placeholder="Search name or ID..."
+                        class="input-field flex-1 min-w-[180px]" oninput="filterMembers()">
+                    <select id="memberFilterRole" class="input-field w-auto" onchange="filterMembers()">
+                        <option value="">All Roles</option>
+                        <option value="presiden">Presiden</option>
+                        <option value="superadmin">Superadmin</option>
+                        <option value="admin">Admin</option>
+                        <option value="inventori">Inventori</option>
+                        <option value="member">Member</option>
+                        <option value="npc">NPC</option>
+                    </select>
+                    <select id="memberFilterStatus" class="input-field w-auto" onchange="filterMembers()">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                    <select id="memberFilterTeam" class="input-field w-auto" onchange="filterMembers()">
+                        <option value="">All Teams</option>
+                        <option value="Core">Core</option>
+                        <option value="Project">Project</option>
+                        <option value="Training">Training</option>
+                        <option value="FamilyGame">FamilyGame</option>
+                        <option value="Alliance">Alliance</option>
+                        <option value="Inventory">Inventory</option>
+                        <option value="DesignCraft">DesignCraft</option>
+                        <option value="NewMember">NewMember</option>
+                    </select>
+                </div>
+
+                <!-- Member table -->
+                <div class="glass rounded-xl overflow-hidden">
+                    <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                        <span class="text-gray-400 text-sm" id="memberCountLabel">Loading...</span>
+                        <button onclick="exportMembersCSV()" class="btn-secondary text-xs py-1.5">Export CSV</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Member ID</th>
+                                    <th>Name</th>
+                                    <th>Division</th>
+                                    <th>Team</th>
+                                    <th>Role</th>
+                                    <th>XP</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="memberTableBody">
+                                <tr><td colspan="8" class="text-center text-gray-500 py-8">Loading members...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SECTION: IMPORT CSV ==================== -->
+            <section id="section-import" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">Import Members</h2>
+                        <p class="text-gray-500 text-sm">Upload CSV file to import member data in bulk</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Upload area -->
+                    <div class="space-y-4">
+                        <div class="glass rounded-xl p-5">
+                            <h3 class="font-display text-lg font-bold text-white mb-3">CSV Format</h3>
+                            <p class="text-gray-400 text-sm mb-3">Your CSV file must have these columns in order:</p>
+                            <div class="bg-black/30 rounded-lg p-3 mono text-xs text-green-400 mb-3">
+                                memberId,name,division,status,team
+                            </div>
+                            <p class="text-gray-500 text-xs mb-2">Example rows:</p>
+                            <div class="bg-black/30 rounded-lg p-3 mono text-xs text-gray-400 space-y-1">
+                                <p>NG11001001GL,Zulfi Ariyan,Game Logic,ACTIVE,Project</p>
+                                <p>NG11004009GD,Abdullah Azzam,Game Design,ACTIVE,Core</p>
+                                <p>NG11018034PG,Ahmad Adzani,Game Logic,ACTIVE,NewMember</p>
+                            </div>
+                            <div class="mt-3 space-y-1">
+                                <p class="text-gray-500 text-xs">Valid status values: <span class="text-white">ACTIVE, AFK, RESIGN, GLORY, NPC</span></p>
+                                <p class="text-gray-500 text-xs">AFK, RESIGN, GLORY = will be imported but cannot register</p>
+                                <p class="text-gray-500 text-xs">Member ID must start with <span class="text-ng-red">NG</span></p>
+                            </div>
+                            <button onclick="downloadCSVTemplate()" class="btn-secondary text-xs mt-3 w-full justify-center">
+                                Download Template CSV
+                            </button>
+                        </div>
+
+                        <!-- Drop zone -->
+                        <div class="drop-zone" id="dropZone"
+                             onclick="document.getElementById('csvFileInput').click()"
+                             ondragover="handleDragOver(event)"
+                             ondragleave="handleDragLeave(event)"
+                             ondrop="handleDrop(event)">
+                            <svg class="w-10 h-10 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <p class="text-gray-400 text-sm font-medium">Drop CSV file here or click to browse</p>
+                            <p class="text-gray-600 text-xs mt-1">Supports .csv files only</p>
+                            <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleFileSelect(event)">
+                        </div>
+                    </div>
+
+                    <!-- Preview dan hasil import -->
+                    <div class="glass rounded-xl p-5">
+                        <h3 class="font-display text-lg font-bold text-white mb-3">Preview</h3>
+
+                        <div id="importIdle">
+                            <p class="text-gray-500 text-sm">Upload a CSV file to preview the data before importing.</p>
+                        </div>
+
+                        <div id="importPreview" class="hidden">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <p class="text-white font-semibold text-sm" id="previewCount">0 members</p>
+                                    <p class="text-gray-500 text-xs" id="previewValid">0 valid, 0 errors</p>
+                                </div>
+                                <button onclick="confirmImport()" class="btn-primary text-sm" id="btnConfirmImport">
+                                    Import All
+                                </button>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto space-y-1" id="previewList"></div>
+                        </div>
+
+                        <div id="importResult" class="hidden">
+                            <div class="text-center py-4">
+                                <div class="w-14 h-14 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <p class="text-white font-semibold mb-1">Import Complete</p>
+                                <p class="text-gray-400 text-sm" id="importResultText">-</p>
+                            </div>
+                            <div id="passwordExportSection" class="hidden mt-4">
+                                <p class="text-yellow-400 text-sm font-semibold mb-2">Temporary Passwords Generated</p>
+                                <p class="text-gray-400 text-xs mb-3">Download and distribute these passwords to each member. Keep this file secure.</p>
+                                <button onclick="downloadPasswordCSV()" class="btn-primary w-full text-sm justify-center">
+                                    Download Password CSV
+                                </button>
+                            </div>
+                            <button onclick="resetImport()" class="btn-secondary w-full text-sm justify-center mt-3">
+                                Import Another File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SECTION: EDIT XP ==================== -->
+            <section id="section-xp" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">XP Management</h2>
+                        <p class="text-gray-500 text-sm">Manually adjust member XP — all changes are logged</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Form edit XP -->
+                    <div class="glass rounded-xl p-5">
+                        <h3 class="font-display text-lg font-bold text-white mb-4">Edit Member XP</h3>
+
+                        <div class="mb-4">
+                            <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Search Member</label>
+                            <input type="text" id="xpMemberSearch" placeholder="Type name or member ID..."
+                                class="input-field" oninput="searchMemberForXP(this.value)">
+                            <div id="xpMemberDropdown" class="mt-1 glass rounded-lg overflow-hidden hidden max-h-48 overflow-y-auto"></div>
+                        </div>
+
+                        <!-- Selected member info -->
+                        <div id="xpSelectedMember" class="hidden mb-4 bg-white/5 rounded-lg p-4 border border-white/10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-ng-red/20 border border-ng-red/30 flex items-center justify-center text-ng-red font-bold text-sm" id="xpMemberAvatar">-</div>
+                                <div>
+                                    <p class="text-white font-semibold text-sm" id="xpMemberName">-</p>
+                                    <p class="text-gray-500 text-xs mono" id="xpMemberId">-</p>
+                                </div>
+                                <div class="ml-auto text-right">
+                                    <p class="text-gray-400 text-xs">Current XP</p>
+                                    <p class="text-white font-bold font-display text-xl" id="xpCurrentValue">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">New XP Value</label>
+                            <input type="number" id="xpNewValue" placeholder="Enter new XP total" min="0"
+                                class="input-field" oninput="updateXPDiff()">
+                            <p class="text-xs mt-1 hidden" id="xpDiffText"></p>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Reason <span class="text-gray-600">(min 5 characters)</span></label>
+                            <textarea id="xpReason" placeholder="e.g. Correction for event #12, bonus for achievement..."
+                                class="input-field resize-none h-24" oninput=""></textarea>
+                        </div>
+
+                        <button onclick="submitXPEdit()" class="btn-primary w-full justify-center" id="btnSubmitXP">
+                            Apply XP Change
+                        </button>
+                    </div>
+
+                    <!-- Riwayat XP manual -->
+                    <div class="glass rounded-xl p-5">
+                        <h3 class="font-display text-lg font-bold text-white mb-4">Recent XP Edits</h3>
+                        <div id="xpHistoryList" class="space-y-2 max-h-[480px] overflow-y-auto">
+                            <p class="text-gray-500 text-sm">Loading XP history...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SECTION: LEAVE REQUESTS ==================== -->
+            <section id="section-leave" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">Leave Requests</h2>
+                        <p class="text-gray-500 text-sm">Review and approve member absence requests</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="leaveFilter" class="input-field w-auto text-sm" onchange="loadLeaveRequests()">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Event</th>
+                                    <th>Reason</th>
+                                    <th>Submitted</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveTableBody">
+                                <tr><td colspan="6" class="text-center text-gray-500 py-8">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SECTION: ANOMALIES ==================== -->
+            <section id="section-anomalies" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">Anomaly Detection</h2>
+                        <p class="text-gray-500 text-sm">Suspicious attendance activity flagged by the system</p>
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Score</th>
+                                    <th>Reasons</th>
+                                    <th>Device</th>
+                                    <th>Detected At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="anomalyTableBody">
+                                <tr><td colspan="6" class="text-center text-gray-500 py-8">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SECTION: LOGS ==================== -->
+            <section id="section-logs" class="section-fade hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-white">System Logs</h2>
+                        <p class="text-gray-500 text-sm">Immutable audit trail of all system activities</p>
+                    </div>
+                    <button onclick="exportLogsCSV()" class="btn-secondary text-sm">Export CSV</button>
+                </div>
+
+                <div class="glass rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+                    <select id="logFilterAction" class="input-field w-auto text-sm" onchange="loadLogs()">
+                        <option value="">All Actions</option>
+                        <option value="attend">Attend</option>
+                        <option value="close_event">Close Event</option>
+                        <option value="manual_xp_edit">XP Edit</option>
+                        <option value="import_members">Import Members</option>
+                        <option value="update_role">Role Update</option>
+                        <option value="approve_leave">Approve Leave</option>
+                        <option value="reject_leave">Reject Leave</option>
+                    </select>
+                    <select id="logFilterResult" class="input-field w-auto text-sm" onchange="loadLogs()">
+                        <option value="">All Results</option>
+                        <option value="success">Success</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                    <input type="date" id="logFilterDate" class="input-field w-auto text-sm" onchange="loadLogs()">
+                </div>
+
+                <div class="glass rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Result</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <tr><td colspan="5" class="text-center text-gray-500 py-8">Loading logs...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 border-t border-white/5 flex justify-center">
+                        <button onclick="loadMoreLogs()" id="btnLoadMoreLogs" class="btn-secondary text-sm hidden">Load More</button>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
-    <!-- QR Code Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
-        integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAXAIn1mDdDA5VIz9l+kHfNRG1Zv4ZPtP7+KE7KQ=="
-        crossorigin="anonymous"></script>
+    <!-- ============================================================
+         MODALS
+    ============================================================ -->
 
-    <!-- Firebase SDK -->
+    <!-- Modal: Create Event -->
+    <div class="modal-overlay hidden" id="modalCreateEvent">
+        <div class="modal-box">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="font-display text-xl font-bold text-white">Create New Event</h3>
+                <button onclick="closeModal('modalCreateEvent')" class="text-gray-500 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Event Name</label>
+                    <input type="text" id="eventName" placeholder="e.g. Weekly Meeting - Week 20"
+                        class="input-field">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">XP Reward</label>
+                        <input type="number" id="eventXPReward" value="10" min="1" max="100" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">XP Penalty</label>
+                        <input type="number" id="eventXPPenalty" value="5" min="0" max="50" class="input-field">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Description <span class="text-gray-600">(optional)</span></label>
+                    <textarea id="eventDescription" placeholder="Additional notes about this event..."
+                        class="input-field resize-none h-20"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Start Mode</label>
+                        <select id="eventStartMode" class="input-field" onchange="toggleScheduleDate()">
+                            <option value="now">Start Immediately</option>
+                            <option value="scheduled">Schedule for Later</option>
+                        </select>
+                    </div>
+                    <div id="scheduleDateWrapper" class="hidden">
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Scheduled Date</label>
+                        <input type="datetime-local" id="eventScheduledDate" class="input-field">
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeModal('modalCreateEvent')" class="btn-secondary flex-1 justify-center">Cancel</button>
+                <button onclick="createEvent()" class="btn-primary flex-1 justify-center" id="btnCreateEventSubmit">Create Event</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Member Role -->
+    <div class="modal-overlay hidden" id="modalEditMember">
+        <div class="modal-box">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="font-display text-xl font-bold text-white">Edit Member</h3>
+                <button onclick="closeModal('modalEditMember')" class="text-gray-500 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="bg-white/5 rounded-lg p-4 mb-4 border border-white/10">
+                <p class="text-white font-semibold" id="editMemberNameDisplay">-</p>
+                <p class="text-gray-400 text-sm mono" id="editMemberIdDisplay">-</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Role</label>
+                    <select id="editMemberRole" class="input-field" id="editMemberRoleSelect"></select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Account Status</label>
+                    <select id="editMemberStatus" class="input-field">
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Team</label>
+                    <select id="editMemberTeam" class="input-field">
+                        <option value="Core">Core</option>
+                        <option value="Project">Project</option>
+                        <option value="Training">Training</option>
+                        <option value="FamilyGame">FamilyGame</option>
+                        <option value="Alliance">Alliance</option>
+                        <option value="Inventory">Inventory</option>
+                        <option value="DesignCraft">DesignCraft</option>
+                        <option value="NewMember">NewMember</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeModal('modalEditMember')" class="btn-secondary flex-1 justify-center">Cancel</button>
+                <button onclick="saveMemberEdit()" class="btn-primary flex-1 justify-center">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Konfirmasi close event -->
+    <div class="modal-overlay hidden" id="modalCloseEvent">
+        <div class="modal-box max-w-sm">
+            <h3 class="font-display text-xl font-bold text-white mb-2">Close Event?</h3>
+            <p class="text-gray-400 text-sm mb-2">This will:</p>
+            <ul class="text-gray-400 text-sm space-y-1 mb-5 list-none">
+                <li>- Invalidate the current QR code</li>
+                <li>- Apply XP penalty to absent members</li>
+                <li>- Mark event as closed permanently</li>
+            </ul>
+            <div id="adminApprovalNote" class="hidden bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                <p class="text-yellow-400 text-sm font-semibold">Admin Approval Required</p>
+                <p class="text-gray-400 text-xs mt-1">Enter the UID of another admin who approves this action:</p>
+                <input type="text" id="approverIdInput" placeholder="Approver UID..."
+                    class="input-field mt-2 text-sm">
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal('modalCloseEvent')" class="btn-secondary flex-1 justify-center">Cancel</button>
+                <button onclick="confirmCloseEvent()" class="btn-danger flex-1">Confirm Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         FIREBASE SCRIPT
+    ============================================================ -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import {
             getAuth, onAuthStateChanged, signOut
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import {
-            getFirestore, doc, getDoc, setDoc, addDoc, updateDoc,
-            collection, query, where, orderBy, limit, getDocs,
-            serverTimestamp, runTransaction, onSnapshot
+            getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
+            query, where, orderBy, limit, startAfter, serverTimestamp, onSnapshot,
+            Timestamp, writeBatch
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // ==========================================
-        // KONFIGURASI FIREBASE
-        // ==========================================
+        // ============================================================
+        // Konfigurasi Firebase — ganti dengan nilai asli
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
             authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
@@ -316,210 +1040,410 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // State
+        // ============================================================
+        // State global — dipakai antar fungsi
+        // ============================================================
         let currentUser = null;
         let currentUserData = null;
-        let currentEvent = null;
+        let currentRole = null;
+        let activeEventId = null;
+        let activeEventData = null;
         let qrInterval = null;
-        let countdownInterval = null;
-        let currentQrCode = null;
+        let qrCountdown = 0;
+        let allMembers = [];
+        let editingMemberId = null;
+        let csvParsedData = [];
+        let importedPasswords = [];
+        let lastLogDoc = null;
+        let xpTargetUserId = null;
+        let qrUnsubscribe = null;
+        let attendanceUnsubscribe = null;
 
-        // ==========================================
-        // CEK AUTH & ROLE
-        // ==========================================
+        // ============================================================
+        // Auth check — semua halaman admin butuh login dan role
+        // ============================================================
         onAuthStateChanged(auth, async (user) => {
             if (!user || !user.emailVerified) {
                 window.location.href = '/public/pages/login.html';
                 return;
             }
 
-            currentUser = user;
             const userDoc = await getDoc(doc(db, 'users', user.uid));
-
             if (!userDoc.exists()) {
+                await signOut(auth);
                 window.location.href = '/public/pages/login.html';
                 return;
             }
 
-            currentUserData = userDoc.data();
-            const role = currentUserData.role;
+            const data = userDoc.data();
+            currentRole = data.role;
 
-            // Update sidebar
-            const name = currentUserData.displayName || user.displayName || 'User';
-            document.getElementById('sidebarName').textContent = name;
-            document.getElementById('sidebarRole').textContent = role;
-            document.getElementById('avatarInitial').textContent = name.charAt(0).toUpperCase();
-
-            // Cek akses — minimal pengurus
-            const allowedRoles = ['pengurus', 'admin', 'superadmin'];
-            if (!allowedRoles.includes(role)) {
-                document.getElementById('accessDenied').classList.remove('hidden');
+            // Hanya role admin ke atas yang boleh masuk
+            const allowedRoles = ['admin', 'inventori', 'superadmin', 'presiden'];
+            if (!allowedRoles.includes(currentRole)) {
+                window.location.href = '/public/pages/dashboard.html';
                 return;
             }
 
-            document.getElementById('adminPanel').classList.remove('hidden');
+            currentUser = user;
+            currentUserData = data;
 
-            // Tampilkan fitur sesuai role
-            if (['admin', 'superadmin'].includes(role)) {
-                document.getElementById('createEventSection').classList.remove('hidden');
-                document.getElementById('closeEventSection').classList.remove('hidden');
-            }
+            // Render UI berdasarkan role
+            setupRoleBasedUI();
 
-            if (role === 'superadmin') {
-                document.getElementById('userManagementSection').classList.remove('hidden');
-                loadUserList();
-            }
+            // Update sidebar info
+            document.getElementById('sidebarName').textContent = data.name || user.email;
+            document.getElementById('sidebarAvatar').textContent = (data.name || 'U')[0].toUpperCase();
+            const roleBadge = document.getElementById('sidebarRoleBadge');
+            roleBadge.textContent = currentRole;
+            roleBadge.className = `badge role-${currentRole}`;
 
-            // Load data
-            await loadCurrentEvent();
-            loadAnomalies();
+            // Load data overview
+            await loadOverviewData();
+
+            // Cek active event
+            await checkActiveEvent();
+
+            // Sembunyikan loading
+            document.getElementById('loadingOverlay').classList.add('hidden');
+
+            // Update tanggal
+            document.getElementById('overviewDate').textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            // Setup auto logout 30 menit
+            setupAutoLogout();
         });
 
-        // ==========================================
-        // LOAD EVENT AKTIF
-        // ==========================================
-        async function loadCurrentEvent() {
+        // ============================================================
+        // Role-based UI — sembunyikan fitur yang tidak boleh diakses
+        // ============================================================
+        function setupRoleBasedUI() {
+            const role = currentRole;
+
+            // Inventori tidak bisa buat event atau generate QR
+            if (role === 'inventori') {
+                document.getElementById('nav-events').classList.add('hidden');
+                document.getElementById('nav-section-events').classList.add('hidden');
+                document.getElementById('nav-qr').classList.add('hidden');
+            }
+
+            // Member dan NPC tidak ada di sini sama sekali (sudah di-block di auth check)
+
+            // Hanya superadmin dan presiden yang bisa import CSV
+            if (!['superadmin', 'presiden'].includes(role)) {
+                document.getElementById('nav-import').classList.add('hidden');
+            }
+
+            // Hanya inventori ke atas yang bisa edit XP
+            // (sudah semua bisa masuk, jadi tidak perlu hide)
+
+            // Role dropdown di modal edit member — batasi berdasarkan role sendiri
+            const roleSelect = document.getElementById('editMemberRole');
+            const roleOptions = {
+                presiden: ['presiden', 'superadmin', 'admin', 'inventori', 'member', 'npc'],
+                superadmin: ['admin', 'inventori', 'member', 'npc'],
+                admin: ['inventori', 'member', 'npc'],
+                inventori: ['member', 'npc']
+            };
+            const allowed = roleOptions[role] || ['member', 'npc'];
+            roleSelect.innerHTML = allowed.map(r =>
+                `<option value="${r}">${r.charAt(0).toUpperCase() + r.slice(1)}</option>`
+            ).join('');
+        }
+
+        // ============================================================
+        // Load data overview
+        // ============================================================
+        async function loadOverviewData() {
             try {
-                const q = query(collection(db, 'events'), where('status', '==', 'active'), limit(1));
-                const snapshot = await getDocs(q);
+                // Total member terdaftar
+                const usersSnap = await getDocs(collection(db, 'users'));
+                const activeCount = usersSnap.docs.filter(d => d.data().status === 'active').length;
+                document.getElementById('statTotalMembers').textContent = usersSnap.size;
+                document.getElementById('statActiveMembers').textContent = `${activeCount} active`;
 
-                const statusEl = document.getElementById('currentEventStatus');
+                // Total events
+                const eventsSnap = await getDocs(collection(db, 'events'));
+                document.getElementById('statTotalEvents').textContent = eventsSnap.size;
 
-                if (snapshot.empty) {
-                    currentEvent = null;
-                    statusEl.innerHTML = '<span class="text-gray-500">Tidak ada event aktif saat ini.</span>';
-                    document.getElementById('qrSection').classList.add('hidden');
+                // Pending leave requests
+                const leaveQ = query(collection(db, 'leaveRequests'), where('status', '==', 'pending'));
+                const leaveSnap = await getDocs(leaveQ);
+                document.getElementById('statPendingLeaves').textContent = leaveSnap.size;
 
-                    // Sembunyikan close event jika tidak ada event
-                    document.getElementById('closeEventSection').classList.add('hidden');
+                // Anomalies
+                const anomalySnap = await getDocs(collection(db, 'anomalies'));
+                document.getElementById('statAnomalies').textContent = anomalySnap.size;
 
-                    // Tampilkan buat event
-                    if (['admin', 'superadmin'].includes(currentUserData.role)) {
-                        document.getElementById('createEventSection').classList.remove('hidden');
-                    }
-                    return;
-                }
-
-                currentEvent = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-
-                statusEl.innerHTML = `
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                        <span class="text-green-400 font-semibold">Event Sedang Berlangsung</span>
-                    </div>
-                    <p class="text-white font-bold text-lg">${currentEvent.name}</p>
-                    <p class="text-gray-400 text-sm">XP Hadir: +${currentEvent.xpReward} | Penalti: -${currentEvent.xpPenalty}</p>
-                `;
-
-                // Tampilkan QR section untuk pengurus ke atas
-                document.getElementById('qrSection').classList.remove('hidden');
-                document.getElementById('createEventSection').classList.add('hidden');
-
-                // Tampilkan close event untuk admin ke atas
-                if (['admin', 'superadmin'].includes(currentUserData.role)) {
-                    document.getElementById('closeEventSection').classList.remove('hidden');
-                    checkCloseRequest();
-                }
-
-                // Mulai generate QR
-                startQRGeneration();
-
-            } catch (error) {
-                console.error('Error loading event:', error);
+            } catch (err) {
+                console.error('loadOverviewData error:', err);
             }
         }
 
-        // ==========================================
-        // MULAI EVENT
-        // ==========================================
-        document.getElementById('startEventBtn')?.addEventListener('click', async () => {
+        // ============================================================
+        // Cek apakah ada event aktif
+        // ============================================================
+        async function checkActiveEvent() {
+            try {
+                const q = query(collection(db, 'events'), where('status', '==', 'active'), limit(1));
+                const snap = await getDocs(q);
+
+                if (!snap.empty) {
+                    const evDoc = snap.docs[0];
+                    activeEventId = evDoc.id;
+                    activeEventData = evDoc.data();
+
+                    // Update overview card
+                    document.getElementById('activeEventInfo').innerHTML = `
+                        <div class="space-y-2">
+                            <p class="text-white font-semibold">${activeEventData.name}</p>
+                            <div class="flex gap-3 text-xs text-gray-400">
+                                <span>+${activeEventData.xpReward} XP reward</span>
+                                <span>-${activeEventData.xpPenalty} XP penalty</span>
+                            </div>
+                            <button onclick="showSection('qr')" class="btn-primary text-sm mt-2">
+                                Open QR Generator
+                            </button>
+                        </div>
+                    `;
+
+                    document.getElementById('statActiveEvent').textContent = 'Event running';
+                } else {
+                    activeEventId = null;
+                    activeEventData = null;
+                }
+
+            } catch (err) {
+                console.error('checkActiveEvent error:', err);
+            }
+        }
+
+        // ============================================================
+        // SECTION: EVENTS — Load semua event
+        // ============================================================
+        async function loadEvents() {
+            try {
+                const q = query(collection(db, 'events'), orderBy('createdAt', 'desc'), limit(50));
+                const snap = await getDocs(q);
+
+                document.getElementById('eventCount').textContent = `${snap.size} events`;
+
+                if (snap.empty) {
+                    document.getElementById('eventList').innerHTML =
+                        '<p class="text-gray-500 text-sm text-center py-8">No events yet. Create your first event.</p>';
+                    return;
+                }
+
+                const html = snap.docs.map(evDoc => {
+                    const ev = evDoc.data();
+                    const statusColors = {
+                        active: 'badge-active', scheduled: 'badge-afk', closed: 'badge-resign'
+                    };
+                    const ts = ev.createdAt ? new Date(ev.createdAt.toDate()).toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+
+                    return `
+                        <div class="flex items-center justify-between py-3 border-b border-white/5 last:border-0 hover:bg-white/2 transition px-1">
+                            <div>
+                                <p class="text-white font-semibold text-sm">${escHtml(ev.name)}</p>
+                                <p class="text-gray-500 text-xs mono">${ts} &bull; +${ev.xpReward}XP / -${ev.xpPenalty}XP</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="badge ${statusColors[ev.status] || 'badge-resign'}">${ev.status}</span>
+                                ${ev.status === 'active' ? `
+                                    <button onclick="showSection('qr')" class="btn-primary text-xs py-1.5 px-3">Open QR</button>
+                                ` : ''}
+                                ${ev.status === 'scheduled' ? `
+                                    <button onclick="activateEvent('${evDoc.id}')" class="btn-success text-xs py-1.5 px-3">Start</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('eventList').innerHTML = html;
+
+            } catch (err) {
+                console.error('loadEvents error:', err);
+                showToast('Failed to load events', 'error');
+            }
+        }
+
+        // ============================================================
+        // Buat event baru
+        // ============================================================
+        window.createEvent = async function() {
             const name = document.getElementById('eventName').value.trim();
-            const xpReward = parseInt(document.getElementById('xpReward').value) || 10;
-            const xpPenalty = parseInt(document.getElementById('xpPenalty').value) || 5;
+            const xpReward = parseInt(document.getElementById('eventXPReward').value) || 10;
+            const xpPenalty = parseInt(document.getElementById('eventXPPenalty').value) || 5;
+            const description = document.getElementById('eventDescription').value.trim();
+            const startMode = document.getElementById('eventStartMode').value;
 
-            if (!name) { showNotification('Nama event tidak boleh kosong', 'error'); return; }
+            if (!name) { showToast('Event name is required', 'error'); return; }
 
-            // Cek sudah ada event aktif
-            const q = query(collection(db, 'events'), where('status', '==', 'active'), limit(1));
-            const existing = await getDocs(q);
-            if (!existing.empty) { showNotification('Sudah ada event aktif! Tutup dulu sebelum membuat baru.', 'error'); return; }
+            const btn = document.getElementById('btnCreateEventSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
 
             try {
-                document.getElementById('startEventBtn').disabled = true;
-                document.getElementById('startEventBtn').textContent = 'Memulai...';
+                // Cek tidak ada event aktif lebih dari satu
+                if (startMode === 'now' && activeEventId) {
+                    showToast('There is already an active event. Close it first.', 'error');
+                    return;
+                }
 
-                // Buat event di Firestore
-                const eventRef = await addDoc(collection(db, 'events'), {
-                    name: name,
-                    status: 'active',
-                    xpReward: xpReward,
-                    xpPenalty: xpPenalty,
-                    startTime: serverTimestamp(),
-                    endTime: null,
+                const eventData = {
+                    name,
+                    xpReward,
+                    xpPenalty,
+                    description,
+                    status: startMode === 'now' ? 'active' : 'scheduled',
                     createdBy: currentUser.uid,
-                    xpDistributed: false
-                });
+                    createdAt: serverTimestamp(),
+                    startTime: startMode === 'now' ? serverTimestamp() : null,
+                    xpDistributed: false,
+                };
 
-                // Catat di log
+                if (startMode === 'scheduled') {
+                    const scheduledDate = document.getElementById('eventScheduledDate').value;
+                    if (!scheduledDate) { showToast('Please set a scheduled date', 'error'); return; }
+                    eventData.scheduledFor = Timestamp.fromDate(new Date(scheduledDate));
+                }
+
+                const docRef = await addDoc(collection(db, 'events'), eventData);
+
+                // Log aksi
                 await addDoc(collection(db, 'logs'), {
                     userId: currentUser.uid,
-                    eventId: eventRef.id,
-                    action: 'start_event',
+                    action: 'create_event',
                     result: 'success',
+                    eventId: docRef.id,
+                    eventName: name,
                     timestamp: serverTimestamp()
                 });
 
-                showNotification(`Event "${name}" berhasil dimulai!`, 'success');
-                await loadCurrentEvent();
+                closeModal('modalCreateEvent');
+                showToast(`Event "${name}" created successfully`, 'success');
 
-            } catch (error) {
-                console.error('Start event error:', error);
-                showNotification('Gagal memulai event. Coba lagi.', 'error');
+                if (startMode === 'now') {
+                    activeEventId = docRef.id;
+                    activeEventData = eventData;
+                    await checkActiveEvent();
+                    showSection('qr');
+                } else {
+                    await loadEvents();
+                }
+
+            } catch (err) {
+                console.error('createEvent error:', err);
+                showToast('Failed to create event', 'error');
             } finally {
-                document.getElementById('startEventBtn').disabled = false;
-                document.getElementById('startEventBtn').textContent = '🚀 Mulai Event';
+                btn.disabled = false;
+                btn.textContent = 'Create Event';
             }
-        });
+        };
 
-        // ==========================================
-        // GENERATE QR CODE
-        // Token baru setiap 12 detik, token lama otomatis invalid
-        // ==========================================
-        async function generateQR() {
-            if (!currentEvent) return;
+        // ============================================================
+        // Aktifkan event yang sudah dijadwalkan
+        // ============================================================
+        window.activateEvent = async function(eventId) {
+            if (activeEventId) {
+                showToast('Close the current active event first', 'error');
+                return;
+            }
+            try {
+                await updateDoc(doc(db, 'events', eventId), {
+                    status: 'active',
+                    startTime: serverTimestamp()
+                });
+                await checkActiveEvent();
+                await loadEvents();
+                showToast('Event activated', 'success');
+            } catch (err) {
+                showToast('Failed to activate event', 'error');
+            }
+        };
+
+        // ============================================================
+        // QR: Load section QR
+        // ============================================================
+        async function loadQRSection() {
+            if (!activeEventId) {
+                document.getElementById('noActiveEventQR').classList.remove('hidden');
+                document.getElementById('qrDisplay').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('noActiveEventQR').classList.add('hidden');
+            document.getElementById('qrDisplay').classList.remove('hidden');
+            document.getElementById('qrDisplay').style.display = 'flex';
+
+            document.getElementById('qrEventName').textContent = activeEventData.name;
+
+            // Generate token pertama
+            await generateNewToken();
+
+            // Load realtime attendance
+            loadRealtimeAttendance();
+        }
+
+        // ============================================================
+        // Generate QR token baru — client-side (tanpa Cloud Functions)
+        // ============================================================
+        window.generateNewToken = async function() {
+            if (!activeEventId) { showToast('No active event', 'error'); return; }
 
             try {
                 // Invalidate token lama
-                const oldTokens = await getDocs(
-                    query(collection(db, 'tokens'),
-                    where('eventId', '==', currentEvent.id),
-                    where('used', '==', false))
+                const oldQ = query(
+                    collection(db, 'tokens'),
+                    where('eventId', '==', activeEventId),
+                    where('used', '==', false)
                 );
-                for (const t of oldTokens.docs) {
-                    await updateDoc(doc(db, 'tokens', t.id), { used: true, invalidatedAt: serverTimestamp() });
-                }
+                const oldSnap = await getDocs(oldQ);
+                const batch = writeBatch(db);
+                oldSnap.docs.forEach(d => batch.update(d.ref, { used: true }));
+                await batch.commit();
 
-                // Buat token baru
-                const tokenId = crypto.randomUUID();
+                // Generate token ID kriptografis
+                const tokenId = generateSecureToken(32);
                 const now = new Date();
                 const expiresAt = new Date(now.getTime() + 12000); // 12 detik
 
                 await setDoc(doc(db, 'tokens', tokenId), {
-                    tokenId: tokenId,
-                    eventId: currentEvent.id,
+                    tokenId,
+                    eventId: activeEventId,
                     createdAt: serverTimestamp(),
-                    expiresAt: expiresAt,
+                    expiresAt: Timestamp.fromDate(expiresAt),
                     used: false,
                     usedBy: null,
-                    deviceFingerprint: null
+                    createdBy: currentUser.uid
                 });
 
-                // Generate URL dengan token di fragment (#)
-                const qrUrl = `${window.location.origin}/index.html#t=${tokenId}`;
+                // Render QR
+                renderQR(tokenId);
+                startQRCountdown(12, expiresAt);
 
-                // Render QR Code
-                document.getElementById('qrContainer').innerHTML = '';
-                currentQrCode = new QRCode(document.getElementById('qrContainer'), {
+                document.getElementById('qrTokenId').textContent = `Token: ${tokenId.slice(0, 12)}...`;
+
+            } catch (err) {
+                console.error('generateNewToken error:', err);
+                showToast('Failed to generate QR token', 'error');
+            }
+        };
+
+        // Render QR code ke canvas
+        function renderQR(tokenId) {
+            const container = document.getElementById('qrCanvas');
+            container.innerHTML = '';
+
+            const qrUrl = `${window.location.origin}/public/pages/scan.html?token=${tokenId}`;
+
+            try {
+                new QRCode(container, {
                     text: qrUrl,
                     width: 200,
                     height: 200,
@@ -527,373 +1451,1129 @@
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.H
                 });
-
-                document.getElementById('tokenInfo').textContent = `Token: ${tokenId.substring(0, 8)}... | Berlaku 12 detik`;
-                document.getElementById('qrExpiredOverlay').classList.add('hidden');
-
-            } catch (error) {
-                console.error('Generate QR error:', error);
+            } catch (e) {
+                container.innerHTML = `<p class="text-red-400 text-xs text-center px-4">QR library not loaded. Check CDN connection.</p>`;
             }
         }
 
-        // ==========================================
-        // MULAI AUTO-REFRESH QR DENGAN COUNTDOWN
-        // ==========================================
-        function startQRGeneration() {
-            // Generate pertama
-            generateQR();
+        // Countdown ring QR
+        function startQRCountdown(seconds, expiresAt) {
+            clearInterval(qrInterval);
 
-            let timeLeft = 12;
-            const circumference = 100;
+            const circumference = 753; // 2 * pi * 120
+            const ring = document.getElementById('qrProgressRing');
 
-            // Clear interval lama jika ada
-            if (qrInterval) clearInterval(qrInterval);
-            if (countdownInterval) clearInterval(countdownInterval);
+            qrInterval = setInterval(() => {
+                const remaining = Math.max(0, Math.ceil((expiresAt - new Date()) / 1000));
+                qrCountdown = remaining;
 
-            // Countdown setiap detik
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('countdownText').textContent = timeLeft;
+                document.getElementById('qrCountdownText').textContent = `${remaining}s`;
 
-                // Update ring
-                const offset = circumference - (timeLeft / 12) * circumference;
-                document.getElementById('countdownRing').style.strokeDashoffset = offset;
+                const progress = remaining / seconds;
+                const offset = circumference * (1 - progress);
+                ring.style.strokeDashoffset = offset;
 
-                if (timeLeft <= 0) {
-                    timeLeft = 12;
-                    document.getElementById('qrExpiredOverlay').classList.remove('hidden');
-                    generateQR();
+                // Warna berubah saat hampir habis
+                if (remaining <= 3) {
+                    ring.style.stroke = '#ef4444';
+                    document.getElementById('qrCountdownText').className = 'text-red-400 text-sm font-bold mono';
+                } else {
+                    ring.style.stroke = '#E63946';
+                    document.getElementById('qrCountdownText').className = 'text-green-400 text-sm font-bold mono';
+                }
+
+                // Auto refresh
+                if (remaining <= 0) {
+                    clearInterval(qrInterval);
+                    generateNewToken();
                 }
             }, 1000);
         }
 
-        // ==========================================
-        // REQUEST TUTUP EVENT
-        // ==========================================
-        document.getElementById('closeEventBtn')?.addEventListener('click', async () => {
-            if (!currentEvent) return;
+        // Load kehadiran realtime untuk event aktif
+        function loadRealtimeAttendance() {
+            if (attendanceUnsubscribe) attendanceUnsubscribe();
+            if (!activeEventId) return;
 
-            // Cooldown check
-            const lastRequest = localStorage.getItem('lastCloseRequest');
-            if (lastRequest && Date.now() - parseInt(lastRequest) < 60000) {
-                showNotification('Tunggu 60 detik sebelum request lagi.', 'error');
-                return;
-            }
-
-            try {
-                await updateDoc(doc(db, 'events', currentEvent.id), {
-                    closeRequest: {
-                        requestedBy: currentUser.uid,
-                        requestedAt: serverTimestamp(),
-                        approvedBy: null,
-                        status: 'pending'
-                    }
-                });
-
-                localStorage.setItem('lastCloseRequest', Date.now().toString());
-
-                await addDoc(collection(db, 'logs'), {
-                    userId: currentUser.uid,
-                    eventId: currentEvent.id,
-                    action: 'request_close_event',
-                    result: 'pending',
-                    timestamp: serverTimestamp()
-                });
-
-                showNotification('Request penutupan event dikirim. Tunggu persetujuan admin lain.', 'success');
-                checkCloseRequest();
-
-            } catch (error) {
-                console.error('Close request error:', error);
-                showNotification('Gagal mengirim request. Coba lagi.', 'error');
-            }
-        });
-
-        // ==========================================
-        // CEK STATUS CLOSE REQUEST
-        // ==========================================
-        async function checkCloseRequest() {
-            if (!currentEvent) return;
-
-            const eventDoc = await getDoc(doc(db, 'events', currentEvent.id));
-            const data = eventDoc.data();
-
-            if (data.closeRequest && data.closeRequest.status === 'pending') {
-                document.getElementById('closeRequestStatus').classList.remove('hidden');
-                document.getElementById('closeRequestInfo').textContent =
-                    `Diminta oleh: ${data.closeRequest.requestedBy.substring(0, 8)}... | Menunggu persetujuan admin lain`;
-
-                // Sembunyikan tombol approve jika yang request adalah diri sendiri
-                if (data.closeRequest.requestedBy === currentUser.uid) {
-                    document.getElementById('approveCloseBtn').classList.add('hidden');
-                } else {
-                    document.getElementById('approveCloseBtn').classList.remove('hidden');
-                }
-            }
-        }
-
-        // ==========================================
-        // APPROVE TUTUP EVENT
-        // ==========================================
-        document.getElementById('approveCloseBtn')?.addEventListener('click', async () => {
-            if (!currentEvent) return;
-
-            try {
-                // Jalankan closeEvent
-                await closeEvent(currentEvent.id);
-                showNotification('Event berhasil ditutup. XP sedang didistribusikan...', 'success');
-
-                // Stop QR generation
-                if (qrInterval) clearInterval(qrInterval);
-                if (countdownInterval) clearInterval(countdownInterval);
-
-                setTimeout(() => loadCurrentEvent(), 2000);
-
-            } catch (error) {
-                console.error('Approve close error:', error);
-                showNotification('Gagal menutup event. Coba lagi.', 'error');
-            }
-        });
-
-        // ==========================================
-        // TUTUP EVENT & DISTRIBUSI XP
-        // ==========================================
-        async function closeEvent(eventId) {
-            // Update status event
-            await updateDoc(doc(db, 'events', eventId), {
-                status: 'closed',
-                endTime: serverTimestamp(),
-                xpDistributed: false,
-                'closeRequest.status': 'approved',
-                'closeRequest.approvedBy': currentUser.uid
-            });
-
-            // Ambil semua user aktif
-            const usersSnapshot = await getDocs(
-                query(collection(db, 'users'), where('status', '==', 'active'))
+            const q = query(
+                collection(db, 'attendance'),
+                where('eventId', '==', activeEventId),
+                where('status', '==', 'present')
             );
 
-            // Ambil semua yang sudah hadir
-            const attendanceSnapshot = await getDocs(
-                query(collection(db, 'attendance'), where('eventId', '==', eventId))
-            );
+            attendanceUnsubscribe = onSnapshot(q, snap => {
+                document.getElementById('presentCount').textContent = `${snap.size} member${snap.size !== 1 ? 's' : ''}`;
 
-            const presentUserIds = new Set(attendanceSnapshot.docs.map(d => d.data().userId));
-            const eventData = (await getDoc(doc(db, 'events', eventId))).data();
-
-            // Distribusi XP per user via transaction
-            for (const userDoc of usersSnapshot.docs) {
-                const userId = userDoc.id;
-                const userData = userDoc.data();
-
-                // Skip user yang baru daftar setelah event mulai
-                if (userData.createdAt && eventData.startTime) {
-                    const userCreated = userData.createdAt.toDate();
-                    const eventStart = eventData.startTime.toDate();
-                    if (userCreated > eventStart) continue;
-                }
-
-                const isPresent = presentUserIds.has(userId);
-                const xpChange = isPresent ? (eventData.xpReward || 10) : -(eventData.xpPenalty || 5);
-
-                await runTransaction(db, async (transaction) => {
-                    const userRef = doc(db, 'users', userId);
-                    const userSnap = await transaction.get(userRef);
-                    if (!userSnap.exists()) return;
-
-                    const currentXP = userSnap.data().xpCache || 0;
-                    const newXP = Math.max(0, currentXP + xpChange); // XP tidak bisa negatif
-                    const currentAttendance = userSnap.data().attendanceCount || 0;
-
-                    transaction.update(userRef, {
-                        xpCache: newXP,
-                        attendanceCount: isPresent ? currentAttendance + 1 : currentAttendance
-                    });
-                });
-
-                // Update attendance record dengan xpChange
-                if (isPresent) {
-                    const attDoc = attendanceSnapshot.docs.find(d => d.data().userId === userId);
-                    if (attDoc) {
-                        await updateDoc(doc(db, 'attendance', attDoc.id), { xpChange: xpChange });
-                    }
-                } else {
-                    // Buat record absent
-                    await addDoc(collection(db, 'attendance'), {
-                        eventId: eventId,
-                        eventName: eventData.name,
-                        userId: userId,
-                        status: 'absent',
-                        xpChange: xpChange,
-                        attendedAt: serverTimestamp()
-                    });
-                }
-            }
-
-            // Tandai XP sudah didistribusi
-            await updateDoc(doc(db, 'events', eventId), { xpDistributed: true });
-
-            // Log
-            await addDoc(collection(db, 'logs'), {
-                userId: currentUser.uid,
-                eventId: eventId,
-                action: 'close_event',
-                result: 'success',
-                timestamp: serverTimestamp()
-            });
-        }
-
-        // ==========================================
-        // LOAD ANOMALIES
-        // ==========================================
-        async function loadAnomalies() {
-            try {
-                const q = query(
-                    collection(db, 'anomalies'),
-                    orderBy('timestamp', 'desc'),
-                    limit(10)
-                );
-                const snapshot = await getDocs(q);
-                const list = document.getElementById('anomalyList');
-
-                if (snapshot.empty) {
-                    list.innerHTML = '<p class="text-gray-500 text-sm text-center py-4"> Tidak ada anomaly terdeteksi</p>';
+                if (snap.empty) {
+                    document.getElementById('presentList').innerHTML =
+                        '<p class="text-gray-500 text-sm">No one has scanned yet.</p>';
                     return;
                 }
 
-                const scoreColors = {
-                    warning: 'border-yellow-500/30 bg-yellow-500/10',
-                    flagged: 'border-orange-500/30 bg-orange-500/10',
-                    blocked: 'border-red-500/30 bg-red-500/10'
-                };
-
-                list.innerHTML = snapshot.docs.map(doc => {
-                    const d = doc.data();
-                    const level = d.score >= 8 ? 'blocked' : d.score >= 6 ? 'flagged' : 'warning';
-                    const levelLabel = { warning: ' Warning', flagged: ' Flagged', blocked: ' Blocked' };
+                const html = snap.docs.slice(0, 50).map(d => {
+                    const rec = d.data();
+                    const time = rec.attendedAt ? rec.attendedAt.toDate().toLocaleTimeString('en-US', {
+                        hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    }) : '-';
                     return `
-                        <div class="border rounded-lg p-4 mb-3 ${scoreColors[level]}">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-semibold">${levelLabel[level]}</span>
-                                <span class="text-xs text-gray-400">Score: ${d.score}</span>
+                        <div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 text-xs font-bold">
+                                    ${(rec.userId || 'U')[0].toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="text-white text-xs font-semibold">${escHtml(rec.userId || '-')}</p>
+                                    <p class="text-gray-500 text-xs mono">${time}</p>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-400">User: ${d.userId?.substring(0, 12)}...</p>
-                            <p class="text-xs text-gray-400">Alasan: ${d.reasons?.join(', ') || '-'}</p>
+                            <span class="text-green-400 text-xs font-bold">+${rec.xpChange || 0} XP</span>
                         </div>
                     `;
                 }).join('');
 
-            } catch (error) {
-                console.error('Load anomalies error:', error);
-            }
+                document.getElementById('presentList').innerHTML = html;
+            });
         }
 
-        // ==========================================
-        // LOAD USER LIST (superadmin only)
-        // ==========================================
-        async function loadUserList() {
+        // ============================================================
+        // Close event
+        // ============================================================
+        window.closeActiveEvent = function() {
+            if (!activeEventId) { showToast('No active event', 'error'); return; }
+
+            const modal = document.getElementById('modalCloseEvent');
+            modal.classList.remove('hidden');
+
+            // Admin biasa perlu approval, superadmin/presiden tidak
+            if (currentRole === 'admin') {
+                document.getElementById('adminApprovalNote').classList.remove('hidden');
+            } else {
+                document.getElementById('adminApprovalNote').classList.add('hidden');
+            }
+        };
+
+        window.confirmCloseEvent = async function() {
+            if (!activeEventId) return;
+
+            // Cek approval untuk admin biasa
+            if (currentRole === 'admin') {
+                const approverId = document.getElementById('approverIdInput').value.trim();
+                if (!approverId || approverId === currentUser.uid) {
+                    showToast('Enter a valid approver UID (must be different from yours)', 'error');
+                    return;
+                }
+            }
+
             try {
-                const snapshot = await getDocs(collection(db, 'users'));
-                const list = document.getElementById('userList');
+                closeModal('modalCloseEvent');
 
-                const roleOptions = ['member', 'pengurus', 'admin', 'superadmin'];
-                const roleColors = {
-                    'member': 'text-blue-400',
-                    'pengurus': 'text-purple-400',
-                    'admin': 'text-yellow-400',
-                    'superadmin': 'text-red-400'
-                };
+                // Stop QR countdown
+                clearInterval(qrInterval);
+                if (attendanceUnsubscribe) attendanceUnsubscribe();
 
-                list.innerHTML = snapshot.docs.map(userDoc => {
-                    const d = userDoc.data();
-                    return `
-                        <div class="flex items-center justify-between py-3 border-b border-white/5">
-                            <div>
-                                <p class="text-sm font-medium">${d.displayName || 'Unknown'}</p>
-                                <p class="text-xs text-gray-500">${d.email || '-'}</p>
-                            </div>
-                            <select
-                                data-uid="${userDoc.id}"
-                                onchange="changeRole(this)"
-                                class="bg-gray-800 text-sm border border-white/10 rounded-lg px-3 py-1 ${roleColors[d.role] || 'text-gray-400'} focus:outline-none"
-                            >
-                                ${roleOptions.map(r => `<option value="${r}" ${d.role === r ? 'selected' : ''}>${r}</option>`).join('')}
-                            </select>
-                        </div>
-                    `;
-                }).join('');
+                // Invalidate semua token aktif
+                const oldQ = query(
+                    collection(db, 'tokens'),
+                    where('eventId', '==', activeEventId),
+                    where('used', '==', false)
+                );
+                const oldSnap = await getDocs(oldQ);
+                const batch = writeBatch(db);
+                oldSnap.docs.forEach(d => batch.update(d.ref, { used: true }));
 
-            } catch (error) {
-                console.error('Load users error:', error);
+                // Ambil semua user aktif
+                const usersQ = query(collection(db, 'users'), where('status', 'in', ['active', 'npc']));
+                const usersSnap = await getDocs(usersQ);
+
+                // Ambil yang sudah hadir
+                const attendedQ = query(
+                    collection(db, 'attendance'),
+                    where('eventId', '==', activeEventId)
+                );
+                const attendedSnap = await getDocs(attendedQ);
+                const presentIds = new Set(attendedSnap.docs.map(d => d.data().userId));
+
+                const eventStartTime = activeEventData.startTime;
+
+                // Distribusi penalti untuk yang tidak hadir
+                for (const userDoc of usersSnap.docs) {
+                    const uid = userDoc.id;
+                    const userData = userDoc.data();
+
+                    // Skip yang daftar setelah event mulai
+                    if (eventStartTime && userData.createdAt) {
+                        if (userData.createdAt.toMillis() > eventStartTime.toMillis()) continue;
+                    }
+
+                    if (!presentIds.has(uid)) {
+                        const penalty = activeEventData.xpPenalty || 5;
+                        const currentXP = userData.xpCache || 0;
+                        const newXP = Math.max(0, currentXP - penalty);
+
+                        batch.update(doc(db, 'users', uid), { xpCache: newXP });
+
+                        const attendanceRef = doc(db, 'attendance', `${activeEventId}_${uid}`);
+                        batch.set(attendanceRef, {
+                            eventId: activeEventId,
+                            eventName: activeEventData.name,
+                            userId: uid,
+                            status: 'absent',
+                            xpChange: -penalty,
+                            attendedAt: serverTimestamp()
+                        });
+                    }
+                }
+
+                // Tutup event
+                batch.update(doc(db, 'events', activeEventId), {
+                    status: 'closed',
+                    closedBy: currentUser.uid,
+                    closedAt: serverTimestamp(),
+                    xpDistributed: true
+                });
+
+                await batch.commit();
+
+                // Log
+                await addDoc(collection(db, 'logs'), {
+                    userId: currentUser.uid,
+                    action: 'close_event',
+                    result: 'success',
+                    eventId: activeEventId,
+                    eventName: activeEventData.name,
+                    timestamp: serverTimestamp()
+                });
+
+                activeEventId = null;
+                activeEventData = null;
+
+                showToast('Event closed. XP distributed to all members.', 'success');
+                showSection('events');
+                await loadOverviewData();
+
+            } catch (err) {
+                console.error('closeEvent error:', err);
+                showToast('Failed to close event: ' + err.message, 'error');
+            }
+        };
+
+        // ============================================================
+        // SECTION: MEMBERS — Load semua user terdaftar
+        // ============================================================
+        async function loadMembers() {
+            try {
+                const snap = await getDocs(collection(db, 'users'));
+                allMembers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderMemberTable(allMembers);
+            } catch (err) {
+                console.error('loadMembers error:', err);
             }
         }
 
-        // ==========================================
-        // GANTI ROLE USER (superadmin only)
-        // ==========================================
-        window.changeRole = async (selectEl) => {
-            const targetUid = selectEl.dataset.uid;
-            const newRole = selectEl.value;
+        function renderMemberTable(members) {
+            document.getElementById('memberCountLabel').textContent = `${members.length} member${members.length !== 1 ? 's' : ''}`;
 
-            // Tidak bisa ubah role diri sendiri
-            if (targetUid === currentUser.uid) {
-                showNotification('Tidak bisa mengubah role diri sendiri.', 'error');
+            if (members.length === 0) {
+                document.getElementById('memberTableBody').innerHTML =
+                    '<tr><td colspan="8" class="text-center text-gray-500 py-8">No members found</td></tr>';
                 return;
             }
 
+            const html = members.map(m => `
+                <tr>
+                    <td class="mono text-xs text-gray-400">${escHtml(m.memberId || '-')}</td>
+                    <td class="font-medium text-white">${escHtml(m.name || '-')}</td>
+                    <td class="text-gray-400 text-xs">${escHtml(m.division || '-')}</td>
+                    <td class="text-gray-400 text-xs">${escHtml(m.team || '-')}</td>
+                    <td><span class="badge role-${m.role || 'member'}">${m.role || 'member'}</span></td>
+                    <td class="font-display font-bold text-white">${m.xpCache || 0}</td>
+                    <td><span class="badge badge-${m.status === 'suspended' ? 'suspended' : 'active'}">${m.status || 'active'}</span></td>
+                    <td>
+                        <button onclick="openEditMember('${m.id}')" class="btn-secondary text-xs py-1.5 px-3">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('memberTableBody').innerHTML = html;
+        }
+
+        window.filterMembers = function() {
+            const search = document.getElementById('memberSearch').value.toLowerCase();
+            const role = document.getElementById('memberFilterRole').value;
+            const status = document.getElementById('memberFilterStatus').value;
+            const team = document.getElementById('memberFilterTeam').value;
+
+            const filtered = allMembers.filter(m => {
+                const matchSearch = !search ||
+                    (m.name || '').toLowerCase().includes(search) ||
+                    (m.memberId || '').toLowerCase().includes(search);
+                const matchRole = !role || m.role === role;
+                const matchStatus = !status || m.status === status;
+                const matchTeam = !team || m.team === team;
+                return matchSearch && matchRole && matchStatus && matchTeam;
+            });
+
+            renderMemberTable(filtered);
+        };
+
+        window.openEditMember = function(uid) {
+            const member = allMembers.find(m => m.id === uid);
+            if (!member) return;
+
+            editingMemberId = uid;
+            document.getElementById('editMemberNameDisplay').textContent = member.name || '-';
+            document.getElementById('editMemberIdDisplay').textContent = member.memberId || uid;
+
+            // Set nilai dropdown sesuai data member
+            const roleSelect = document.getElementById('editMemberRole');
+            for (let opt of roleSelect.options) {
+                opt.selected = opt.value === (member.role || 'member');
+            }
+
+            const statusSelect = document.getElementById('editMemberStatus');
+            for (let opt of statusSelect.options) {
+                opt.selected = opt.value === (member.status || 'active');
+            }
+
+            const teamSelect = document.getElementById('editMemberTeam');
+            for (let opt of teamSelect.options) {
+                opt.selected = opt.value === (member.team || '');
+            }
+
+            openModal('modalEditMember');
+        };
+
+        window.saveMemberEdit = async function() {
+            if (!editingMemberId) return;
+
+            const newRole = document.getElementById('editMemberRole').value;
+            const newStatus = document.getElementById('editMemberStatus').value;
+            const newTeam = document.getElementById('editMemberTeam').value;
+
             try {
-                await updateDoc(doc(db, 'users', targetUid), { role: newRole });
+                await updateDoc(doc(db, 'users', editingMemberId), {
+                    role: newRole,
+                    status: newStatus,
+                    team: newTeam
+                });
+
+                // Log perubahan role
+                await addDoc(collection(db, 'logs'), {
+                    userId: currentUser.uid,
+                    targetUserId: editingMemberId,
+                    action: 'update_role',
+                    result: 'success',
+                    newRole,
+                    newStatus,
+                    timestamp: serverTimestamp()
+                });
+
+                closeModal('modalEditMember');
+                showToast('Member updated successfully', 'success');
+                await loadMembers();
+
+            } catch (err) {
+                showToast('Failed to update member', 'error');
+            }
+        };
+
+        window.exportMembersCSV = function() {
+            const rows = [['memberId', 'name', 'division', 'team', 'role', 'xp', 'status', 'email']];
+            allMembers.forEach(m => {
+                rows.push([m.memberId || '', m.name || '', m.division || '', m.team || '',
+                    m.role || '', m.xpCache || 0, m.status || '', m.email || '']);
+            });
+            downloadCSV(rows, 'members_export.csv');
+            showToast('Members exported to CSV', 'success');
+        };
+
+        // ============================================================
+        // SECTION: IMPORT CSV
+        // ============================================================
+        window.handleDragOver = function(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.add('drag-over');
+        };
+        window.handleDragLeave = function(e) {
+            document.getElementById('dropZone').classList.remove('drag-over');
+        };
+        window.handleDrop = function(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) processCSVFile(file);
+            else showToast('Please upload a .csv file', 'error');
+        };
+        window.handleFileSelect = function(e) {
+            const file = e.target.files[0];
+            if (file) processCSVFile(file);
+        };
+
+        function processCSVFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                parseCSV(text);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(l => l.trim());
+            if (lines.length < 2) { showToast('CSV file is empty or invalid', 'error'); return; }
+
+            // Skip baris header
+            const header = lines[0].toLowerCase();
+            const startIdx = header.includes('memberid') ? 1 : 0;
+
+            csvParsedData = [];
+            let validCount = 0;
+            let errorCount = 0;
+            const previewItems = [];
+
+            for (let i = startIdx; i < lines.length; i++) {
+                const cols = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
+                if (cols.length < 4) {
+                    errorCount++;
+                    previewItems.push({ valid: false, msg: `Row ${i + 1}: not enough columns` });
+                    continue;
+                }
+
+                const [memberId, name, division, status, team] = cols;
+                let error = '';
+
+                if (!memberId.startsWith('NG')) error = 'ID must start with NG';
+                else if (!name) error = 'Name is required';
+                else if (!division) error = 'Division is required';
+
+                if (error) {
+                    errorCount++;
+                    previewItems.push({ valid: false, msg: `${memberId || 'Row ' + (i+1)}: ${error}` });
+                } else {
+                    validCount++;
+                    const tempPassword = generateTempPasswordLocal();
+                    csvParsedData.push({ memberId, name, division, status: (status || 'ACTIVE').toUpperCase(), team: team || '', tempPassword });
+                    previewItems.push({ valid: true, memberId, name, division, status: (status || 'ACTIVE').toUpperCase(), team: team || '' });
+                }
+            }
+
+            document.getElementById('importIdle').classList.add('hidden');
+            document.getElementById('importPreview').classList.remove('hidden');
+            document.getElementById('importResult').classList.add('hidden');
+
+            document.getElementById('previewCount').textContent = `${lines.length - startIdx} rows found`;
+            document.getElementById('previewValid').textContent = `${validCount} valid, ${errorCount} errors`;
+
+            const previewHtml = previewItems.slice(0, 30).map(item => `
+                <div class="flex items-center gap-2 py-1.5 border-b border-white/5">
+                    <div class="w-4 h-4 rounded-full flex items-center justify-center text-xs flex-shrink-0
+                        ${item.valid ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                        ${item.valid ? '+' : 'x'}
+                    </div>
+                    ${item.valid
+                        ? `<div class="flex-1 min-w-0">
+                            <p class="text-white text-xs mono truncate">${escHtml(item.memberId)}</p>
+                            <p class="text-gray-500 text-xs truncate">${escHtml(item.name)} &bull; ${escHtml(item.division)}</p>
+                           </div>
+                           <span class="badge badge-${item.status === 'ACTIVE' ? 'active' : item.status === 'NPC' ? 'npc' : 'resign'} text-xs flex-shrink-0">${item.status}</span>`
+                        : `<p class="text-red-400 text-xs">${escHtml(item.msg)}</p>`
+                    }
+                </div>
+            `).join('');
+
+            document.getElementById('previewList').innerHTML = previewHtml;
+            if (previewItems.length > 30) {
+                document.getElementById('previewList').innerHTML += `<p class="text-gray-500 text-xs text-center py-2">...and ${previewItems.length - 30} more rows</p>`;
+            }
+        }
+
+        window.confirmImport = async function() {
+            if (!csvParsedData.length) { showToast('No valid data to import', 'error'); return; }
+
+            const btn = document.getElementById('btnConfirmImport');
+            btn.disabled = true;
+            btn.textContent = 'Importing...';
+
+            try {
+                let successCount = 0;
+                importedPasswords = [];
+
+                // Proses per batch — Firestore max 500 per batch
+                const batchSize = 400;
+                for (let i = 0; i < csvParsedData.length; i += batchSize) {
+                    const chunk = csvParsedData.slice(i, i + batchSize);
+                    const batch = writeBatch(db);
+
+                    for (const member of chunk) {
+                        const memberRef = doc(db, 'members', member.memberId);
+                        batch.set(memberRef, {
+                            memberId: member.memberId,
+                            name: member.name,
+                            division: member.division,
+                            status: member.status,
+                            team: member.team,
+                            tempPassword: member.tempPassword,
+                            isRegistered: false,
+                            createdAt: serverTimestamp(),
+                            importedBy: currentUser.uid
+                        }, { merge: true });
+
+                        successCount++;
+
+                        if (['ACTIVE', 'NPC'].includes(member.status)) {
+                            importedPasswords.push({
+                                memberId: member.memberId,
+                                name: member.name,
+                                tempPassword: member.tempPassword
+                            });
+                        }
+                    }
+
+                    await batch.commit();
+                }
+
+                // Log import
+                await addDoc(collection(db, 'logs'), {
+                    userId: currentUser.uid,
+                    action: 'import_members',
+                    result: 'success',
+                    totalImported: successCount,
+                    timestamp: serverTimestamp()
+                });
+
+                document.getElementById('importPreview').classList.add('hidden');
+                document.getElementById('importResult').classList.remove('hidden');
+                document.getElementById('importResultText').textContent =
+                    `${successCount} members imported successfully`;
+
+                if (importedPasswords.length > 0) {
+                    document.getElementById('passwordExportSection').classList.remove('hidden');
+                }
+
+                showToast(`${successCount} members imported`, 'success');
+
+            } catch (err) {
+                console.error('confirmImport error:', err);
+                showToast('Import failed: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Import All';
+            }
+        };
+
+        window.downloadPasswordCSV = function() {
+            const rows = [['Member ID', 'Name', 'Temporary Password']];
+            importedPasswords.forEach(p => rows.push([p.memberId, p.name, p.tempPassword]));
+            downloadCSV(rows, 'temp_passwords_CONFIDENTIAL.csv');
+            showToast('Password file downloaded. Keep it secure!', 'info');
+        };
+
+        window.resetImport = function() {
+            csvParsedData = [];
+            importedPasswords = [];
+            document.getElementById('csvFileInput').value = '';
+            document.getElementById('importIdle').classList.remove('hidden');
+            document.getElementById('importPreview').classList.add('hidden');
+            document.getElementById('importResult').classList.add('hidden');
+            document.getElementById('passwordExportSection').classList.add('hidden');
+        };
+
+        window.downloadCSVTemplate = function() {
+            const rows = [
+                ['memberId', 'name', 'division', 'status', 'team'],
+                ['NG11001001GL', 'Zulfi Ariyan', 'Game Logic', 'ACTIVE', 'Project'],
+                ['NG11004009GD', 'Abdullah Azzam Assyafqi', 'Game Design', 'ACTIVE', 'Core'],
+                ['NG11018034PG', 'Ahmad Adzani Gibran', 'Game Logic', 'ACTIVE', 'NewMember']
+            ];
+            downloadCSV(rows, 'member_import_template.csv');
+        };
+
+        // ============================================================
+        // SECTION: EDIT XP — Search member
+        // ============================================================
+        window.searchMemberForXP = function(query) {
+            const dropdown = document.getElementById('xpMemberDropdown');
+
+            if (!query || query.length < 2) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            const results = allMembers.filter(m =>
+                (m.name || '').toLowerCase().includes(query.toLowerCase()) ||
+                (m.memberId || '').toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 8);
+
+            if (results.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            dropdown.innerHTML = results.map(m => `
+                <div class="p-3 hover:bg-white/5 cursor-pointer flex items-center gap-3 border-b border-white/5 last:border-0"
+                     onclick="selectXPMember('${m.id}')">
+                    <div class="w-8 h-8 rounded-full bg-ng-red/20 border border-ng-red/30 flex items-center justify-center text-ng-red font-bold text-xs">
+                        ${(m.name || 'U')[0]}
+                    </div>
+                    <div>
+                        <p class="text-white text-sm font-semibold">${escHtml(m.name)}</p>
+                        <p class="text-gray-500 text-xs mono">${escHtml(m.memberId || m.id)}</p>
+                    </div>
+                    <div class="ml-auto text-right">
+                        <p class="text-white font-bold font-display">${m.xpCache || 0}</p>
+                        <p class="text-gray-500 text-xs">XP</p>
+                    </div>
+                </div>
+            `).join('');
+
+            dropdown.classList.remove('hidden');
+        };
+
+        window.selectXPMember = function(uid) {
+            const member = allMembers.find(m => m.id === uid);
+            if (!member) return;
+
+            xpTargetUserId = uid;
+            document.getElementById('xpMemberDropdown').classList.add('hidden');
+            document.getElementById('xpMemberSearch').value = member.name;
+            document.getElementById('xpSelectedMember').classList.remove('hidden');
+            document.getElementById('xpMemberAvatar').textContent = (member.name || 'U')[0];
+            document.getElementById('xpMemberName').textContent = member.name || '-';
+            document.getElementById('xpMemberId').textContent = member.memberId || uid;
+            document.getElementById('xpCurrentValue').textContent = member.xpCache || 0;
+            document.getElementById('xpNewValue').value = member.xpCache || 0;
+        };
+
+        window.updateXPDiff = function() {
+            const diffEl = document.getElementById('xpDiffText');
+            const member = allMembers.find(m => m.id === xpTargetUserId);
+            if (!member) { diffEl.classList.add('hidden'); return; }
+
+            const newVal = parseInt(document.getElementById('xpNewValue').value) || 0;
+            const diff = newVal - (member.xpCache || 0);
+
+            diffEl.classList.remove('hidden');
+            if (diff > 0) {
+                diffEl.textContent = `+${diff} XP will be added`;
+                diffEl.className = 'text-xs mt-1 text-green-400';
+            } else if (diff < 0) {
+                diffEl.textContent = `${diff} XP will be deducted`;
+                diffEl.className = 'text-xs mt-1 text-red-400';
+            } else {
+                diffEl.textContent = 'No change';
+                diffEl.className = 'text-xs mt-1 text-gray-500';
+            }
+        };
+
+        window.submitXPEdit = async function() {
+            if (!xpTargetUserId) { showToast('Select a member first', 'error'); return; }
+
+            const newXP = parseInt(document.getElementById('xpNewValue').value);
+            const reason = document.getElementById('xpReason').value.trim();
+
+            if (isNaN(newXP) || newXP < 0) { showToast('XP must be 0 or greater', 'error'); return; }
+            if (reason.length < 5) { showToast('Reason must be at least 5 characters', 'error'); return; }
+
+            const member = allMembers.find(m => m.id === xpTargetUserId);
+            const oldXP = member?.xpCache || 0;
+
+            const btn = document.getElementById('btnSubmitXP');
+            btn.disabled = true;
+            btn.textContent = 'Applying...';
+
+            try {
+                await updateDoc(doc(db, 'users', xpTargetUserId), { xpCache: newXP });
+
+                await addDoc(collection(db, 'xpHistory'), {
+                    userId: xpTargetUserId,
+                    oldXP,
+                    newXP,
+                    change: newXP - oldXP,
+                    reason,
+                    changedBy: currentUser.uid,
+                    changedByRole: currentRole,
+                    type: 'manual',
+                    timestamp: serverTimestamp()
+                });
 
                 await addDoc(collection(db, 'logs'), {
                     userId: currentUser.uid,
-                    targetUserId: targetUid,
-                    action: 'change_role',
-                    newRole: newRole,
+                    targetUserId: xpTargetUserId,
+                    action: 'manual_xp_edit',
+                    result: 'success',
+                    oldXP,
+                    newXP,
+                    reason,
+                    timestamp: serverTimestamp()
+                });
+
+                showToast(`XP updated: ${oldXP} → ${newXP}`, 'success');
+                document.getElementById('xpNewValue').value = '';
+                document.getElementById('xpReason').value = '';
+                xpTargetUserId = null;
+                document.getElementById('xpSelectedMember').classList.add('hidden');
+                document.getElementById('xpMemberSearch').value = '';
+
+                // Refresh member list dan riwayat XP
+                await loadMembers();
+                await loadXPHistory();
+
+            } catch (err) {
+                showToast('Failed to update XP', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Apply XP Change';
+            }
+        };
+
+        async function loadXPHistory() {
+            try {
+                const q = query(collection(db, 'xpHistory'), where('type', '==', 'manual'), orderBy('timestamp', 'desc'), limit(20));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    document.getElementById('xpHistoryList').innerHTML =
+                        '<p class="text-gray-500 text-sm">No manual XP edits yet.</p>';
+                    return;
+                }
+
+                const html = snap.docs.map(d => {
+                    const h = d.data();
+                    const ts = h.timestamp ? h.timestamp.toDate().toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+                    const diff = h.newXP - h.oldXP;
+                    return `
+                        <div class="py-2 border-b border-white/5 last:border-0">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <p class="text-white text-xs font-semibold mono">${escHtml(h.userId || '-')}</p>
+                                <span class="text-xs font-bold ${diff >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                    ${diff >= 0 ? '+' : ''}${diff} XP
+                                </span>
+                            </div>
+                            <p class="text-gray-500 text-xs">${escHtml(h.reason || '-')}</p>
+                            <p class="text-gray-600 text-xs">${ts}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('xpHistoryList').innerHTML = html;
+
+            } catch (err) {
+                document.getElementById('xpHistoryList').innerHTML =
+                    '<p class="text-gray-500 text-sm">Failed to load XP history.</p>';
+            }
+        }
+
+        // ============================================================
+        // SECTION: LEAVE REQUESTS
+        // ============================================================
+        async function loadLeaveRequests() {
+            const filterStatus = document.getElementById('leaveFilter').value;
+            try {
+                let q;
+                if (filterStatus) {
+                    q = query(collection(db, 'leaveRequests'), where('status', '==', filterStatus), orderBy('createdAt', 'desc'), limit(50));
+                } else {
+                    q = query(collection(db, 'leaveRequests'), orderBy('createdAt', 'desc'), limit(50));
+                }
+
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    document.getElementById('leaveTableBody').innerHTML =
+                        '<tr><td colspan="6" class="text-center text-gray-500 py-8">No leave requests found</td></tr>';
+                    return;
+                }
+
+                const html = snap.docs.map(d => {
+                    const req = d.data();
+                    const ts = req.createdAt ? req.createdAt.toDate().toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+                    const statusColors = { pending: 'badge-afk', approved: 'badge-active', rejected: 'badge-resign', cancelled: 'badge-resign' };
+
+                    return `
+                        <tr>
+                            <td class="mono text-xs text-gray-400">${escHtml(req.userId || '-')}</td>
+                            <td class="text-gray-400 text-xs">${escHtml(req.eventId || '-')}</td>
+                            <td class="text-gray-300 text-sm max-w-xs truncate">${escHtml(req.reason || '-')}</td>
+                            <td class="text-gray-500 text-xs">${ts}</td>
+                            <td><span class="badge ${statusColors[req.status] || 'badge-resign'}">${req.status}</span></td>
+                            <td>
+                                ${req.status === 'pending' ? `
+                                    <div class="flex gap-1">
+                                        <button onclick="processLeave('${d.id}', true)" class="btn-success text-xs py-1 px-2">Approve</button>
+                                        <button onclick="processLeave('${d.id}', false)" class="btn-danger text-xs py-1 px-2">Reject</button>
+                                    </div>
+                                ` : '<span class="text-gray-600 text-xs">Processed</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('leaveTableBody').innerHTML = html;
+
+            } catch (err) {
+                console.error('loadLeaveRequests error:', err);
+            }
+        }
+
+        window.processLeave = async function(requestId, approved) {
+            try {
+                const requestRef = doc(db, 'leaveRequests', requestId);
+                const requestSnap = await getDoc(requestRef);
+                if (!requestSnap.exists()) { showToast('Request not found', 'error'); return; }
+
+                const request = requestSnap.data();
+
+                await updateDoc(requestRef, {
+                    status: approved ? 'approved' : 'rejected',
+                    processedBy: currentUser.uid,
+                    processedAt: serverTimestamp()
+                });
+
+                if (approved) {
+                    const attendanceId = `${request.eventId}_${request.userId}`;
+                    await setDoc(doc(db, 'attendance', attendanceId), {
+                        eventId: request.eventId,
+                        userId: request.userId,
+                        status: 'excused',
+                        xpChange: 0,
+                        approvedBy: currentUser.uid,
+                        attendedAt: serverTimestamp()
+                    });
+                }
+
+                await addDoc(collection(db, 'notifications'), {
+                    userId: request.userId,
+                    type: 'leave_request',
+                    message: approved ? 'Your leave request has been approved' : 'Your leave request has been rejected',
+                    read: false,
+                    createdAt: serverTimestamp()
+                });
+
+                await addDoc(collection(db, 'logs'), {
+                    userId: currentUser.uid,
+                    targetUserId: request.userId,
+                    action: approved ? 'approve_leave' : 'reject_leave',
                     result: 'success',
                     timestamp: serverTimestamp()
                 });
 
-                showNotification(`Role berhasil diubah ke ${newRole}`, 'success');
+                showToast(`Leave request ${approved ? 'approved' : 'rejected'}`, 'success');
+                await loadLeaveRequests();
 
-            } catch (error) {
-                console.error('Change role error:', error);
-                showNotification('Gagal mengubah role.', 'error');
+            } catch (err) {
+                showToast('Failed to process request', 'error');
             }
         };
 
-        // ==========================================
-        // NOTIFIKASI
-        // ==========================================
-        function showNotification(msg, type) {
-            const el = document.getElementById('notification');
-            el.textContent = msg;
-            el.className = `px-4 py-3 rounded-lg text-sm font-medium ${
-                type === 'success'
-                    ? 'bg-green-500/20 border border-green-500/50 text-green-400'
-                    : 'bg-red-500/20 border border-red-500/50 text-red-400'
-            }`;
-            el.classList.remove('hidden');
-            setTimeout(() => el.classList.add('hidden'), 5000);
+        // ============================================================
+        // SECTION: ANOMALIES
+        // ============================================================
+        async function loadAnomalies() {
+            try {
+                const q = query(collection(db, 'anomalies'), orderBy('timestamp', 'desc'), limit(50));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    document.getElementById('anomalyTableBody').innerHTML =
+                        '<tr><td colspan="6" class="text-center text-gray-500 py-8">No anomalies detected</td></tr>';
+                    return;
+                }
+
+                const html = snap.docs.map(d => {
+                    const a = d.data();
+                    const ts = a.timestamp ? a.timestamp.toDate().toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+                    const scoreColor = a.score >= 6 ? 'text-red-400' : a.score >= 3 ? 'text-yellow-400' : 'text-blue-400';
+
+                    return `
+                        <tr>
+                            <td class="mono text-xs text-gray-400">${escHtml(a.userId || '-')}</td>
+                            <td><span class="font-display font-bold text-xl ${scoreColor}">${a.score || 0}</span></td>
+                            <td class="text-gray-400 text-xs">${(a.reasons || []).join(', ')}</td>
+                            <td class="mono text-xs text-gray-600">${(a.deviceFingerprint || '-').slice(0, 16)}...</td>
+                            <td class="text-gray-500 text-xs">${ts}</td>
+                            <td>
+                                <button onclick="suspendUser('${a.userId}')" class="btn-danger text-xs py-1 px-2">Suspend</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('anomalyTableBody').innerHTML = html;
+
+            } catch (err) {
+                console.error('loadAnomalies error:', err);
+            }
         }
 
-        // ==========================================
-        // LOGOUT
-        // ==========================================
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        window.suspendUser = async function(uid) {
+            if (!uid || !confirm(`Suspend this user?`)) return;
+            try {
+                await updateDoc(doc(db, 'users', uid), {
+                    status: 'suspended',
+                    suspendedAt: serverTimestamp(),
+                    suspendedBy: currentUser.uid
+                });
+                await addDoc(collection(db, 'logs'), {
+                    userId: currentUser.uid,
+                    targetUserId: uid,
+                    action: 'suspend_user',
+                    result: 'success',
+                    timestamp: serverTimestamp()
+                });
+                showToast('User suspended', 'success');
+                await loadAnomalies();
+            } catch (err) {
+                showToast('Failed to suspend user', 'error');
+            }
+        };
+
+        // ============================================================
+        // SECTION: LOGS
+        // ============================================================
+        async function loadLogs() {
+            lastLogDoc = null;
+            await fetchLogs(false);
+        }
+
+        async function fetchLogs(loadMore) {
+            const filterAction = document.getElementById('logFilterAction').value;
+            const filterResult = document.getElementById('logFilterResult').value;
+
+            try {
+                let constraints = [orderBy('timestamp', 'desc'), limit(30)];
+                if (filterAction) constraints.unshift(where('action', '==', filterAction));
+                if (filterResult) constraints.unshift(where('result', '==', filterResult));
+                if (loadMore && lastLogDoc) constraints.push(startAfter(lastLogDoc));
+
+                const q = query(collection(db, 'logs'), ...constraints);
+                const snap = await getDocs(q);
+
+                lastLogDoc = snap.docs[snap.docs.length - 1] || null;
+                document.getElementById('btnLoadMoreLogs').classList.toggle('hidden', snap.size < 30);
+
+                if (snap.empty && !loadMore) {
+                    document.getElementById('logsTableBody').innerHTML =
+                        '<tr><td colspan="5" class="text-center text-gray-500 py-8">No logs found</td></tr>';
+                    return;
+                }
+
+                const actionColors = {
+                    attend: 'text-green-400',
+                    close_event: 'text-blue-400',
+                    manual_xp_edit: 'text-yellow-400',
+                    import_members: 'text-purple-400',
+                    update_role: 'text-orange-400',
+                    approve_leave: 'text-green-400',
+                    reject_leave: 'text-red-400',
+                    suspend_user: 'text-red-400',
+                    create_event: 'text-blue-400'
+                };
+
+                const html = snap.docs.map(d => {
+                    const l = d.data();
+                    const ts = l.timestamp ? l.timestamp.toDate().toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    }) : '-';
+                    const details = l.reason || l.newRole || l.eventName || l.totalImported ? (
+                        l.reason || (l.newRole ? `→ ${l.newRole}` : '') ||
+                        (l.eventName ? l.eventName : '') ||
+                        (l.totalImported ? `${l.totalImported} members` : '')
+                    ) : '';
+
+                    return `
+                        <tr>
+                            <td class="mono text-xs text-gray-600">${ts}</td>
+                            <td class="mono text-xs text-gray-400">${escHtml((l.userId || '-').slice(0, 12))}...</td>
+                            <td><span class="mono text-xs font-semibold ${actionColors[l.action] || 'text-gray-400'}">${escHtml(l.action || '-')}</span></td>
+                            <td><span class="badge ${l.result === 'success' ? 'badge-active' : 'badge-suspended'}">${l.result || '-'}</span></td>
+                            <td class="text-gray-500 text-xs max-w-xs truncate">${escHtml(details)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                const tbody = document.getElementById('logsTableBody');
+                if (loadMore) {
+                    tbody.innerHTML += html;
+                } else {
+                    tbody.innerHTML = html;
+                }
+
+            } catch (err) {
+                console.error('fetchLogs error:', err);
+            }
+        }
+
+        window.loadMoreLogs = function() { fetchLogs(true); };
+
+        window.exportLogsCSV = async function() {
+            try {
+                const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'), limit(500));
+                const snap = await getDocs(q);
+                const rows = [['Timestamp', 'User ID', 'Action', 'Result', 'Details']];
+                snap.docs.forEach(d => {
+                    const l = d.data();
+                    rows.push([
+                        l.timestamp ? l.timestamp.toDate().toISOString() : '-',
+                        l.userId || '-',
+                        l.action || '-',
+                        l.result || '-',
+                        l.reason || l.eventName || l.newRole || ''
+                    ]);
+                });
+                downloadCSV(rows, 'system_logs_export.csv');
+                showToast('Logs exported', 'success');
+            } catch (err) {
+                showToast('Failed to export logs', 'error');
+            }
+        };
+
+        // ============================================================
+        // Navigation — ganti section yang ditampilkan
+        // ============================================================
+        window.showSection = async function(name) {
+            // Sembunyikan semua section
+            document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            // Tampilkan section yang dipilih
+            const section = document.getElementById(`section-${name}`);
+            if (section) {
+                section.classList.remove('hidden');
+                section.classList.add('section-fade');
+                setTimeout(() => section.classList.remove('section-fade'), 400);
+            }
+
+            const navItem = document.getElementById(`nav-${name}`);
+            if (navItem) navItem.classList.add('active');
+
+            // Load data saat section dibuka
+            switch (name) {
+                case 'overview': await loadOverviewData(); break;
+                case 'events': await loadEvents(); break;
+                case 'qr': await loadQRSection(); break;
+                case 'members': await loadMembers(); break;
+                case 'xp': await loadMembers(); await loadXPHistory(); break;
+                case 'leave': await loadLeaveRequests(); break;
+                case 'anomalies': await loadAnomalies(); break;
+                case 'logs': await loadLogs(); break;
+            }
+
+            // Tutup sidebar di mobile
+            document.getElementById('sidebar').classList.remove('open');
+        };
+
+        // ============================================================
+        // Modal helpers
+        // ============================================================
+        window.openModal = function(id) {
+            document.getElementById(id).classList.remove('hidden');
+        };
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.add('hidden');
+        };
+        window.toggleScheduleDate = function() {
+            const mode = document.getElementById('eventStartMode').value;
+            document.getElementById('scheduleDateWrapper').classList.toggle('hidden', mode === 'now');
+        };
+
+        // ============================================================
+        // Logout dan navigasi
+        // ============================================================
+        window.handleLogout = async function() {
+            clearInterval(qrInterval);
+            if (attendanceUnsubscribe) attendanceUnsubscribe();
             await signOut(auth);
             window.location.href = '/public/pages/login.html';
-        });
+        };
 
-        // Sidebar mobile
-        window.openSidebar = () => {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('overlay').classList.remove('hidden');
+        window.goToDashboard = function() {
+            window.location.href = '/public/pages/dashboard.html';
         };
-        window.closeSidebar = () => {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('overlay').classList.add('hidden');
+
+        // ============================================================
+        // Auto logout setelah 30 menit tidak aktif
+        // ============================================================
+        function setupAutoLogout() {
+            let timeout;
+            const TIMEOUT_MS = 30 * 60 * 1000;
+
+            function resetTimer() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    clearInterval(qrInterval);
+                    signOut(auth).then(() => {
+                        window.location.href = '/public/pages/login.html';
+                    });
+                }, TIMEOUT_MS);
+            }
+
+            ['mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(ev => {
+                document.addEventListener(ev, resetTimer, true);
+            });
+
+            resetTimer();
+        }
+
+        // ============================================================
+        // Helper: Generate token kriptografis
+        // ============================================================
+        function generateSecureToken(length = 32) {
+            const arr = new Uint8Array(length);
+            crypto.getRandomValues(arr);
+            return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, length);
+        }
+
+        // Helper: generate password sementara
+        function generateTempPasswordLocal() {
+            const u = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+            const l = 'abcdefghjkmnpqrstuvwxyz';
+            const n = '23456789';
+            const s = '!@#$%';
+            const r = str => str[Math.floor(Math.random() * str.length)];
+            return r(u) + r(l) + r(l) + r(l) + r(n) + r(n) + r(s) + r(l);
+        }
+
+        // Helper: Escape HTML untuk mencegah XSS
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Helper: Download CSV
+        function downloadCSV(rows, filename) {
+            const content = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        }
+
+        // ============================================================
+        // Toast notification
+        // ============================================================
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            const icons = {
+                success: '<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+                error: '<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+                info: '<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            };
+
+            toast.innerHTML = `${icons[type] || icons.info}<span>${escHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(8px)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 4000);
         };
+
     </script>
-
 </body>
 </html>
