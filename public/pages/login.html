@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,21 +21,18 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
-
         * { font-family: 'Inter', sans-serif; }
         h1, h2, h3 { font-family: 'Rajdhani', sans-serif; }
 
-        /* Background logo blur */
         .bg-logo {
             position: fixed;
             inset: 0;
-            background: url('../../assets/logo unandnewgame.png') center/cover no-repeat;
+            background: url('../../assets/logo.png') center/cover no-repeat;
             filter: blur(20px) brightness(0.15);
             transform: scale(1.1);
             z-index: 0;
         }
 
-        /* Glassmorphism card */
         .glass {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
@@ -43,7 +40,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Animasi fade in */
         .fade-in {
             animation: fadeIn 0.6s ease forwards;
         }
@@ -53,20 +49,19 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Glow merah pada focus input */
-        input:focus {
-            box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.5);
-        }
-
-        /* Gradient tombol */
         .btn-primary {
             background: linear-gradient(135deg, #E63946, #c1121f);
             transition: all 0.3s ease;
         }
         .btn-primary:hover {
-            background: linear-gradient(135deg, #c1121f, #E63946);
             transform: translateY(-1px);
             box-shadow: 0 8px 25px rgba(230, 57, 70, 0.4);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-google {
@@ -79,136 +74,242 @@
             transform: translateY(-1px);
         }
 
-        /* Garis dekorasi merah-biru */
         .accent-line {
             height: 3px;
             background: linear-gradient(90deg, #E63946, #1D3557, #457B9D);
             border-radius: 999px;
         }
+
+        /* Tab aktif */
+        .tab-btn.active {
+            color: white;
+            border-bottom: 2px solid #E63946;
+        }
+
+        /* Password strength bar */
+        .strength-bar {
+            height: 4px;
+            border-radius: 999px;
+            transition: all 0.3s ease;
+        }
+
+        /* Input focus */
+        input:focus {
+            outline: none;
+            border-color: #E63946;
+            box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.2);
+        }
+
+        /* Step indicator */
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        .step-dot.active {
+            background: #E63946;
+            transform: scale(1.3);
+        }
+        .step-dot.done {
+            background: #22c55e;
+        }
     </style>
 </head>
 <body class="bg-black min-h-screen flex items-center justify-center overflow-hidden">
 
-    <!-- BACKGROUND BLUR LOGO -->
+    <!-- background blur logo -->
     <div class="bg-logo"></div>
-
-    <!-- OVERLAY GRADIENT -->
     <div class="fixed inset-0 z-0" style="background: radial-gradient(ellipse at top left, rgba(230,57,70,0.15) 0%, transparent 60%), radial-gradient(ellipse at bottom right, rgba(29,53,87,0.3) 0%, transparent 60%);"></div>
 
-    <!-- MAIN CARD -->
+    <!-- main card -->
     <div class="relative z-10 w-full max-w-md mx-4 fade-in">
 
-        <!-- LOGO & BRAND -->
+        <!-- brand -->
         <div class="text-center mb-8">
-            <img src="../../assets/logo unandnewgame.png" alt="NEWGAME" class="w-20 h-20 mx-auto mb-4 drop-shadow-2xl">
+            <img src="../../assets/logo.png" alt="NEWGAME" class="w-20 h-20 mx-auto mb-4 drop-shadow-2xl">
             <h1 class="text-4xl font-bold text-white tracking-wider">NEWGAME</h1>
             <p class="text-gray-400 text-sm tracking-widest uppercase mt-1">Learn Create Play</p>
             <div class="accent-line w-24 mx-auto mt-3"></div>
         </div>
 
-        <!-- CARD -->
+        <!-- card -->
         <div class="glass rounded-2xl p-8 shadow-2xl">
 
-            <!-- PESAN ERROR -->
-            <div id="errorMsg" class="hidden bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm flex items-center gap-2">
-                <span></span>
+            <!-- pesan error global -->
+            <div id="errorMsg" class="hidden bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">
                 <span id="errorText"></span>
             </div>
 
-            <!-- PESAN SUKSES -->
-            <div id="successMsg" class="hidden bg-green-500/20 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg mb-4 text-sm flex items-center gap-2">
-                <span></span>
+            <!-- pesan sukses global -->
+            <div id="successMsg" class="hidden bg-green-500/20 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg mb-4 text-sm">
                 <span id="successText"></span>
             </div>
 
-            <!-- FORM LOGIN -->
-            <div id="loginForm">
-                <h2 class="text-2xl font-bold text-white mb-6">Masuk</h2>
-
-                <div class="mb-4">
-                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Email</label>
-                    <input
-                        type="email"
-                        id="emailInput"
-                        placeholder="email@kamu.com"
-                        class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition placeholder-gray-600"
-                    >
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Password</label>
-                    <input
-                        type="password"
-                        id="passwordInput"
-                        placeholder="••••••••"
-                        class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition placeholder-gray-600"
-                    >
-                </div>
-
-                <button id="loginBtn" class="btn-primary w-full text-white font-bold py-3 rounded-lg mb-3">
-                    Masuk
+            <!-- tab login / register -->
+            <div class="flex border-b border-white/10 mb-6">
+                <button id="tabLogin" class="tab-btn active flex-1 py-2 text-sm font-semibold text-gray-400 transition" onclick="switchTab('login')">
+                    Sign In
                 </button>
-
-                <button id="googleBtn" class="btn-google w-full text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
-                    <img src="https://www.google.com/favicon.ico" class="w-4 h-4">
-                    Masuk dengan Google
+                <button id="tabRegister" class="tab-btn flex-1 py-2 text-sm font-semibold text-gray-400 transition" onclick="switchTab('register')">
+                    Register
                 </button>
-
-                <p class="text-center text-gray-500 text-sm mt-6">
-                    Belum punya akun?
-                    <span id="showRegister" class="text-ng-red cursor-pointer hover:text-red-400 font-semibold transition">Daftar</span>
-                </p>
             </div>
 
-            <!-- FORM REGISTER -->
-            <div id="registerForm" class="hidden">
-                <h2 class="text-2xl font-bold text-white mb-6">Daftar</h2>
-
-                <div class="mb-4">
-                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Nama Lengkap</label>
-                    <input
-                        type="text"
-                        id="nameInput"
-                        placeholder="Nama kamu"
-                        class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition placeholder-gray-600"
-                    >
-                </div>
-
+            <!-- ==================== FORM LOGIN ==================== -->
+            <div id="loginForm">
                 <div class="mb-4">
                     <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Email</label>
-                    <input
-                        type="email"
-                        id="regEmailInput"
-                        placeholder="email@kamu.com"
-                        class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition placeholder-gray-600"
-                    >
+                    <input type="email" id="loginEmail" placeholder="your@email.com"
+                        class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 transition placeholder-gray-600">
                 </div>
-
                 <div class="mb-6">
                     <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Password</label>
-                    <input
-                        type="password"
-                        id="regPasswordInput"
-                        placeholder="Minimal 8 karakter"
-                        class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-ng-red focus:outline-none transition placeholder-gray-600"
-                    >
+                    <div class="relative">
+                        <input type="password" id="loginPassword" placeholder="••••••••"
+                            class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 transition placeholder-gray-600 pr-10">
+                        <button type="button" onclick="togglePassword('loginPassword', this)"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
+                            Show
+                        </button>
+                    </div>
+                </div>
+                <button id="loginBtn" onclick="handleLogin()" class="btn-primary w-full text-white font-bold py-3 rounded-lg mb-3">
+                    Sign In
+                </button>
+                <button onclick="handleGoogleLogin()" class="btn-google w-full text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
+                    <img src="https://www.google.com/favicon.ico" class="w-4 h-4">
+                    Continue with Google
+                </button>
+            </div>
+
+            <!-- ==================== FORM REGISTER ==================== -->
+            <!-- Register dibagi 3 step:
+                 Step 1: Verifikasi ID anggota + password sementara
+                 Step 2: Input email + kirim verifikasi
+                 Step 3: Konfirmasi email sudah diverifikasi
+            -->
+            <div id="registerForm" class="hidden">
+
+                <!-- step indicator -->
+                <div class="flex items-center justify-center gap-2 mb-6">
+                    <div class="step-dot active" id="dot1"></div>
+                    <div class="h-px w-8 bg-white/20"></div>
+                    <div class="step-dot" id="dot2"></div>
+                    <div class="h-px w-8 bg-white/20"></div>
+                    <div class="step-dot" id="dot3"></div>
                 </div>
 
-                <button id="registerBtn" class="btn-primary w-full text-white font-bold py-3 rounded-lg mb-3">
-                    Daftar
-                </button>
+                <!-- step 1: verifikasi ID -->
+                <div id="step1">
+                    <h3 class="text-lg font-bold text-white mb-1">Verify Your Identity</h3>
+                    <p class="text-gray-400 text-xs mb-4">Enter your member ID and temporary password provided by your admin</p>
 
-                <p class="text-center text-gray-500 text-sm mt-6">
-                    Sudah punya akun?
-                    <span id="showLogin" class="text-ng-red cursor-pointer hover:text-red-400 font-semibold transition">Masuk</span>
-                </p>
+                    <div class="mb-4">
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Member ID</label>
+                        <input type="text" id="memberId" placeholder="e.g. NG11018034PG"
+                            class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 transition placeholder-gray-600 uppercase"
+                            oninput="this.value = this.value.toUpperCase()">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Temporary Password</label>
+                        <div class="relative">
+                            <input type="password" id="tempPassword" placeholder="Provided by admin"
+                                class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 transition placeholder-gray-600 pr-10">
+                            <button type="button" onclick="togglePassword('tempPassword', this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
+                                Show
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="verifyMemberId()" class="btn-primary w-full text-white font-bold py-3 rounded-lg">
+                        Verify Identity
+                    </button>
+                </div>
+
+                <!-- step 2: input email dan password baru -->
+                <div id="step2" class="hidden">
+                    <h3 class="text-lg font-bold text-white mb-1">Create Your Account</h3>
+                    <p class="text-gray-400 text-xs mb-4">Set your email and a strong password</p>
+
+                    <!-- info member yang terverifikasi -->
+                    <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4">
+                        <p class="text-green-400 text-xs font-semibold">Identity Verified</p>
+                        <p class="text-white text-sm font-bold" id="verifiedName">-</p>
+                        <p class="text-gray-400 text-xs" id="verifiedDivision">-</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Email Address</label>
+                        <input type="email" id="regEmail" placeholder="your@email.com"
+                            class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 transition placeholder-gray-600">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">New Password</label>
+                        <div class="relative">
+                            <input type="password" id="newPassword" placeholder="Min 8 chars, uppercase, number, special"
+                                class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 transition placeholder-gray-600 pr-10"
+                                oninput="checkPasswordStrength(this.value)">
+                            <button type="button" onclick="togglePassword('newPassword', this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
+                                Show
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- password strength indicator -->
+                    <div class="mb-4">
+                        <div class="flex gap-1 mb-1">
+                            <div class="strength-bar flex-1 bg-white/10" id="bar1"></div>
+                            <div class="strength-bar flex-1 bg-white/10" id="bar2"></div>
+                            <div class="strength-bar flex-1 bg-white/10" id="bar3"></div>
+                            <div class="strength-bar flex-1 bg-white/10" id="bar4"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1 mt-2">
+                            <p class="text-xs" id="check-length">- Min 8 characters</p>
+                            <p class="text-xs" id="check-upper">- Uppercase letter</p>
+                            <p class="text-xs" id="check-number">- Number</p>
+                            <p class="text-xs" id="check-special">- Special character (!@#$%^&*)</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">Confirm Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Re-enter your password"
+                            class="w-full bg-white/5 text-white px-4 py-3 rounded-lg border border-white/10 transition placeholder-gray-600">
+                    </div>
+
+                    <button onclick="handleRegister()" class="btn-primary w-full text-white font-bold py-3 rounded-lg">
+                        Create Account
+                    </button>
+                </div>
+
+                <!-- step 3: konfirmasi email -->
+                <div id="step3" class="hidden text-center">
+                    <div class="w-16 h-16 rounded-full bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Check Your Email</h3>
+                    <p class="text-gray-400 text-sm mb-2">We sent a verification link to:</p>
+                    <p class="text-white font-semibold mb-4" id="sentEmailDisplay">-</p>
+                    <p class="text-gray-500 text-xs mb-6">Click the link in the email, then come back here and click the button below</p>
+                    <button onclick="checkEmailVerified()" class="btn-primary w-full text-white font-bold py-3 rounded-lg mb-3">
+                        I Have Verified My Email
+                    </button>
+                    <button onclick="resendVerification()" class="w-full text-gray-400 hover:text-white text-sm py-2 transition">
+                        Resend Email
+                    </button>
+                </div>
             </div>
 
         </div>
 
-        <!-- FOOTER -->
-        <p class="text-center text-gray-600 text-xs mt-6">© 2026 NEWGAME Organization</p>
-
+        <!-- footer -->
+        <p class="text-center text-gray-600 text-xs mt-6">2026 NEWGAME Organization. All rights reserved.</p>
     </div>
 
     <!-- Firebase SDK -->
@@ -221,19 +322,22 @@
             sendEmailVerification,
             signInWithPopup,
             GoogleAuthProvider,
-            onAuthStateChanged
+            onAuthStateChanged,
+            signOut
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import {
             getFirestore,
             doc,
             setDoc,
             getDoc,
-            serverTimestamp
+            serverTimestamp,
+            initializeFirestore,
+            CACHE_SIZE_UNLIMITED
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // ==========================================
-        // KONFIGURASI FIREBASE — ganti dengan milikmu
-        // ==========================================
+        // ============================================================
+        // Konfigurasi Firebase — ganti dengan nilai asli kamu
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
             authDomain: "qr-absensi-unandnewgame.firebaseapp.com",
@@ -245,55 +349,428 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
 
-        // Cek jika sudah login
+        // Disable offline cache untuk halaman auth — mencegah data stale
+        const db = initializeFirestore(app, {
+            experimentalForceLongPolling: false
+        });
+
+        // State register — menyimpan data antar step
+        let registerState = {
+            memberId: null,
+            memberData: null,
+            email: null,
+            userCredential: null
+        };
+
+        // ============================================================
+        // Cek jika sudah login — redirect ke dashboard
+        // ============================================================
         onAuthStateChanged(auth, async (user) => {
             if (user && user.emailVerified) {
-                window.location.href = '/public/pages/dashboard.html';
+                // Cek apakah sudah ganti password
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists() && userDoc.data().mustChangePassword) {
+                    window.location.href = '/public/pages/change-password.html';
+                } else if (userDoc.exists()) {
+                    window.location.href = '/public/pages/dashboard.html';
+                }
             }
         });
 
-        // Helper tampilkan pesan
-        function showError(msg) {
-            document.getElementById('errorText').textContent = msg;
-            document.getElementById('errorMsg').classList.remove('hidden');
-            document.getElementById('successMsg').classList.add('hidden');
-            setTimeout(() => document.getElementById('errorMsg').classList.add('hidden'), 5000);
-        }
+        // ============================================================
+        // Switch tab login / register
+        // ============================================================
+        window.switchTab = function(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
 
-        function showSuccess(msg) {
-            document.getElementById('successText').textContent = msg;
-            document.getElementById('successMsg').classList.remove('hidden');
-            document.getElementById('errorMsg').classList.add('hidden');
-        }
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabLogin.classList.remove('active');
+                tabRegister.classList.add('active');
+            }
+            hideMessages();
+        };
 
-        // Toggle form
-        document.getElementById('showRegister').addEventListener('click', () => {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('registerForm').classList.remove('hidden');
-        });
+        // ============================================================
+        // Toggle show/hide password
+        // ============================================================
+        window.togglePassword = function(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'Show';
+            }
+        };
 
-        document.getElementById('showLogin').addEventListener('click', () => {
-            document.getElementById('registerForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.remove('hidden');
-        });
+        // ============================================================
+        // Password strength checker
+        // ============================================================
+        window.checkPasswordStrength = function(password) {
+            const checks = {
+                length: password.length >= 8,
+                upper: /[A-Z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[!@#$%^&*]/.test(password)
+            };
 
-        // Login email
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const email = document.getElementById('emailInput').value.trim();
-            const password = document.getElementById('passwordInput').value;
+            const passed = Object.values(checks).filter(Boolean).length;
+            const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+            const bars = ['bar1', 'bar2', 'bar3', 'bar4'];
 
-            if (!email || !password) { showError('Email dan password tidak boleh kosong'); return; }
+            bars.forEach((id, index) => {
+                const bar = document.getElementById(id);
+                bar.className = `strength-bar flex-1 ${index < passed ? colors[passed - 1] : 'bg-white/10'}`;
+            });
+
+            // Update checklist
+            const checkEls = {
+                'check-length': checks.length,
+                'check-upper': checks.upper,
+                'check-number': checks.number,
+                'check-special': checks.special
+            };
+
+            const labels = {
+                'check-length': 'Min 8 characters',
+                'check-upper': 'Uppercase letter',
+                'check-number': 'Number',
+                'check-special': 'Special character (!@#$%^&*)'
+            };
+
+            Object.entries(checkEls).forEach(([id, ok]) => {
+                const el = document.getElementById(id);
+                el.textContent = (ok ? '+ ' : '- ') + labels[id];
+                el.className = `text-xs ${ok ? 'text-green-400' : 'text-gray-500'}`;
+            });
+        };
+
+        // ============================================================
+        // STEP 1 — Verifikasi ID anggota + password sementara
+        // ============================================================
+        window.verifyMemberId = async function() {
+            const memberId = document.getElementById('memberId').value.trim().toUpperCase();
+            const tempPassword = document.getElementById('tempPassword').value;
+
+            if (!memberId || !tempPassword) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            // Validasi format ID
+            if (!memberId.startsWith('NG')) {
+                showError('Invalid Member ID format. Must start with NG');
+                return;
+            }
 
             try {
-                document.getElementById('loginBtn').textContent = 'Memuat...';
+                setLoading('verifyMemberId', true);
+
+                // Cek ID di collection members
+                const memberDoc = await getDoc(doc(db, 'members', memberId));
+
+                if (!memberDoc.exists()) {
+                    showError('Member ID not found. Contact your admin.');
+                    return;
+                }
+
+                const memberData = memberDoc.data();
+
+                // Cek status anggota
+                if (!['ACTIVE', 'NPC'].includes(memberData.status)) {
+                    showError('Your account is not active. Contact your admin.');
+                    return;
+                }
+
+                // Cek sudah pernah register
+                if (memberData.isRegistered) {
+                    showError('This Member ID is already registered. Try signing in.');
+                    return;
+                }
+
+                // Verifikasi password sementara
+                if (tempPassword !== memberData.tempPassword) {
+                    showError('Incorrect temporary password. Contact your admin.');
+                    return;
+                }
+
+                // Simpan state untuk step berikutnya
+                registerState.memberId = memberId;
+                registerState.memberData = memberData;
+
+                // Tampilkan info member
+                document.getElementById('verifiedName').textContent = memberData.name;
+                document.getElementById('verifiedDivision').textContent =
+                    `${memberData.division} - ${memberData.team || 'No Team'}`;
+
+                // Update step indicator
+                updateStepIndicator(2);
+
+                // Pindah ke step 2
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Verify error:', error);
+                showError('Verification failed. Please try again.');
+            } finally {
+                setLoading('verifyMemberId', false);
+            }
+        };
+
+        // ============================================================
+        // STEP 2 — Buat akun dengan email dan password baru
+        // ============================================================
+        window.handleRegister = async function() {
+            const email = document.getElementById('regEmail').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!email || !newPassword || !confirmPassword) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            // Validasi password tidak sama dengan password sementara
+            if (newPassword === registerState.memberData.tempPassword) {
+                showError('New password cannot be the same as your temporary password');
+                return;
+            }
+
+            // Validasi password baru
+            const passwordChecks = {
+                minLength: newPassword.length >= 8,
+                hasUppercase: /[A-Z]/.test(newPassword),
+                hasNumber: /[0-9]/.test(newPassword),
+                hasSpecial: /[!@#$%^&*]/.test(newPassword)
+            };
+
+            if (!Object.values(passwordChecks).every(Boolean)) {
+                showError('Password does not meet requirements');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            try {
+                setLoading('handleRegister', true);
+
+                // Buat akun Firebase Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, email, newPassword);
+                const user = userCredential.user;
+
+                // Kirim email verifikasi
+                await sendEmailVerification(user);
+
+                // Simpan data user ke Firestore
+                await setDoc(doc(db, 'users', user.uid), {
+                    uid: user.uid,
+                    memberId: registerState.memberId,
+                    name: registerState.memberData.name,
+                    email: email,
+                    division: registerState.memberData.division,
+                    team: registerState.memberData.team || '',
+                    role: registerState.memberData.status === 'NPC' ? 'npc' : 'member',
+                    status: 'active',
+                    xpCache: 0,
+                    attendanceCount: 0,
+                    streak: 0,
+                    mustChangePassword: false,
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                    sessionToken: crypto.randomUUID()
+                });
+
+                // Tandai member sudah register
+                await setDoc(doc(db, 'members', registerState.memberId), {
+                    isRegistered: true,
+                    registeredUid: user.uid,
+                    registeredAt: serverTimestamp()
+                }, { merge: true });
+
+                // Logout dulu — user harus verifikasi email
+                registerState.email = email;
+                registerState.userCredential = userCredential;
+                await signOut(auth);
+
+                // Update step indicator
+                document.getElementById('sentEmailDisplay').textContent = email;
+                updateStepIndicator(3);
+
+                // Pindah ke step 3
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Register error:', error);
+                if (error.code === 'auth/email-already-in-use') {
+                    showError('Email already registered. Try signing in.');
+                } else if (error.code === 'auth/invalid-email') {
+                    showError('Invalid email format');
+                } else {
+                    showError('Registration failed. Please try again.');
+                }
+            } finally {
+                setLoading('handleRegister', false);
+            }
+        };
+
+        // ============================================================
+        // STEP 3 — Cek apakah email sudah diverifikasi
+        // ============================================================
+        window.checkEmailVerified = async function() {
+            try {
+                // Login sementara untuk cek status verifikasi
+                const userCredential = await signInWithEmailAndPassword(
+                    auth,
+                    registerState.email,
+                    document.getElementById('newPassword')?.value || ''
+                );
+
+                await userCredential.user.reload();
+
+                if (userCredential.user.emailVerified) {
+                    showSuccess('Email verified! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/public/pages/dashboard.html';
+                    }, 1500);
+                } else {
+                    await signOut(auth);
+                    showError('Email not verified yet. Please check your inbox.');
+                }
+            } catch (error) {
+                showError('Verification check failed. Please try signing in manually.');
+            }
+        };
+
+        // ============================================================
+        // Kirim ulang email verifikasi
+        // ============================================================
+        window.resendVerification = async function() {
+            try {
+                const userCredential = await signInWithEmailAndPassword(
+                    auth,
+                    registerState.email,
+                    document.getElementById('newPassword')?.value || ''
+                );
+                await sendEmailVerification(userCredential.user);
+                await signOut(auth);
+                showSuccess('Verification email resent. Check your inbox.');
+            } catch (error) {
+                showError('Failed to resend email. Please try again.');
+            }
+        };
+
+        // ============================================================
+        // LOGIN dengan email & password
+        // ============================================================
+        window.handleLogin = async function() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const btn = document.getElementById('loginBtn');
+                btn.disabled = true;
+                btn.textContent = 'Signing in...';
+
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
+                // Cek email sudah diverifikasi
                 if (!user.emailVerified) {
-                    showError('Email belum diverifikasi. Cek inbox emailmu.');
-                    await auth.signOut();
+                    await signOut(auth);
+                    showError('Email not verified. Check your inbox.');
+                    return;
+                }
+
+                // Ambil data user
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (!userDoc.exists()) {
+                    await signOut(auth);
+                    showError('Account data not found. Contact your admin.');
+                    return;
+                }
+
+                const userData = userDoc.data();
+
+                // Cek status akun
+                if (userData.status === 'suspended') {
+                    await signOut(auth);
+                    showError('Your account has been suspended. Contact your admin.');
+                    return;
+                }
+
+                // Update session
+                await setDoc(doc(db, 'users', user.uid), {
+                    lastLogin: serverTimestamp(),
+                    sessionToken: crypto.randomUUID()
+                }, { merge: true });
+
+                // Redirect
+                window.location.href = '/public/pages/dashboard.html';
+
+            } catch (error) {
+                if (error.code === 'auth/invalid-credential') {
+                    showError('Incorrect email or password');
+                } else if (error.code === 'auth/too-many-requests') {
+                    showError('Too many attempts. Please try again later.');
+                } else {
+                    showError('Sign in failed. Please try again.');
+                }
+            } finally {
+                const btn = document.getElementById('loginBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Sign In';
+                }
+            }
+        };
+
+        // ============================================================
+        // LOGIN dengan Google
+        // Google login hanya untuk yang sudah punya akun
+        // ============================================================
+        window.handleGoogleLogin = async function() {
+            try {
+                const provider = new GoogleAuthProvider();
+                const userCredential = await signInWithPopup(auth, provider);
+                const user = userCredential.user;
+
+                // Cek apakah sudah punya akun di Firestore
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+                if (!userDoc.exists()) {
+                    // Akun belum ada — user harus register dulu via ID
+                    await signOut(auth);
+                    showError('No account found. Please register with your Member ID first.');
+                    return;
+                }
+
+                const userData = userDoc.data();
+
+                if (userData.status === 'suspended') {
+                    await signOut(auth);
+                    showError('Your account has been suspended.');
                     return;
                 }
 
@@ -305,88 +782,73 @@
                 window.location.href = '/public/pages/dashboard.html';
 
             } catch (error) {
-                if (error.code === 'auth/invalid-credential') showError('Email atau password salah');
-                else if (error.code === 'auth/too-many-requests') showError('Terlalu banyak percobaan. Coba lagi nanti');
-                else showError('Terjadi kesalahan. Coba lagi');
-            } finally {
-                document.getElementById('loginBtn').textContent = 'Masuk';
-            }
-        });
-
-        // Login Google
-        document.getElementById('googleBtn').addEventListener('click', async () => {
-            try {
-                const provider = new GoogleAuthProvider();
-                const userCredential = await signInWithPopup(auth, provider);
-                const user = userCredential.user;
-
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-
-                if (!userDoc.exists()) {
-                    await setDoc(doc(db, 'users', user.uid), {
-                        uid: user.uid,
-                        displayName: user.displayName,
-                        email: user.email,
-                        role: 'member',
-                        xpCache: 0,
-                        status: 'active',
-                        createdAt: serverTimestamp(),
-                        lastLogin: serverTimestamp(),
-                        sessionToken: crypto.randomUUID()
-                    });
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showError('Sign in cancelled');
                 } else {
-                    await setDoc(doc(db, 'users', user.uid), {
-                        lastLogin: serverTimestamp(),
-                        sessionToken: crypto.randomUUID()
-                    }, { merge: true });
+                    showError('Google sign in failed. Please try again.');
                 }
-
-                window.location.href = '/public/pages/dashboard.html';
-
-            } catch (error) {
-                if (error.code === 'auth/popup-closed-by-user') showError('Login dibatalkan');
-                else showError('Gagal login dengan Google. Coba lagi');
             }
-        });
+        };
 
-        // Register
-        document.getElementById('registerBtn').addEventListener('click', async () => {
-            const name = document.getElementById('nameInput').value.trim();
-            const email = document.getElementById('regEmailInput').value.trim();
-            const password = document.getElementById('regPasswordInput').value;
+        // ============================================================
+        // Helper functions
+        // ============================================================
 
-            if (!name || !email || !password) { showError('Semua kolom wajib diisi'); return; }
-            if (password.length < 8) { showError('Password minimal 8 karakter'); return; }
+        // Tampilkan error
+        function showError(msg) {
+            document.getElementById('errorText').textContent = msg;
+            document.getElementById('errorMsg').classList.remove('hidden');
+            document.getElementById('successMsg').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('errorMsg').classList.add('hidden');
+            }, 5000);
+        }
 
-            try {
-                document.getElementById('registerBtn').textContent = 'Memuat...';
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
+        // Tampilkan sukses
+        function showSuccess(msg) {
+            document.getElementById('successText').textContent = msg;
+            document.getElementById('successMsg').classList.remove('hidden');
+            document.getElementById('errorMsg').classList.add('hidden');
+        }
 
-                await sendEmailVerification(user);
+        // Sembunyikan semua pesan
+        function hideMessages() {
+            document.getElementById('errorMsg').classList.add('hidden');
+            document.getElementById('successMsg').classList.add('hidden');
+        }
 
-                await setDoc(doc(db, 'users', user.uid), {
-                    uid: user.uid,
-                    displayName: name,
-                    email: email,
-                    role: 'member',
-                    xpCache: 0,
-                    status: 'active',
-                    createdAt: serverTimestamp(),
-                    lastLogin: serverTimestamp(),
-                    sessionToken: crypto.randomUUID()
-                });
+        // Update step indicator
+        function updateStepIndicator(currentStep) {
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                dot.className = 'step-dot';
+                if (i < currentStep) dot.classList.add('done');
+                else if (i === currentStep) dot.classList.add('active');
+            }
+        }
 
-                await auth.signOut();
-                showSuccess('Akun berhasil dibuat! Cek email untuk verifikasi sebelum login.');
+        // Loading state — disable semua tombol
+        function setLoading(funcName, loading) {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                if (loading) {
+                    btn.disabled = true;
+                    if (btn.dataset.loadingFor === funcName) {
+                        btn.textContent = 'Please wait...';
+                    }
+                } else {
+                    btn.disabled = false;
+                }
+            });
+        }
 
-            } catch (error) {
-                if (error.code === 'auth/email-already-in-use') showError('Email sudah terdaftar');
-                else if (error.code === 'auth/weak-password') showError('Password terlalu lemah');
-                else if (error.code === 'auth/invalid-email') showError('Format email tidak valid');
-                else showError('Gagal membuat akun. Coba lagi');
-            } finally {
-                document.getElementById('registerBtn').textContent = 'Daftar';
+        // Enter key untuk submit form login
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const loginForm = document.getElementById('loginForm');
+                if (!loginForm.classList.contains('hidden')) {
+                    handleLogin();
+                }
             }
         });
     </script>
