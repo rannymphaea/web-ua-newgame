@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEWGAME - Members</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        h1,h2,h3,h4 { font-family: 'Rajdhani', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        body { background: #070910; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+
+        .glass {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+        }
+        .sidebar {
+            width: 220px; position: fixed; left: 0; top: 0;
+            height: 100%; background: rgba(7,9,16,0.95);
+            border-right: 1px solid rgba(255,255,255,0.07);
+            z-index: 40; display: flex; flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 14px; border-radius: 8px;
+            color: #6b7280; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(230,57,70,0.15); color: #E63946; border-left: 2px solid #E63946; }
+        .btn-primary {
+            background: linear-gradient(135deg,#E63946,#c1121f);
+            color: white; font-weight: 600; padding: 8px 16px;
+            border-radius: 8px; font-size: 13px; border: none;
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(230,57,70,0.35); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.07); color: #d1d5db;
+            font-weight: 500; padding: 7px 14px; border-radius: 8px;
+            font-size: 13px; border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); color: white; }
+        .input-field {
+            background: rgba(255,255,255,0.05); color: white;
+            padding: 9px 13px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1); font-size: 13px;
+            transition: all 0.2s; width: 100%;
+        }
+        .input-field:focus { outline: none; border-color: #E63946; box-shadow: 0 0 0 2px rgba(230,57,70,0.2); }
+        .input-field::placeholder { color: #4b5563; }
+        select.input-field option { background: #111827; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+
+        /* Status badges */
+        .badge-active    { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+        .badge-afk       { background: rgba(234,179,8,0.15);  color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
+        .badge-npc       { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .badge-resign    { background: rgba(220,38,38,0.15);  color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
+        .badge-glory     { background: rgba(250,204,21,0.15); color: #fbbf24; border: 1px solid rgba(250,204,21,0.3); }
+        .badge-freeze    { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+        .badge-rip       { background: rgba(75,85,99,0.3);    color: #9ca3af; border: 1px solid rgba(75,85,99,0.4); }
+
+        /* Role/Team badges */
+        .role-core       { background: rgba(250,204,21,0.15); color: #fbbf24; border: 1px solid rgba(250,204,21,0.3); }
+        .role-project    { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .role-training   { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .role-familygame { background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
+        .role-alliance   { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+        .role-inventory  { background: rgba(20,184,166,0.15); color: #2dd4bf; border: 1px solid rgba(20,184,166,0.3); }
+        .role-designcraft{ background: rgba(244,63,94,0.15);  color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+        .role-newmember  { background: rgba(255,255,255,0.08);color: #9ca3af; border: 1px solid rgba(255,255,255,0.15); }
+        .role-npc        { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .role-unknown    { background: rgba(75,85,99,0.2);    color: #6b7280; border: 1px solid rgba(75,85,99,0.3); }
+
+        /* Pillar badges */
+        .pillar-gl { background: rgba(230,57,70,0.15);  color: #E63946; border: 1px solid rgba(230,57,70,0.3); }
+        .pillar-gd { background: rgba(29,53,87,0.4);    color: #90b4ce; border: 1px solid rgba(69,123,157,0.4); }
+        .pillar-gs { background: rgba(71,143,87,0.2);   color: #6fcf97; border: 1px solid rgba(71,143,87,0.4); }
+
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .data-table thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .data-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .data-table tbody td { padding: 11px 14px; font-size: 13px; color: #d1d5db; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .modal-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #0f1117; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 28px; width: 100%; max-width: 520px; }
+        .toast { position: fixed; bottom: 24px; right: 24px; z-index: 100; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; animation: toastIn 0.3s ease; min-width: 260px; }
+        @keyframes toastIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #4ade80; }
+        .toast-error   { background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.4); color: #f87171; }
+        .accent-bar { height: 3px; background: linear-gradient(90deg,#E63946,#1D3557,#457B9D); }
+        @media(max-width:768px){ .sidebar{ transform: translateX(-100%); } .sidebar.open{ transform: translateX(0); } .main{ margin-left:0!important; } }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+<div class="accent-bar fixed top-0 left-0 right-0 z-50"></div>
+<div id="toastContainer"></div>
+
+<div class="flex min-h-screen pt-[3px]">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="p-5 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-red-600/20 border border-red-500/30 flex items-center justify-center text-red-400 font-bold text-sm">NG</div>
+                <div>
+                    <h2 class="text-white font-bold text-base" style="font-family:'Rajdhani',sans-serif;">NEWGAME</h2>
+                    <p class="text-gray-500 text-xs mono">Members</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 p-3 space-y-1">
+            <a href="#" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item active">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Members
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Leaderboard
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main flex-1 p-6 overflow-auto" style="margin-left:220px;">
+        <div class="md:hidden flex items-center gap-3 mb-4">
+            <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="btn-secondary py-2 px-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <h1 class="text-xl font-bold text-white">Members</h1>
+        </div>
+
+        <div class="flex items-center justify-between mb-6">
+            <div class="hidden md:block">
+                <h1 class="text-2xl font-bold text-white">Member Directory</h1>
+                <p class="text-gray-500 text-sm">All registered players — search, filter, and manage</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="exportCSV()" class="btn-secondary text-sm">Export CSV</button>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4" id="statsRow"></div>
+
+        <!-- Filter bar -->
+        <div class="glass rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+            <input type="text" id="searchInput" placeholder="Search name or ID player..." class="input-field flex-1 min-w-[180px]" oninput="filterTable()">
+            <select id="filterPillar" class="input-field w-auto" onchange="filterTable()">
+                <option value="">All Pillars</option>
+                <option value="Game Logic">Game Logic</option>
+                <option value="Game Design">Game Design</option>
+                <option value="Game Sound">Game Sound</option>
+            </select>
+            <select id="filterStatus" class="input-field w-auto" onchange="filterTable()">
+                <option value="">All Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="AFK">AFK</option>
+                <option value="NPC">NPC</option>
+                <option value="RESIGN">Resign</option>
+                <option value="GLORY">Glory</option>
+                <option value="FREEZE">Freeze</option>
+                <option value="RIP">RIP</option>
+            </select>
+            <select id="filterTeam" class="input-field w-auto" onchange="filterTable()">
+                <option value="">All Teams</option>
+                <option value="Core">Core</option>
+                <option value="Project">Project</option>
+                <option value="Training">Training</option>
+                <option value="FamilyGame">FamilyGame</option>
+                <option value="Alliance">Alliance</option>
+                <option value="Inventory">Inventory</option>
+                <option value="DesignCraft">DesignCraft</option>
+                <option value="NewMember">NewMember</option>
+                <option value="NPC">NPC</option>
+            </select>
+            <select id="filterGen" class="input-field w-auto" onchange="filterTable()">
+                <option value="">All Gen</option>
+                <option value="GEN 1">Gen 1</option>
+                <option value="GEN 2">Gen 2</option>
+            </select>
+        </div>
+
+        <!-- Table -->
+        <div class="glass rounded-xl overflow-hidden">
+            <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                <span class="text-gray-400 text-sm" id="tableCountLabel">Loading...</span>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span class="text-green-400 text-xs">CSV data</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('no')" class="cursor-pointer hover:text-white"># <span id="sort-no"></span></th>
+                            <th onclick="sortTable('name')" class="cursor-pointer hover:text-white">Name <span id="sort-name"></span></th>
+                            <th>ID Player</th>
+                            <th onclick="sortTable('pillar')" class="cursor-pointer hover:text-white">Pillar <span id="sort-pillar"></span></th>
+                            <th>Gen</th>
+                            <th>Team (Role S5)</th>
+                            <th onclick="sortTable('status')" class="cursor-pointer hover:text-white">Status <span id="sort-status"></span></th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="8" class="text-center text-gray-500 py-10">Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-white/5 flex items-center justify-between">
+                <span class="text-gray-500 text-xs" id="paginationInfo">-</span>
+                <div class="flex gap-2">
+                    <button onclick="prevPage()" id="btnPrev" class="btn-secondary text-xs py-1.5 px-3">Prev</button>
+                    <button onclick="nextPage()" id="btnNext" class="btn-secondary text-xs py-1.5 px-3">Next</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal: View Member Detail -->
+<div class="modal-overlay" id="modalDetail">
+    <div class="modal-box max-w-lg">
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="text-xl font-bold text-white">Player Detail</h3>
+            <button onclick="closeModal('modalDetail')" class="text-gray-500 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="memberDetailContent"></div>
+        <div class="flex gap-2 mt-5">
+            <button onclick="closeModal('modalDetail')" class="btn-secondary flex-1 justify-center">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// CSV DATA — All players parsed from ALL_DATABASE_PLAYER
+// ============================================================
+const CSV_PLAYERS = [
+  // GEN 1
+  {no:1,  gen:"GEN 1", pillar:"Game Logic",  id:"NG11001001GL", name:"Zulfi Ariyan",                          status:"ACTIVE",  team:"Project"},
+  {no:2,  gen:"GEN 1", pillar:"Game Design", id:"NG11001001GD", name:"Annisa Revalina Harahap",               status:"ACTIVE",  team:"Project"},
+  {no:3,  gen:"GEN 1", pillar:"-",           id:"NG11001001GL", name:"Founder",                               status:"-",       team:"-"},
+  {no:4,  gen:"GEN 1", pillar:"Game Logic",  id:"NG11004005PG", name:"Dion Faizal Saputra",                   status:"NPC",     team:"NPC"},
+  {no:5,  gen:"GEN 1", pillar:"Game Logic",  id:"NG11005006PG", name:"Achmad Abidy R",                        status:"ACTIVE",  team:"Training"},
+  {no:6,  gen:"GEN 1", pillar:"Game Logic",  id:"NG11006008PG", name:"Rayhan Habibi",                         status:"AFK",     team:"?????"},
+  {no:7,  gen:"GEN 1", pillar:"Game Logic",  id:"NG11007016PG", name:"Faridhatul Azhari",                     status:"AFK",     team:"?????"},
+  {no:8,  gen:"GEN 1", pillar:"Game Logic",  id:"NG11008018PG", name:"Novalino",                              status:"AFK",     team:"?????"},
+  {no:9,  gen:"GEN 1", pillar:"Game Logic",  id:"NG11009019PG", name:"Alfarizhi Fitra",                       status:"ACTIVE",  team:"?????"},
+  {no:10, gen:"GEN 1", pillar:"Game Logic",  id:"NG11010021PG", name:"Naila Faiza Inshyra",                   status:"ACTIVE",  team:"Project"},
+  {no:11, gen:"GEN 1", pillar:"Game Logic",  id:"NG11011024PG", name:"Renaldi Alwean Saputra",                status:"ACTIVE",  team:"NPC"},
+  {no:12, gen:"GEN 1", pillar:"Game Logic",  id:"NG11012025PG", name:"Lexania Nazila",                        status:"ACTIVE",  team:"?????"},
+  {no:13, gen:"GEN 1", pillar:"Game Logic",  id:"NG11013027PG", name:"Adhiwiryafitra Rulino",                 status:"AFK",     team:"?????"},
+  {no:14, gen:"GEN 1", pillar:"Game Logic",  id:"NG11014029PG", name:"Elsa Syafitri",                         status:"ACTIVE",  team:"Project"},
+  {no:15, gen:"GEN 1", pillar:"Game Logic",  id:"NG11015031PG", name:"Muhammad Rasyid Ridha",                 status:"ACTIVE",  team:"Training"},
+  {no:16, gen:"GEN 1", pillar:"Game Logic",  id:"NG11016032PG", name:"Arib Jilham",                           status:"ACTIVE",  team:"Training"},
+  {no:17, gen:"GEN 1", pillar:"Game Logic",  id:"NG11017033PG", name:"Ariq Hidayat",                          status:"RESIGN",  team:""},
+  {no:18, gen:"GEN 1", pillar:"Game Logic",  id:"NG11018034PG", name:"Andi Dewa Aryazetna",                   status:"ACTIVE",  team:"NewMember"},
+  {no:19, gen:"GEN 1", pillar:"Game Logic",  id:"NG11019037PG", name:"Nabila Tri Hapnesari Aresta",           status:"ACTIVE",  team:"?????"},
+  {no:20, gen:"GEN 1", pillar:"Game Logic",  id:"NG11020038PG", name:"Haya Al Fitrah",                        status:"ACTIVE",  team:"FamilyGame"},
+  {no:21, gen:"GEN 1", pillar:"Game Logic",  id:"NG11021039PG", name:"Muhammad Al Fath",                      status:"AFK",     team:"?????"},
+  {no:22, gen:"GEN 1", pillar:"Game Logic",  id:"NG11022046PG", name:"Raudhatul Jannah",                      status:"AFK",     team:"?????"},
+  {no:23, gen:"GEN 1", pillar:"Game Logic",  id:"NG11023048PG", name:"Olif Juansa Putra",                     status:"AFK",     team:"?????"},
+  {no:24, gen:"GEN 1", pillar:"Game Logic",  id:"NG11024049PG", name:"Naufal Hakim Zulian",                   status:"ACTIVE",  team:"NPC"},
+  {no:25, gen:"GEN 1", pillar:"Game Logic",  id:"NG11025050PG", name:"Muhammad Riski Fahrezi",                status:"ACTIVE",  team:"NPC"},
+  {no:26, gen:"GEN 1", pillar:"Game Logic",  id:"NG11026051PG", name:"Nida Najwa Salimah",                    status:"AFK",     team:"?????"},
+  {no:27, gen:"GEN 1", pillar:"Game Logic",  id:"NG11027054PG", name:"Hanaviz",                               status:"AFK",     team:"?????"},
+  {no:28, gen:"GEN 1", pillar:"Game Logic",  id:"NG11028056PG", name:"Muhammad Abdul Malik Al-Khairi",        status:"ACTIVE",  team:"Project"},
+  {no:29, gen:"GEN 1", pillar:"Game Logic",  id:"NG11029057PG", name:"Andri Ramadani",                        status:"ACTIVE",  team:"NPC"},
+  {no:30, gen:"GEN 1", pillar:"Game Logic",  id:"NG11030061PG", name:"Imbang Jayo Gampito",                   status:"ACTIVE",  team:"Training"},
+  {no:31, gen:"GEN 1", pillar:"Game Logic",  id:"NG11031062PG", name:"Ade Naldia Putra",                      status:"AFK",     team:"NPC"},
+  {no:32, gen:"GEN 1", pillar:"Game Logic",  id:"NG11032065PG", name:"Farhan Aufa",                           status:"ACTIVE",  team:"NPC"},
+  {no:33, gen:"GEN 1", pillar:"Game Logic",  id:"NG11033066PG", name:"Ridho Dwi Syahputra",                   status:"ACTIVE",  team:"NPC"},
+  {no:34, gen:"GEN 1", pillar:"Game Logic",  id:"NG11034067PG", name:"Fachri Akbar",                          status:"AFK",     team:"?????"},
+  {no:35, gen:"GEN 1", pillar:"Game Logic",  id:"NG11035068PG", name:"Muhammad Abrar Rayva",                  status:"AFK",     team:"?????"},
+  {no:36, gen:"GEN 1", pillar:"Game Logic",  id:"NG11036069PG", name:"Muhammad Fajri",                        status:"ACTIVE",  team:"NPC"},
+  {no:37, gen:"GEN 1", pillar:"Game Logic",  id:"NG11037070PG", name:"Habiburrahman",                         status:"AFK",     team:"?????"},
+  {no:38, gen:"GEN 1", pillar:"Game Logic",  id:"NG11038071PG", name:"Verdi Akbar",                           status:"AFK",     team:"?????"},
+  {no:39, gen:"GEN 1", pillar:"Game Logic",  id:"NG11039072PG", name:"Fauzan Al Munawar",                     status:"AFK",     team:"?????"},
+  {no:40, gen:"GEN 1", pillar:"Game Logic",  id:"NG11040073PG", name:"Dani Muhammad Rizq",                    status:"ACTIVE",  team:"Project"},
+  {no:41, gen:"GEN 1", pillar:"Game Logic",  id:"NG11041074PG", name:"Pandu Aryo",                            status:"AFK",     team:"?????"},
+  {no:42, gen:"GEN 1", pillar:"Game Logic",  id:"NG11042075PG", name:"Agil Rahman",                           status:"AFK",     team:"?????"},
+  {no:43, gen:"GEN 1", pillar:"Game Logic",  id:"NG11043077PG", name:"Alvin Emmanuel",                        status:"RESIGN",  team:""},
+  {no:44, gen:"GEN 1", pillar:"Game Logic",  id:"NG11044078PG", name:"Farhan Hamid",                          status:"AFK",     team:"?????"},
+  {no:45, gen:"GEN 1", pillar:"Game Logic",  id:"NG11045081PG", name:"Syafira Suci Darma Putri",              status:"GLORY",   team:""},
+  {no:46, gen:"GEN 1", pillar:"Game Logic",  id:"NG12046083PG", name:"Aini Khuryati",                         status:"AFK",     team:"?????"},
+  // GEN 1 - Game Design
+  {no:47, gen:"GEN 1", pillar:"Game Design", id:"NG11004009GD", name:"Abdullah Azzam Assyafqi",               status:"ACTIVE",  team:"Core"},
+  {no:48, gen:"GEN 1", pillar:"Game Design", id:"NG11005014GD", name:"Fajar Nur Alhamdi",                     status:"AFK",     team:"?????"},
+  {no:49, gen:"GEN 1", pillar:"Game Design", id:"NG11006015GD", name:"Hamdi Al Syahzi",                       status:"AFK",     team:"?????"},
+  {no:50, gen:"GEN 1", pillar:"Game Design", id:"NG11007017GD", name:"Rasyid Nugrahesa Riqua",                status:"ACTIVE",  team:"?????"},
+  {no:51, gen:"GEN 1", pillar:"Game Design", id:"NG11008020GD", name:"Muhammad Fawwaz Wiyoga",                status:"AFK",     team:"?????"},
+  {no:52, gen:"GEN 1", pillar:"Game Design", id:"NG11009022GD", name:"Fathurrahman Kamil",                    status:"NPC",     team:"NPC"},
+  {no:53, gen:"GEN 1", pillar:"Game Design", id:"NG11010023GD", name:"Muhammad Adam",                         status:"ACTIVE",  team:"FamilyGame"},
+  {no:54, gen:"GEN 1", pillar:"Game Design", id:"NG11011028GD", name:"Irham Alif Muhammad",                   status:"ACTIVE",  team:"Project"},
+  {no:55, gen:"GEN 1", pillar:"Game Design", id:"NG11012036GD", name:"Salsabila Qatrun Nisa",                 status:"ACTIVE",  team:"Core"},
+  {no:56, gen:"GEN 1", pillar:"Game Design", id:"NG11013040GD", name:"Velisa Dwi Sonia",                      status:"ACTIVE",  team:"Core"},
+  {no:57, gen:"GEN 1", pillar:"Game Design", id:"NG11014041GD", name:"Nailah Khaira Ahmad",                   status:"ACTIVE",  team:"DesignCraft"},
+  {no:58, gen:"GEN 1", pillar:"Game Design", id:"NG11015042GD", name:"Ayra Salsabillah Gunanto",              status:"AFK",     team:"?????"},
+  {no:59, gen:"GEN 1", pillar:"Game Design", id:"NG11016043GD", name:"Nabila Nurfatihatul Laila",             status:"NPC",     team:"NPC"},
+  {no:60, gen:"GEN 1", pillar:"Game Design", id:"NG11017044GD", name:"M Agung Andani",                        status:"AFK",     team:"?????"},
+  {no:61, gen:"GEN 1", pillar:"Game Design", id:"NG11018045GD", name:"Fadhilla Amalia",                       status:"ACTIVE",  team:"FamilyGame"},
+  {no:62, gen:"GEN 1", pillar:"Game Design", id:"NG11019047GD", name:"Riandi Arista Muhammad",                status:"AFK",     team:"?????"},
+  {no:63, gen:"GEN 1", pillar:"Game Design", id:"NG11020052GD", name:"Cece Novitrian",                        status:"ACTIVE",  team:"Inventory"},
+  {no:64, gen:"GEN 1", pillar:"Game Design", id:"NG11021053GD", name:"Mhd. Hasbi",                            status:"AFK",     team:"?????"},
+  {no:65, gen:"GEN 1", pillar:"Game Design", id:"NG11022055GD", name:"Fahri Zamzami",                         status:"AFK",     team:"?????"},
+  {no:66, gen:"GEN 1", pillar:"Game Design", id:"NG11023058GD", name:"Umar Maulana Fiqri",                    status:"AFK",     team:"?????"},
+  {no:67, gen:"GEN 1", pillar:"Game Design", id:"NG11024060GD", name:"Howrine Rizqa Delarozy",                status:"ACTIVE",  team:"Training"},
+  {no:68, gen:"GEN 1", pillar:"Game Design", id:"NG11025063GD", name:"Muhammad Rafi Asytar",                  status:"AFK",     team:"?????"},
+  {no:69, gen:"GEN 1", pillar:"Game Design", id:"NG11026076GD", name:"Andi Tri Akira",                        status:"AFK",     team:"?????"},
+  {no:70, gen:"GEN 1", pillar:"Game Design", id:"NG11027079GD", name:"Muhammad Rafly",                        status:"AFK",     team:"?????"},
+  {no:71, gen:"GEN 1", pillar:"Game Design", id:"NG11028082GD", name:"Muhammad Rizki Efendi",                 status:"AFK",     team:"?????"},
+  // GEN 1 - Game Sound
+  {no:72, gen:"GEN 1", pillar:"Game Sound",  id:"NG11004004SF", name:"Aditya Prawira",                        status:"RESIGN",  team:""},
+  {no:73, gen:"GEN 1", pillar:"Game Sound",  id:"NG11005007SF", name:"Hafizh Ikhwanul Muslim",                status:"ACTIVE",  team:"Project"},
+  {no:74, gen:"GEN 1", pillar:"Game Sound",  id:"NG11006010SF", name:"Emi Lazola",                            status:"ACTIVE",  team:"NPC"},
+  {no:75, gen:"GEN 1", pillar:"Game Sound",  id:"NG11007011SF", name:"Muhammad Rizki Hapiz",                  status:"AFK",     team:"NPC"},
+  {no:76, gen:"GEN 1", pillar:"Game Sound",  id:"NG11008012SF", name:"Muhammad Zia Ul-Haq",                   status:"ACTIVE",  team:"Core"},
+  {no:77, gen:"GEN 1", pillar:"Game Sound",  id:"NG11009013SF", name:"Muhammad Zaky Alfareza",                status:"AFK",     team:"NPC"},
+  {no:78, gen:"GEN 1", pillar:"Game Sound",  id:"NG11010026SF", name:"Nur Hazizah Welyazhari",                status:"ACTIVE",  team:"FamilyGame"},
+  {no:79, gen:"GEN 1", pillar:"Game Sound",  id:"NG11011030SF", name:"Asyratul Mufidah Andini",               status:"ACTIVE",  team:"?????"},
+  {no:80, gen:"GEN 1", pillar:"Game Sound",  id:"NG11012035SF", name:"Jilannisa Hanifa",                      status:"ACTIVE",  team:"?????"},
+  {no:81, gen:"GEN 1", pillar:"Game Sound",  id:"NG11013059SF", name:"Insanul Kamil",                         status:"ACTIVE",  team:"?????"},
+  {no:82, gen:"GEN 1", pillar:"Game Sound",  id:"NG11014064SF", name:"Adhitya Rizki Pratama",                 status:"AFK",     team:"?????"},
+  {no:83, gen:"GEN 1", pillar:"Game Sound",  id:"NG11015080SF", name:"Farel Azkira Pratama",                  status:"AFK",     team:"?????"},
+  // GEN 2 - Game Design
+  {no:84,  gen:"GEN 2", pillar:"Game Design", id:"NG21029084GD", name:"Mutiara Azzahra",                      status:"ACTIVE",  team:"DesignCraft"},
+  {no:85,  gen:"GEN 2", pillar:"Game Design", id:"NG21030085GD", name:"Nabilah Macika Parelia",               status:"ACTIVE",  team:"DesignCraft"},
+  {no:86,  gen:"GEN 2", pillar:"Game Design", id:"NG21031086GD", name:"Zakiyatur Rahmah",                     status:"ACTIVE",  team:"Alliance"},
+  {no:87,  gen:"GEN 2", pillar:"Game Design", id:"NG21032087GD", name:"Yozi Al Gadri",                        status:"ACTIVE",  team:"DesignCraft"},
+  {no:88,  gen:"GEN 2", pillar:"Game Design", id:"NG21033088GD", name:"Alyssa Calista Harahap",               status:"ACTIVE",  team:"DesignCraft"},
+  {no:89,  gen:"GEN 2", pillar:"Game Design", id:"NG21034089GD", name:"Fadhila Nurzi Hayati",                 status:"ACTIVE",  team:"Project"},
+  {no:90,  gen:"GEN 2", pillar:"Game Design", id:"NG21035090GD", name:"Ridho Setiawan",                       status:"ACTIVE",  team:"Inventory"},
+  {no:91,  gen:"GEN 2", pillar:"Game Design", id:"NG21036091GD", name:"Aisyah Nahril Ilmi",                   status:"ACTIVE",  team:"DesignCraft"},
+  {no:92,  gen:"GEN 2", pillar:"Game Design", id:"NG21037092GD", name:"Nayla Mariza Syahyuda",                status:"ACTIVE",  team:"Inventory"},
+  {no:93,  gen:"GEN 2", pillar:"Game Design", id:"NG21038093GD", name:"Rayhan Hanif Rahmani",                 status:"ACTIVE",  team:"DesignCraft"},
+  {no:94,  gen:"GEN 2", pillar:"Game Design", id:"NG21039094GD", name:"Chita Tri Afrianti",                   status:"ACTIVE",  team:"Alliance"},
+  {no:95,  gen:"GEN 2", pillar:"Game Design", id:"NG21040095GD", name:"Hanna Zahra Insani Pristiwasa",        status:"ACTIVE",  team:"?????"},
+  {no:96,  gen:"GEN 2", pillar:"Game Design", id:"NG21041096GD", name:"Syifa Khalishah Nugroho",              status:"ACTIVE",  team:"Inventory"},
+  {no:97,  gen:"GEN 2", pillar:"Game Design", id:"NG21042097GD", name:"Zaki Defano Irvan",                    status:"ACTIVE",  team:"?????"},
+  // GEN 2 - Game Logic
+  {no:98,  gen:"GEN 2", pillar:"Game Logic",  id:"NG21047098PG", name:"Ysmayyl Kakajanov",                    status:"ACTIVE",  team:"Training"},
+  {no:99,  gen:"GEN 2", pillar:"Game Logic",  id:"NG21048099PG", name:"Muhammad Yasin Habiburrahman",         status:"ACTIVE",  team:"Training"},
+  {no:100, gen:"GEN 2", pillar:"Game Logic",  id:"NG21049100PG", name:"Az Zahrand Solichul Tajussalathin",    status:"ACTIVE",  team:"Inventory"},
+  {no:101, gen:"GEN 2", pillar:"Game Logic",  id:"NG21050101PG", name:"Muzaini Sandri",                       status:"ACTIVE",  team:"FamilyGame"},
+  {no:102, gen:"GEN 2", pillar:"Game Logic",  id:"NG21051102PG", name:"Ilham Maulana Hasibuan",               status:"ACTIVE",  team:"FamilyGame"},
+  {no:103, gen:"GEN 2", pillar:"Game Logic",  id:"NG21052103PG", name:"Rafikhul Ramadhan",                    status:"ACTIVE",  team:"Alliance"},
+  {no:104, gen:"GEN 2", pillar:"Game Logic",  id:"NG21053104PG", name:"Annafi Al Ghifari",                    status:"ACTIVE",  team:"?????"},
+  {no:105, gen:"GEN 2", pillar:"Game Logic",  id:"NG21054105PG", name:"Luthfi Ariffandi",                     status:"ACTIVE",  team:"Inventory"},
+  {no:106, gen:"GEN 2", pillar:"Game Logic",  id:"NG21055106PG", name:"Khairi Ibnu Ramadhan",                 status:"ACTIVE",  team:"DesignCraft"},
+  {no:107, gen:"GEN 2", pillar:"Game Logic",  id:"NG21056107PG", name:"Afif Naufal Zahran",                   status:"ACTIVE",  team:"Training"},
+  {no:108, gen:"GEN 2", pillar:"Game Logic",  id:"NG21057108PG", name:"Muhammad Yusuf Alwi",                  status:"ACTIVE",  team:"NewMember"},
+  {no:109, gen:"GEN 2", pillar:"Game Logic",  id:"NG21058109PG", name:"Fachrezi Putra Riandy",                status:"ACTIVE",  team:"NewMember"},
+  {no:110, gen:"GEN 2", pillar:"Game Logic",  id:"NG21059110PG", name:"Muhammad Zikra",                       status:"ACTIVE",  team:"NewMember"},
+  {no:111, gen:"GEN 2", pillar:"Game Logic",  id:"NG21060111PG", name:"Faiz Fikri Satria",                    status:"ACTIVE",  team:"Project"},
+  {no:112, gen:"GEN 2", pillar:"Game Logic",  id:"NG21061112PG", name:"Ahmad Adzani Gibran",                  status:"ACTIVE",  team:"FamilyGame"},
+  {no:113, gen:"GEN 2", pillar:"Game Logic",  id:"NG21062113PG", name:"Muhammad Hans Nafis",                  status:"ACTIVE",  team:"FamilyGame"},
+  {no:114, gen:"GEN 2", pillar:"Game Logic",  id:"NG21063114PG", name:"Rusydi 'Arif",                         status:"ACTIVE",  team:"Alliance"},
+  {no:115, gen:"GEN 2", pillar:"Game Logic",  id:"NG21064115PG", name:"Zikri Amru Syuhada",                   status:"ACTIVE",  team:"FamilyGame"},
+  {no:116, gen:"GEN 2", pillar:"Game Logic",  id:"NG21065116PG", name:"Haykal Muhammad Dahnil",               status:"ACTIVE",  team:"Inventory"},
+  {no:117, gen:"GEN 2", pillar:"Game Logic",  id:"NG21066117PG", name:"Zakira Athifah Mukhlis",               status:"ACTIVE",  team:"Inventory"},
+  {no:118, gen:"GEN 2", pillar:"Game Logic",  id:"NG21067118PG", name:"Muhammad Juang Keenan Purnatama Abindanie", status:"ACTIVE", team:"Alliance"},
+  {no:119, gen:"GEN 2", pillar:"Game Logic",  id:"NG21068119PG", name:"Fadhel Ibnu Yupardi",                  status:"ACTIVE",  team:"NewMember"},
+  {no:120, gen:"GEN 2", pillar:"Game Logic",  id:"NG21069120PG", name:"Thaariq Salam",                        status:"ACTIVE",  team:"DesignCraft"},
+  // GEN 2 - Game Sound
+  {no:121, gen:"GEN 2", pillar:"Game Sound",  id:"NG11016121SF", name:"Reyhan Abigail",                       status:"ACTIVE",  team:"Alliance"},
+  {no:122, gen:"GEN 2", pillar:"Game Sound",  id:"NG11017122SF", name:"Habbiel Zidanu Arsa",                  status:"ACTIVE",  team:"NewMember"},
+  {no:123, gen:"GEN 2", pillar:"Game Sound",  id:"NG11018123SF", name:"Hafizh Habibullah",                    status:"ACTIVE",  team:"?????"},
+  {no:124, gen:"GEN 2", pillar:"Game Sound",  id:"NG11019124SF", name:"Muhammad Zaky",                        status:"ACTIVE",  team:"DesignCraft"},
+  {no:125, gen:"GEN 2", pillar:"Game Sound",  id:"NG11020125SF", name:"Raditya wengki maulana",               status:"ACTIVE",  team:"Inventory"},
+];
+
+let allMembers = [...CSV_PLAYERS];
+let filteredMembers = [...CSV_PLAYERS];
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let sortKey = 'no';
+let sortAsc = true;
+
+// ============================================================
+// Init
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+    renderStats();
+    filterTable();
+});
+
+// ============================================================
+// Stats
+// ============================================================
+function renderStats() {
+    const total  = allMembers.length;
+    const active = allMembers.filter(m => m.status === 'ACTIVE').length;
+    const afk    = allMembers.filter(m => m.status === 'AFK').length;
+    const npc    = allMembers.filter(m => m.status === 'NPC').length;
+
+    const cards = [
+        {label:'Total Players', value: total,  color:'text-white',      bg:'rgba(255,255,255,0.05)'},
+        {label:'Active',        value: active, color:'text-green-400',  bg:'rgba(34,197,94,0.07)'},
+        {label:'AFK',           value: afk,    color:'text-yellow-400', bg:'rgba(234,179,8,0.07)'},
+        {label:'NPC',           value: npc,    color:'text-purple-400', bg:'rgba(139,92,246,0.07)'},
+    ];
+    document.getElementById('statsRow').innerHTML = cards.map(c => `
+        <div class="glass rounded-xl p-4" style="background:${c.bg}">
+            <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">${c.label}</p>
+            <p class="text-2xl font-bold ${c.color}" style="font-family:'Rajdhani',sans-serif;">${c.value}</p>
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// Filter & Sort
+// ============================================================
+window.filterTable = function() {
+    const search  = document.getElementById('searchInput').value.toLowerCase();
+    const pillar  = document.getElementById('filterPillar').value;
+    const status  = document.getElementById('filterStatus').value;
+    const team    = document.getElementById('filterTeam').value;
+    const gen     = document.getElementById('filterGen').value;
+
+    filteredMembers = allMembers.filter(m => {
+        const matchSearch = !search ||
+            m.name.toLowerCase().includes(search) ||
+            m.id.toLowerCase().includes(search);
+        const matchPillar = !pillar  || m.pillar === pillar;
+        const matchStatus = !status  || m.status === status;
+        const matchTeam   = !team    || m.team   === team;
+        const matchGen    = !gen     || m.gen    === gen;
+        return matchSearch && matchPillar && matchStatus && matchTeam && matchGen;
+    });
+
+    filteredMembers.sort((a, b) => {
+        let av = a[sortKey] ?? '';
+        let bv = b[sortKey] ?? '';
+        if (typeof av === 'string') av = av.toLowerCase();
+        if (typeof bv === 'string') bv = bv.toLowerCase();
+        if (av < bv) return sortAsc ? -1 : 1;
+        if (av > bv) return sortAsc ?  1 : -1;
+        return 0;
+    });
+
+    currentPage = 1;
+    renderTable();
+};
+
+window.sortTable = function(key) {
+    if (sortKey === key) sortAsc = !sortAsc;
+    else { sortKey = key; sortAsc = true; }
+    document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = '');
+    document.getElementById(`sort-${key}`).textContent = sortAsc ? '↑' : '↓';
+    filterTable();
+};
+
+// ============================================================
+// Render
+// ============================================================
+function renderTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end   = start + PAGE_SIZE;
+    const page  = filteredMembers.slice(start, end);
+    const total = filteredMembers.length;
+
+    document.getElementById('tableCountLabel').textContent = `${total} player${total !== 1 ? 's' : ''} found`;
+    document.getElementById('paginationInfo').textContent  = `Showing ${Math.min(start+1,total)}–${Math.min(end,total)} of ${total}`;
+    document.getElementById('btnPrev').disabled = currentPage === 1;
+    document.getElementById('btnNext').disabled = end >= total;
+
+    if (page.length === 0) {
+        document.getElementById('tableBody').innerHTML =
+            '<tr><td colspan="8" class="text-center text-gray-500 py-10">No players match the filter</td></tr>';
+        return;
+    }
+
+    document.getElementById('tableBody').innerHTML = page.map(m => `
+        <tr>
+            <td class="mono text-xs text-gray-600">${m.no}</td>
+            <td>
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${pillArBg(m.pillar)}">
+                        ${m.name[0].toUpperCase()}
+                    </div>
+                    <p class="text-white font-medium text-sm">${esc(m.name)}</p>
+                </div>
+            </td>
+            <td class="mono text-xs text-gray-400">${esc(m.id)}</td>
+            <td><span class="badge ${pillArClass(m.pillar)}">${pillarShort(m.pillar)}</span></td>
+            <td class="text-xs text-gray-400">${m.gen}</td>
+            <td>${teamBadge(m.team)}</td>
+            <td>${statusBadge(m.status)}</td>
+            <td>
+                <button onclick="viewDetail(${m.no})" class="btn-secondary text-xs py-1 px-2">View</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+window.prevPage = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
+window.nextPage = () => { if (currentPage * PAGE_SIZE < filteredMembers.length) { currentPage++; renderTable(); } };
+
+// ============================================================
+// Detail modal
+// ============================================================
+window.viewDetail = function(no) {
+    const m = allMembers.find(x => x.no === no);
+    if (!m) return;
+    document.getElementById('memberDetailContent').innerHTML = `
+        <div class="flex items-center gap-4 mb-5">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-2xl ${pillArBg(m.pillar)}">
+                ${m.name[0].toUpperCase()}
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-lg">${esc(m.name)}</h4>
+                <p class="mono text-gray-400 text-xs mt-0.5">${esc(m.id)}</p>
+                <div class="flex gap-2 mt-1.5">
+                    ${statusBadge(m.status)}
+                    <span class="badge ${pillArClass(m.pillar)}">${m.pillar}</span>
+                </div>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+            <div class="bg-white/5 rounded-lg p-3">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">No. Urut</p>
+                <p class="text-white font-bold">#${m.no}</p>
+            </div>
+            <div class="bg-white/5 rounded-lg p-3">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Generasi</p>
+                <p class="text-white">${m.gen}</p>
+            </div>
+            <div class="bg-white/5 rounded-lg p-3">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Pillar</p>
+                <p class="text-white">${m.pillar}</p>
+            </div>
+            <div class="bg-white/5 rounded-lg p-3">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Team / Role S5</p>
+                ${teamBadge(m.team)}
+            </div>
+            <div class="bg-white/5 rounded-lg p-3 col-span-2">
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">ID Player</p>
+                <p class="text-white mono text-sm">${esc(m.id)}</p>
+                <p class="text-gray-600 text-xs mt-1">${parseIdDesc(m.id)}</p>
+            </div>
+        </div>
+    `;
+    openModal('modalDetail');
+};
+
+// Parse ID description
+function parseIdDesc(id) {
+    const pillarCode = id.slice(-2);
+    const pillarMap = {GL:'Game Logic', GD:'Game Design', SF:'Game Sound', PG:'Game Logic (PG)'};
+    const jalurMap = {'1':'Royal Recruitment','2':'Solo Initiators','3':'Talent Trappers'};
+    try {
+        const gen   = id[2]; // 1 or 2
+        const jalur = id[3]; // recruitment path
+        const desc  = `Gen ${gen} · Jalur: ${jalurMap[jalur]||jalur} · Pillar: ${pillarMap[pillarCode]||pillarCode}`;
+        return desc;
+    } catch(e) { return ''; }
+}
+
+// ============================================================
+// Export CSV
+// ============================================================
+window.exportCSV = function() {
+    const rows = [['No','Name','ID Player','Pillar','Gen','Team/Role S5','Status']];
+    filteredMembers.forEach(m => rows.push([m.no, m.name, m.id, m.pillar, m.gen, m.team, m.status]));
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a   = document.createElement('a');
+    a.href    = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download= `newgame_players_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    showToast('Players exported', 'success');
+};
+
+// ============================================================
+// Helpers
+// ============================================================
+function pillArBg(p) {
+    if (p==='Game Logic')  return 'bg-red-500/20 border border-red-500/30 text-red-400';
+    if (p==='Game Design') return 'bg-blue-900/30 border border-blue-700/30 text-blue-300';
+    if (p==='Game Sound')  return 'bg-green-900/20 border border-green-700/30 text-green-300';
+    return 'bg-gray-800 text-gray-400';
+}
+function pillArClass(p) {
+    if (p==='Game Logic')  return 'pillar-gl';
+    if (p==='Game Design') return 'pillar-gd';
+    if (p==='Game Sound')  return 'pillar-gs';
+    return 'role-unknown';
+}
+function pillarShort(p) {
+    if (p==='Game Logic')  return 'GL';
+    if (p==='Game Design') return 'GD';
+    if (p==='Game Sound')  return 'GS';
+    return p || '-';
+}
+function statusBadge(s) {
+    const map = {
+        ACTIVE:'badge-active', AFK:'badge-afk', NPC:'badge-npc',
+        RESIGN:'badge-resign', GLORY:'badge-glory', FREEZE:'badge-freeze', RIP:'badge-rip'
+    };
+    const cls = map[s] || 'role-unknown';
+    return `<span class="badge ${cls}">${s||'-'}</span>`;
+}
+function teamBadge(t) {
+    if (!t || t === '?????' || t === '-' || t === '') return `<span class="text-gray-600 text-xs">—</span>`;
+    const map = {
+        Core:'role-core', Project:'role-project', Training:'role-training',
+        FamilyGame:'role-familygame', Alliance:'role-alliance', Inventory:'role-inventory',
+        DesignCraft:'role-designcraft', NewMember:'role-newmember', NPC:'role-npc'
+    };
+    const cls = map[t] || 'role-unknown';
+    return `<span class="badge ${cls}">${t}</span>`;
+}
+
+window.openModal  = id => document.getElementById(id).classList.add('show');
+window.closeModal = id => document.getElementById(id).classList.remove('show');
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg, type='success') {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.innerHTML = `<span>${esc(msg)}</span>`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+</script>
+</body>
+</html>
