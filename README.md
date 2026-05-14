@@ -1,7 +1,7 @@
 # NEWGAME Attendance System
 
 <p align="center">
-  <img src="./assets/logo.png" width="150" alt="NEWGAME Logo">
+  <img src="assets/logo unandnewgame.png" width="150" alt="NEWGAME Logo">
 </p>
 
 <h1 align="center">NEWGAME Attendance System</h1>
