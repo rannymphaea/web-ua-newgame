@@ -273,7 +273,7 @@
 
                 <!-- DAFTAR USER (superadmin only) -->
                 <div id="userManagementSection" class="hidden glass rounded-xl p-6">
-                    <h3 class="text-lg font-bold mb-4">👥 Manajemen User</h3>
+                    <h3 class="text-lg font-bold mb-4"> Manajemen User</h3>
                     <div id="userList" class="space-y-3">
                         <p class="text-gray-500 text-sm text-center py-4">Memuat...</p>
                     </div>
@@ -757,7 +757,7 @@
                 const list = document.getElementById('anomalyList');
 
                 if (snapshot.empty) {
-                    list.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">✅ Tidak ada anomaly terdeteksi</p>';
+                    list.innerHTML = '<p class="text-gray-500 text-sm text-center py-4"> Tidak ada anomaly terdeteksi</p>';
                     return;
                 }
 
@@ -770,7 +770,7 @@
                 list.innerHTML = snapshot.docs.map(doc => {
                     const d = doc.data();
                     const level = d.score >= 8 ? 'blocked' : d.score >= 6 ? 'flagged' : 'warning';
-                    const levelLabel = { warning: '⚠️ Warning', flagged: '🚨 Flagged', blocked: '🔴 Blocked' };
+                    const levelLabel = { warning: ' Warning', flagged: ' Flagged', blocked: ' Blocked' };
                     return `
                         <div class="border rounded-lg p-4 mb-3 ${scoreColors[level]}">
                             <div class="flex items-center justify-between mb-2">
