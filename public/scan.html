@@ -72,7 +72,7 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
     import {
         getFirestore, doc, getDoc, setDoc, updateDoc, addDoc,
@@ -136,9 +136,16 @@
                 const eventSnap = await getDoc(doc(db, 'events', token.eventId));
                 if (!eventSnap.exists() || eventSnap.data().status !== 'active') throw new Error('Event not active');
 
-                const userData = userSnap.data();
-                if (!userSnap.exists() || userData.status === 'suspended') throw new Error('Account not active');
+               if (!userSnap.exists()) {
+    throw new Error('Account not found');
+}
 
+                const userData = userSnap.data();
+                console.log("USER DATA:", userData);
+
+                if (userData.status === 'suspended') {
+                throw new Error('Account not active');
+}
                 const attId = `${token.eventId}_${user.uid}`;
                 const attSnap = await getDoc(doc(db, 'attendance', attId));
                 if (attSnap.exists()) throw new Error('Already attended');
