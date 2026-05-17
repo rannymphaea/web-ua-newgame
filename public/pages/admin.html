@@ -1013,11 +1013,12 @@
     <!-- ============================================================
          FIREBASE SCRIPT
     ============================================================ -->
-    <script type="module">
+ <script type="module">
+        // ============================================================
+        // Import Firebase — semua import harus di paling atas
+        // Tidak boleh ada import duplikat atau import di tengah script
+        // ============================================================
         import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import {
-            getAuth, onAuthStateChanged, signOut
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import {
             getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
             query, where, orderBy, limit, startAfter, serverTimestamp, onSnapshot,
@@ -1025,7 +1026,7 @@
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // ============================================================
-        // Konfigurasi Firebase — ganti dengan nilai asli
+        // Konfigurasi Firebase — nilai asli project kamu
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyD6AqPbmW4UM1d1o8caBWSIi61yQsxxsGk",
@@ -1036,12 +1037,13 @@
             appId: "1:377822320778:web:f7305bb71019f670ccf573"
         };
 
-     // BARU — cek dulu sebelum inisialisasi
-        import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        // ============================================================
+        // Inisialisasi Firebase — cek dulu agar tidak duplikat
+        // getApp() lebih aman dari getApps()[0]
+        // ============================================================
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         const auth = getAuth(app);
         const db = getFirestore(app);
-
         // ============================================================
         // State global — dipakai antar fungsi
         // ============================================================
@@ -1553,10 +1555,117 @@
                 document.getElementById('adminApprovalNote').classList.add('hidden');
             }
         };
+        if (!approverId || approverId === currentUser.uid) {
+            showToast('Enter a valid approver UID (must be different from yours)', 'error');
+            return;
+        }
 
-        window.confirmCloseEvent = async function() {
-            if (!activeEventId) return;
+    try {
+        closeModal('modalCloseEvent');
+        clearInterval(qrInterval);
+        if (attendanceUnsubscribe) attendanceUnsubscribe();
 
+        // Invalidate token lama
+        const oldQ = query(
+            collection(db, 'tokens'),
+            where('eventId', '==', activeEventId),
+            where('used', '==', false)
+        );
+        const oldSnap = await getDocs(oldQ);
+        if (oldSnap.size > 0) {
+            const tokenBatch = writeBatch(db);
+            oldSnap.docs.forEach(d => tokenBatch.update(d.ref, { used: true }));
+            await tokenBatch.commit();
+        }
+
+        // Ambil semua user aktif
+        const usersQ = query(collection(db, 'users'), where('status', 'in', ['active', 'npc']));
+        const usersSnap = await getDocs(usersQ);
+
+        // Ambil yang sudah hadir
+        const attendedQ = query(
+            collection(db, 'attendance'),
+            where('eventId', '==', activeEventId)
+        );
+        const attendedSnap = await getDocs(attendedQ);
+        const presentIds = new Set(attendedSnap.docs.map(d => d.data().userId));
+        const eventStartTime = activeEventData.startTime;
+
+        // ============================================================
+        // PERBAIKAN UTAMA — Proses per chunk 400
+        // Mencegah error jika user lebih dari 500
+        // ============================================================
+        const CHUNK_SIZE = 400;
+        const usersToProcess = usersSnap.docs.filter(userDoc => {
+            const userData = userDoc.data();
+            // Skip yang daftar setelah event mulai
+            if (eventStartTime && userData.createdAt) {
+                if (userData.createdAt.toMillis() > eventStartTime.toMillis()) return false;
+            }
+            // Hanya proses yang tidak hadir
+            return !presentIds.has(userDoc.id);
+        });
+
+        for (let i = 0; i < usersToProcess.length; i += CHUNK_SIZE) {
+            const chunk = usersToProcess.slice(i, i + CHUNK_SIZE);
+            const batch = writeBatch(db);
+
+            for (const userDoc of chunk) {
+                const uid = userDoc.id;
+                const userData = userDoc.data();
+                const penalty = activeEventData.xpPenalty || 5;
+                const currentXP = userData.xpCache || 0;
+                const newXP = Math.max(0, currentXP - penalty);
+
+                batch.update(doc(db, 'users', uid), { xpCache: newXP });
+
+                const attendanceRef = doc(db, 'attendance', `${activeEventId}_${uid}`);
+                batch.set(attendanceRef, {
+                    eventId: activeEventId,
+                    eventName: activeEventData.name,
+                    userId: uid,
+                    status: 'absent',
+                    xpChange: -penalty,
+                    attendedAt: serverTimestamp()
+                });
+            }
+
+            await batch.commit();
+        }
+
+        // Tutup event dan tulis log dalam satu batch terakhir
+        const closeBatch = writeBatch(db);
+        closeBatch.update(doc(db, 'events', activeEventId), {
+            status: 'closed',
+            closedBy: currentUser.uid,
+            closedAt: serverTimestamp(),
+            xpDistributed: true
+        });
+
+        // Log masuk ke dalam batch — mencegah kehilangan jejak audit
+        const logRef = doc(collection(db, 'logs'));
+        closeBatch.set(logRef, {
+            userId: currentUser.uid,
+            action: 'close_event',
+            result: 'success',
+            eventId: activeEventId,
+            eventName: activeEventData.name,
+            timestamp: serverTimestamp()
+        });
+
+        await closeBatch.commit();
+
+        activeEventId = null;
+        activeEventData = null;
+
+        showToast('Event closed. XP distributed to all members.', 'success');
+        showSection('events');
+        await loadOverviewData();
+
+    } catch (err) {
+        console.error('closeEvent error:', err);
+        showToast('Failed to close event: ' + err.message, 'error');
+    }
             // Cek approval untuk admin biasa
             if (currentRole === 'admin') {
                 const approverId = document.getElementById('approverIdInput').value.trim();
@@ -1657,7 +1766,6 @@
                 console.error('closeEvent error:', err);
                 showToast('Failed to close event: ' + err.message, 'error');
             }
-        };
 
         // ============================================================
         // SECTION: MEMBERS — Load semua user terdaftar
