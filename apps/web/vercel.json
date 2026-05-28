@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "comment": "DEPLOY MANUAL: Hapus file ini atau ubah ignoreCommand ke 'exit 1' saat siap deploy ke Vercel.",
+  "ignoreCommand": "exit 0"
+}
