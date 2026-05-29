@@ -108,15 +108,44 @@ export class AuthService {
 
   /**
    * Set custom claims (role) di Firebase Auth.
-   * Dipanggil oleh admin saat mengubah role user.
+   * superadmin → bisa set role apapun
+   * admin      → hanya bisa set role 'member'
    */
-  async setUserRole(uid: string, role: string) {
+  async setUserRole(uid: string, role: string, callerRole?: string) {
+    const allowedRoles = ['member', 'admin', 'superadmin'];
+    if (!allowedRoles.includes(role)) {
+      throw new BadRequestException(`Role '${role}' tidak valid`);
+    }
+
+    // Admin biasa hanya boleh mengembalikan ke 'member'
+    if (callerRole === 'admin' && role !== 'member') {
+      throw new UnauthorizedException('Admin hanya bisa mengubah role ke member');
+    }
+
     await this.firebaseService.auth.setCustomUserClaims(uid, { role });
-
-    await this.firebaseService.firestore.collection('users').doc(uid).update({
-      role: role,
-    });
-
+    await this.firebaseService.firestore.collection('users').doc(uid).update({ role });
     return { success: true, role };
   }
+
+  /**
+   * Ambil semua user — untuk halaman manajemen role (superadmin only)
+   */
+  async getAllUsers(limit = 100) {
+    const snapshot = await this.firebaseService.firestore
+      .collection('users')
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      id:          doc.id,
+      displayName: doc.data().displayName || '',
+      email:       doc.data().email || '',
+      memberId:    doc.data().memberId || '',
+      role:        doc.data().role || 'member',
+      division:    doc.data().division || '',
+      status:      doc.data().status || 'active',
+    }));
+  }
 }
+

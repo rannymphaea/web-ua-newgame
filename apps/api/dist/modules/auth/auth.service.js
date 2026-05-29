@@ -82,12 +82,33 @@ let AuthService = class AuthService {
         }
         return { id: uid, ...userSnap.data() };
     }
-    async setUserRole(uid, role) {
+    async setUserRole(uid, role, callerRole) {
+        const allowedRoles = ['member', 'admin', 'superadmin'];
+        if (!allowedRoles.includes(role)) {
+            throw new common_1.BadRequestException(`Role '${role}' tidak valid`);
+        }
+        if (callerRole === 'admin' && role !== 'member') {
+            throw new common_1.UnauthorizedException('Admin hanya bisa mengubah role ke member');
+        }
         await this.firebaseService.auth.setCustomUserClaims(uid, { role });
-        await this.firebaseService.firestore.collection('users').doc(uid).update({
-            role: role,
-        });
+        await this.firebaseService.firestore.collection('users').doc(uid).update({ role });
         return { success: true, role };
+    }
+    async getAllUsers(limit = 100) {
+        const snapshot = await this.firebaseService.firestore
+            .collection('users')
+            .orderBy('createdAt', 'desc')
+            .limit(limit)
+            .get();
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            displayName: doc.data().displayName || '',
+            email: doc.data().email || '',
+            memberId: doc.data().memberId || '',
+            role: doc.data().role || 'member',
+            division: doc.data().division || '',
+            status: doc.data().status || 'active',
+        }));
     }
 };
 exports.AuthService = AuthService;

@@ -741,3 +741,86 @@
   .exp-grid      { grid-template-columns: 1fr; }
   .landing-footer{ padding: 20px 20px 48px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   DARK MODE OVERRIDES — Landing Page
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Paper canvas — multiply blend mode is invisible on dark bg */
+.dark #paper-canvas {
+  mix-blend-mode: overlay;
+  opacity: 0.08;
+}
+
+/* Quest 3D cards */
+.dark .q-card {
+  background: rgba(17, 24, 39, 0.85);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  color: var(--clr-text-primary);
+}
+.dark .q-card.is-active {
+  border-color: rgba(253, 207, 65, 0.3);
+  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(253,207,65,0.15);
+}
+
+/* Assessment buttons */
+.dark .assess-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--clr-text-secondary);
+}
+.dark .assess-btn:hover {
+  background: rgba(253, 207, 65, 0.08);
+  border-color: rgba(253, 207, 65, 0.35);
+  color: var(--clr-text-primary);
+}
+.dark .assess-btn.active-tab {
+  background: rgba(253, 207, 65, 0.1);
+  border-color: rgba(253, 207, 65, 0.45);
+  color: var(--clr-text-primary);
+}
+
+/* Stats section */
+.dark .stats-section {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+.dark .stat-counter {
+  background: linear-gradient(135deg, #F0EEF4, #B9A6CE);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* FAQ */
+.dark .faq-item { border-color: rgba(255, 255, 255, 0.07); }
+.dark .faq-question { color: var(--clr-text-primary); }
+
+/* Contact icon */
+.dark .contact-icon {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Footer */
+.dark .landing-footer {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Scroll arrow */
+.dark .scroll-arrow {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Org branch connector lines */
+.dark .org-branch-card::before {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Guidebook chip colors (hardcoded bg) — invert in dark */
+.dark .glow-card {
+  background: rgba(17, 24, 39, 0.5) !important;
+}
+

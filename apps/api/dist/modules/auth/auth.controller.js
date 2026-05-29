@@ -38,8 +38,11 @@ let AuthController = class AuthController {
     async getProfile(user) {
         return this.authService.getUserProfile(user.uid);
     }
-    async setRole(body) {
-        return this.authService.setUserRole(body.userId, body.role);
+    async setRole(caller, body) {
+        return this.authService.setUserRole(body.userId, body.role, caller.role);
+    }
+    async getAllUsers() {
+        return this.authService.getAllUsers();
     }
 };
 exports.AuthController = AuthController;
@@ -70,12 +73,21 @@ __decorate([
 __decorate([
     (0, common_1.Post)('set-role'),
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('admin'),
-    __param(0, (0, common_1.Body)()),
+    (0, roles_decorator_1.Roles)('admin', 'superadmin'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "setRole", null);
+__decorate([
+    (0, common_1.Get)('users'),
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('superadmin'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getAllUsers", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

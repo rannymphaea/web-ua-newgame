@@ -51,12 +51,13 @@ export default function LoginPage() {
   const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
 
-  const [email,       setEmail]       = useState('');
-  const [password,    setPassword]    = useState('');
-  const [regName,     setRegName]     = useState('');
-  const [regMemberId, setRegMemberId] = useState('');
-  const [regEmail,    setRegEmail]    = useState('');
-  const [regPassword, setRegPassword] = useState('');
+  const [email,           setEmail]           = useState('');
+  const [password,        setPassword]        = useState('');
+  const [regName,         setRegName]         = useState('');
+  const [regMemberId,     setRegMemberId]     = useState('');
+  const [regTempPassword, setRegTempPassword] = useState('');
+  const [regEmail,        setRegEmail]        = useState('');
+  const [regPassword,     setRegPassword]     = useState('');
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -77,24 +78,43 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      const verifyRes = await fetch('/api/auth/verify-member', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId: regMemberId, name: regName }),
-      });
+      // Step 1: Verifikasi Member ID + Kode Akses ke backend
+      const verifyRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/verify-member`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId:     regMemberId.trim().toUpperCase(),
+            tempPassword: regTempPassword.trim(),
+          }),
+        },
+      );
       if (!verifyRes.ok) {
         const err = await verifyRes.json();
-        throw new Error(err.message || 'Member verification failed');
+        throw new Error(err.message || 'Verifikasi gagal — cek Member ID dan Kode Akses');
       }
+      const verified = await verifyRes.json();
+      // verified = { valid, memberId, name, division, team, status }
+
+      // Step 2: Buat akun Firebase Auth
       const cred = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
       await sendEmailVerification(cred.user);
+
+      // Step 3: Simpan profil ke Firestore via backend
       const idToken = await cred.user.getIdToken();
       api.setToken(idToken);
-      await api.post('/auth/register', { name: regName, memberId: regMemberId });
-      setSuccess('Registration successful! Please check your email for verification.');
+      await api.post('/auth/register', {
+        memberId:    verified.memberId,
+        displayName: regName.trim() || verified.name,
+        division:    verified.division,
+        team:        verified.team || '',
+      });
+
+      setSuccess('Pendaftaran berhasil! Cek email kamu untuk verifikasi sebelum login.');
       setMode('login');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : 'Pendaftaran gagal');
     } finally { setLoading(false); }
   }
 
@@ -233,17 +253,26 @@ export default function LoginPage() {
                 transition={{ duration: 0.3 }}
                 onSubmit={handleRegister}
               >
+                {/* Registration info box */}
+                <div style={{ padding: '10px 14px', borderRadius: 8, background: 'var(--clr-info-bg)', border: '1px solid var(--clr-info-border)', marginBottom: 16 }}>
+                  <p style={{ fontFamily: 'var(--font-inter)', fontSize: 12, color: 'var(--clr-info)', lineHeight: 1.6, display: 'flex', gap: 8 }}>
+                    <i className="ri-information-line" style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }} />
+                    Kamu memerlukan <strong>Member ID</strong> dan <strong>Kode Akses</strong> dari admin untuk mendaftar.
+                  </p>
+                </div>
+
                 {[
-                  { label: 'Nama Lengkap', icon: 'ri-user-line',   type: 'text',     id: 'reg-name',     val: regName,     set: setRegName,     ph: 'Nama kamu' },
-                  { label: 'Member ID',    icon: 'ri-id-card-line', type: 'text',     id: 'reg-memberid', val: regMemberId, set: setRegMemberId, ph: 'Contoh: NEWGAME-001' },
-                  { label: 'Email',        icon: 'ri-mail-line',    type: 'email',    id: 'reg-email',    val: regEmail,    set: setRegEmail,    ph: 'nama@email.com' },
-                  { label: 'Password',     icon: 'ri-lock-line',    type: 'password', id: 'reg-password', val: regPassword, set: setRegPassword, ph: 'Min 6 karakter', min: 6 },
-                ].map(({ label, icon, type, id, val, set, ph, min }, idx) => (
-                  <div key={idx} style={{ marginBottom: idx === 3 ? 24 : 14 }}>
+                  { label: 'Nama Lengkap',  icon: 'ri-user-line',    type: 'text',     id: 'reg-name',         val: regName,         set: setRegName,         ph: 'Nama kamu' },
+                  { label: 'Member ID',     icon: 'ri-id-card-line', type: 'text',     id: 'reg-memberid',     val: regMemberId,     set: setRegMemberId,     ph: 'Contoh: NEWGAME-001' },
+                  { label: 'Kode Akses',    icon: 'ri-key-2-line',   type: 'password', id: 'reg-temppassword', val: regTempPassword, set: setRegTempPassword, ph: 'Dari admin' },
+                  { label: 'Email',         icon: 'ri-mail-line',    type: 'email',    id: 'reg-email',        val: regEmail,        set: setRegEmail,        ph: 'nama@email.com' },
+                  { label: 'Password Baru', icon: 'ri-lock-line',    type: 'password', id: 'reg-password',     val: regPassword,     set: setRegPassword,     ph: 'Min 6 karakter', min: 6 },
+                ].map(({ label, icon, type, id, val, set, ph, min }: any, idx) => (
+                  <div key={idx} style={{ marginBottom: idx === 4 ? 24 : 14 }}>
                     <label className="label" htmlFor={id}><i className={icon} style={{ marginRight: 6 }} aria-hidden="true" />{label}</label>
-                    <input id={id} type={type} className="input" value={val} onChange={e => set(e.target.value)} placeholder={ph} required minLength={min} autoComplete={type === 'password' ? 'new-password' : undefined} />
+                    <input id={id} type={type} className="input" value={val} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(e.target.value)} placeholder={ph} required minLength={min} autoComplete={type === 'password' ? 'new-password' : 'off'} />
                   </div>
-                ))}
+                ))
                 <motion.button type="submit" className="btn btn-primary btn-depth w-full" disabled={loading} whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.97 }}>
                   {loading ? <><span className="spinner spinner-sm" /> Mendaftar...</> : <><i className="ri-quill-pen-line" style={{ fontSize: 17 }} aria-hidden="true" /> Daftar</>}
                 </motion.button>

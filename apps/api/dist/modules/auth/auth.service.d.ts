@@ -22,8 +22,17 @@ export declare class AuthService {
     getUserProfile(uid: string): Promise<{
         id: string;
     }>;
-    setUserRole(uid: string, role: string): Promise<{
+    setUserRole(uid: string, role: string, callerRole?: string): Promise<{
         success: boolean;
         role: string;
     }>;
+    getAllUsers(limit?: number): Promise<{
+        id: string;
+        displayName: any;
+        email: any;
+        memberId: any;
+        role: any;
+        division: any;
+        status: any;
+    }[]>;
 }

@@ -20,6 +20,7 @@ import {
   CONTACTS,
 } from './components/data';
 import dynamic from 'next/dynamic';
+import { useTheme } from '@/lib/theme-engine';
 
 // Dynamically import heavy / client-only components
 const PaperCanvas         = dynamic(() => import('./components/PaperCanvas'),         { ssr: false });
@@ -27,6 +28,7 @@ const QuestStack3D        = dynamic(() => import('./components/QuestStack3D'),  
 const PirateMap           = dynamic(() => import('./components/PirateMap'),           { ssr: false });
 const AssessmentAccordion = dynamic(() => import('./components/AssessmentAccordion'), { ssr: false });
 const VideoModal          = dynamic(() => import('./components/VideoModal'),           { ssr: false });
+const SplashScreen        = dynamic(() => import('./components/SplashScreen'),        { ssr: false });
 
 /* ── Sound toggle ─────────────────────────────────────────────── */
 function SoundToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
@@ -42,6 +44,27 @@ function SoundToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => 
         <i className="ri-volume-up-line" style={{ fontSize: 18 }} />
       ) : (
         <i className="ri-volume-mute-line" style={{ fontSize: 18 }} />
+      )}
+    </button>
+  );
+}
+
+/* ── Theme toggle ──────────────────────────────────────────────── */
+function ThemeToggle() {
+  const { isDark, toggleTheme } = useTheme();
+  return (
+    <button
+      id="theme-toggle"
+      className="sound-toggle-btn"
+      onClick={toggleTheme}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Light Mode' : 'Dark Mode'}
+      style={{ bottom: 88 }}
+    >
+      {isDark ? (
+        <i className="ri-sun-line" style={{ fontSize: 18, color: '#FDCF41' }} />
+      ) : (
+        <i className="ri-moon-line" style={{ fontSize: 18 }} />
       )}
     </button>
   );
@@ -90,6 +113,9 @@ export default function LandingPage() {
       ref={scrollRef}
       style={{ minHeight: '100vh', background: 'var(--novel-bg)', color: 'var(--novel-ink)', overflowX: 'hidden', position: 'relative' }}
     >
+      {/* ── Splash Screen Entrance ─ */}
+      <SplashScreen />
+
       {/* ── Paper Texture ─── */}
       <PaperCanvas />
 
@@ -102,6 +128,9 @@ export default function LandingPage() {
 
       {/* ── Sound Toggle ─ */}
       <SoundToggle enabled={soundOn} onToggle={toggleSound} />
+
+      {/* ── Theme Toggle ─ */}
+      <ThemeToggle />
 
       {/* ════ HERO (Asymmetric Split) ═══════════════════════════ */}
       <section

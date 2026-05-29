@@ -24,11 +24,20 @@ export declare class AuthController {
     getProfile(user: any): Promise<{
         id: string;
     }>;
-    setRole(body: {
+    setRole(caller: any, body: {
         userId: string;
         role: string;
     }): Promise<{
         success: boolean;
         role: string;
     }>;
+    getAllUsers(): Promise<{
+        id: string;
+        displayName: any;
+        email: any;
+        memberId: any;
+        role: any;
+        division: any;
+        status: any;
+    }[]>;
 }
