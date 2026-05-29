@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "installCommand": "npm install --legacy-peer-deps",
-  "functions": {
-    "api/index.js": {
-      "memory": 1024,
-      "maxDuration": 30,
-      "includeFiles": "dist/**"
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["dist/**"]
+      }
     }
-  },
+  ],
   "routes": [
     {
       "src": "/(.*)",
