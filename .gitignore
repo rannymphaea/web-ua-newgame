@@ -45,3 +45,6 @@ claude.md
 workflow.md
 afbof.md
 full_project.txt
+
+.vercel
+.env*

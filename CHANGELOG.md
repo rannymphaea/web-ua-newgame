@@ -1,113 +1,99 @@
-# CHANGELOG
+# Changelog
 
-Log perubahan dan riwayat sesi pengembangan platform web NEWGAME.
-
----
-
-## Sesi 8 (29 Mei 2026) — Konsolidasi Dokumentasi dan Fitur Avatar
-
-### Fitur Avatar dan Unggah Profil
-- **Upload Foto Profil**: Penulisan ulang uploadProfile dengan mekanisme doUpload yang dicoba maksimal 2 kali. Jika gagal pada percobaan pertama, mencatat log upload_retry. Jika tetap gagal, mengembalikan status kegagalan tanpa menyebabkan server crash.
-- **Dukungan Multi Avatar**: Menambahkan daftar avatar yang diizinkan (default, neko, chibi, yua) pada media service dan kontroler API.
-- **Interaksi Avatar Yua**: Implementasi efek khusus saat memilih avatar yua, yang memicu sfx yua-select.mp3 dan animasi avatar_pulse (skala 1 ke 1.15 ke 1 dalam durasi maksimal 220ms dengan transisi ease-out).
-- **Pembatasan Laju SFX (Cooldown)**: Menghindari spam suara dengan menambahkan jeda cooldown 600ms. Jika ditekan kembali selama cooldown, sistem memberikan respon cooldown_active.
-- **Format JSON Bersih**: Seluruh endpoint avatar dan profil selalu mengembalikan respon JSON terstruktur.
-
-### Konsolidasi Dokumen Markdown
-- Menggabungkan README.md, PENGENALAN.md, dan NOTULENSI.md menjadi satu dokumen README.md yang komprehensif.
-- Menggabungkan DEVELOPER_GUIDE.md, STYLE_GUIDE.md, CONTRIBUTING.md, dan dokumen panduan perbaikan (Firebase connection, Storage bucket, profile fix) menjadi satu file DEVELOPER_GUIDE.md.
-- Menggabungkan SECURITY_CHECKLIST.md, SECURITY_HARDENING.md, THREAT_INTEL.md, dan FIRESTORE_RULES.md ke dalam satu file SECURITY.md.
-- Menggabungkan CHANGELOG.md dan TRACKING.md menjadi satu file CHANGELOG.md.
-- Menghapus semua emoji dari seluruh dokumen Markdown agar tampilan lebih profesional dan bersih.
+Catatan perubahan platform NEWGAME, dari sesi pengembangan pertama sampai sekarang. Ditulis dari yang paling baru.
 
 ---
 
-## Sesi 7 — Integrasi Guidebook
+## 29 Mei 2026
 
-### Kerja Sesi
-- **Dashboard**: Menambahkan kartu banner Guidebook (ikon, judul, deskripsi, chip penanda, dan efek hover emas).
-- **Landing Page**: Menambahkan seksi Guidebook NEWGAME sebelum CTA menggunakan transisi Framer Motion dan chip indikator.
-- **Landing Hero**: Menambahkan tombol ketiga "Guidebook" untuk melakukan gulir otomatis ke bagian panduan.
+**Migrasi storage ke Cloudinary**
 
----
+Firebase Storage sekarang butuh upgrade berbayar, jadi kita pindah ke Cloudinary yang gratis dan tidak perlu kartu kredit. Media service di backend ditulis ulang sepenuhnya — semua upload sekarang pakai `cloudinary.uploader.upload_stream` via readable stream, bukan lagi `file.save()` ke Firebase bucket. Fungsi hapus file juga diperbarui agar bisa parsing public ID dari URL Cloudinary.
 
-## Sesi 6 — Optimalisasi Performa
+**Perbaikan upload foto profil**
 
-### Masalah Awal
-- Waktu muat halaman pertama melebihi 3 detik.
-- Remix Icon CSS menghalangi proses render awal (render-blocking).
-- Autentikasi Firebase menyebabkan layar kosong / pemutar berputar (spinner) selama 1-3 detik.
-- Panggilan API simultan sebelum halaman siap ditampilkan.
-- Pemuatan font tebal di semua halaman dashboard.
+Error `unknown_system_error` yang sudah lama mengganggu akhirnya terselesaikan. Akar masalahnya ada di dua hal: pertama, `makePublic()` selalu gagal karena Firebase Storage belum pernah diaktifkan; kedua, error aslinya tidak pernah sampai ke frontend karena selalu ditimpa dengan pesan generik. Sekarang kedua hal itu sudah diperbaiki.
 
-### Solusi yang Diterapkan
-- **Pemuatan Optimistik pada Auth Store**: Memanfaatkan cache IndexedDB Firebase agar status login dapat dimuat secara instan tanpa menunggu siklus penuh auth state.
-- **Tata Letak Dashboard Lebih Ringan**: Menghapus pemutar layar penuh dan menggantinya dengan skeleton loading untuk mempercepat transisi.
-- **Sumber Daya Non-Blocking**: Memuat CSS Remix Icon secara asinkron dan menghapus font Cormorant serta Pinyon dari dashboard untuk menghemat ukuran bundle.
-- **Dua Fase Pemuatan Dashboard**: Fase pertama menampilkan data dasar secara instan dari Zustand, fase kedua mengambil data eksternal secara bertahap setelah halaman pertama selesai digambar.
-- **Konfigurasi Next.js**: Mengoptimalkan impor pustaka eksternal (framer-motion, zustand, sub-modul Firebase) dan mengaktifkan kompresi format gambar AVIF/WebP dengan waktu simpan (TTL) cache yang dioptimalkan.
+**Interaksi karakter Yua di dashboard**
 
----
+Gambar Yua di hero section sekarang bisa diklik. Klik memicu animasi bounce (scale + rotate kecil dalam 400ms) dan memutar `yua-select.mp3`. SFX punya cooldown 600ms supaya tidak spam, tapi animasinya tetap jalan setiap klik.
 
-## Sesi 5 — Penyesuaian Tata Letak Dashboard dan XP Bar
+**Tampilan avatar Yua di halaman profil**
 
-### Kerja Sesi
-- Mengembalikan desain dashboard ke tata letak awal menggunakan ilustrasi karakter utama.
-- **TopBar**: Menambahkan visualisasi bar tingkat pengalaman (XP liquid bar) setinggi 30px secara horizontal, lengkap dengan animasi gelombang SVG dan perubahan warna otomatis sesuai tingkatan level user.
+Tombol pilih avatar Yua sekarang menampilkan gambar karakter Yua langsung, bukan huruf inisial. Kalau avatar aktif adalah Yua dan tidak ada foto profil yang diupload, foto profil utama juga menampilkan gambar Yua. Badge "NEW" sudah dihapus. Warna aksen Yua diganti ke biru (`#3b82f6`).
+
+**Konsolidasi dokumentasi**
+
+Semua file `.md` yang berserakan digabungkan jadi empat file saja: README, DEVELOPER_GUIDE, SECURITY, dan CHANGELOG ini. Semua emoji dihapus dari dokumentasi.
+
+**Perbaikan deploy Vercel**
+
+`vercel.json` di `apps/web` yang sebelumnya sengaja memblokir deployment (`ignoreCommand: exit 0`) sudah dibenarkan. Root `vercel.json` dibuat ulang dengan konfigurasi yang benar untuk monorepo. Rewrite API di `next.config.js` sekarang hanya aktif saat development — di production, traffic langsung ke `NEXT_PUBLIC_API_URL`. Hostname Cloudinary ditambahkan ke `remotePatterns` untuk image optimization.
 
 ---
 
-## Sesi 4 — Pengerasan Keamanan
+## Sesi 7
 
-### Kerja Sesi
-- Menyusun modul keamanan NestJS (SecurityModule) yang mencakup pembatasan laju permintaan, pelindung token JWT, penyaring input, CORS, dan tajuk keamanan (Helmet).
-- Menyiapkan berkas stubs konfigurasi untuk pengerasan NGINX dan aturan ModSecurity WAF.
-- Merancang fondasi awal pendeteksian anomali berbasis kecerdasan buatan.
-- Menambahkan sistem pencatatan aktivitas forensic logs dan pengiriman peringatan keamanan.
+**Integrasi Guidebook**
+
+Menambahkan kartu Guidebook di dashboard dan halaman landing. Di landing, ada seksi baru sebelum CTA dengan animasi Framer Motion. Di hero, ada tombol ketiga untuk scroll otomatis ke bagian panduan.
 
 ---
 
-## Sesi 3 — Landing Page Premium
+## Sesi 6
 
-### Kerja Sesi
-- Mendesain ulang landing page dengan tata letak modern, animasi pengetikan teks, seksi visi misi, struktur pengurus, dan pengenalan divisi.
-- Menambahkan visualisasi peta perjalanan keanggotaan (Pirate Map) dan presentasi kartu misi tiga dimensi.
-- Menambahkan efek suara interaktif, modal pemutaran video profil, dan latar belakang tekstur kertas.
+**Optimasi performa**
 
----
+Masalahnya waktu itu: halaman pertama butuh 3+ detik untuk tampil, spinner login bertahan 1-3 detik, dan font berat dimuat di semua halaman dashboard.
 
-## Sesi 2 — Antarmuka Halaman Dashboard dan Pengguna
-
-### Kerja Sesi
-- Membuat halaman login yang terintegrasi dengan Firebase Auth.
-- Implementasi halaman utama dashboard anggota, pemindaian QR absensi, daftar lencana, dan peringkat keaktifan.
-- Menyusun halaman administrasi untuk pengelolaan berita, berkas galeri media, dan analisis keaktifan anggota.
+Solusinya: auth store sekarang memanfaatkan cache IndexedDB Firebase sehingga status login dimuat instan. Dashboard punya dua fase — fase pertama tampilkan data dari Zustand cache, fase kedua baru ambil data dari server. CSS Remix Icon dimuat secara async dan font Cormorant dihapus dari dashboard untuk menghemat bundle size.
 
 ---
 
-## Sesi 1 — Infrastruktur Dasar Monorepo
+## Sesi 5
 
-### Kerja Sesi
-- Setup monorepo menggunakan Next.js (aplikasi web) dan NestJS (aplikasi API).
-- Konfigurasi database Firestore dan Firebase Auth.
-- Membuat modul sistem penanganan pesan kesalahan global dan manajemen tema visual aplikasi.
+**XP liquid bar di TopBar**
+
+Bar XP setinggi 30px ditambahkan secara horizontal di bagian atas. Ada animasi gelombang SVG dan warna berubah otomatis sesuai level user. Dashboard dikembalikan ke desain dengan ilustrasi karakter.
 
 ---
 
-## Riwayat Rilis Sebelumnya
+## Sesi 4
 
-### 20 Mei 2026 (Landing Page & Integrasi Guidebook)
-- Integrasi materi panduan dari guidebook resmi ke halaman web.
-- Mengganti seluruh emoji pada antarmuka publik dengan ikon berbasis SVG.
-- Membagi komponen landing page agar lebih modular untuk pemeliharaan yang lebih mudah.
+**Pengerasan keamanan**
 
-### 17 Mei 2026 (Migrasi Monorepo)
-- Migrasi penuh sistem lama berbasis HTML/JS mandiri ke monorepo terpadu.
-- Menghapus lebih dari 12,000 berkas konfigurasi lama yang tidak terpakai.
-- Menyusun 16 modul utama di backend API untuk menangani autentikasi, absensi, lencana, pilar keahlian, ekspor laporan, dan pendeteksian kecurangan.
+SecurityModule NestJS dibuat — berisi rate limiting, validasi JWT, CORS, Helmet, dan filter input. Konfigurasi NGINX dan ModSecurity WAF dibuat sebagai stub. Fondasi awal anomaly detection dan forensic logging juga dipasang di sesi ini.
 
-### 3 Mei 2026 (Fitur Anggota & Kalender)
-- Menambahkan halaman detail profil anggota beserta riwayat aktivitasnya.
-- Menambahkan kalender kegiatan interaktif.
-- Membuat banner pengumuman darurat di dashboard admin.
-- Integrasi visualisasi grafik heatmap mingguan untuk analisis keaktifan anggota.
+---
+
+## Sesi 3
+
+**Landing page premium**
+
+Desain ulang total landing page. Animasi typewriter di hero, seksi visi misi, struktur pengurus, dan pengenalan pilar. Ada juga Pirate Map untuk journey anggota, efek suara interaktif, dan modal video profil organisasi.
+
+---
+
+## Sesi 2
+
+**Halaman dashboard dan pengguna**
+
+Halaman login dengan Firebase Auth, dashboard anggota, scan QR absensi, halaman lencana, leaderboard, dan panel admin dengan manajemen berita, media, dan analytics.
+
+---
+
+## Sesi 1
+
+**Setup dasar monorepo**
+
+Next.js untuk frontend, NestJS untuk backend, Firestore dan Firebase Auth sebagai infrastruktur data. Modul error handling global dan sistem tema visual dibuat di sesi pertama ini.
+
+---
+
+## Rilis sebelumnya
+
+**20 Mei 2026** — Integrasi materi dari guidebook resmi NEWGAME ke halaman landing. Semua emoji di UI publik diganti dengan ikon SVG. Komponen landing dipecah jadi lebih modular.
+
+**17 Mei 2026** — Migrasi dari sistem lama berbasis HTML/JS mandiri ke monorepo terpadu. Lebih dari 12.000 file konfigurasi lama dihapus. 16 modul backend dibuat untuk menangani seluruh kebutuhan sistem.
+
+**3 Mei 2026** — Halaman detail profil anggota dengan riwayat aktivitas. Kalender kegiatan interaktif. Banner pengumuman darurat untuk admin. Heatmap mingguan untuk analisis kehadiran.

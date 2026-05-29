@@ -13,6 +13,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'storage.googleapis.com' },
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
       { protocol: 'https', hostname: 'img.youtube.com' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 3600,
@@ -32,8 +33,10 @@ const nextConfig = {
     ],
   },
 
-  // API proxy ke backend NestJS (dev only)
+  // API proxy ke backend NestJS — hanya aktif di development (localhost)
   async rewrites() {
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev) return [];
     return [
       {
         source: '/api/:path*',
@@ -57,7 +60,7 @@ const nextConfig = {
       },
       // Cache static assets aggressively
       {
-        source: '/(.*)\\.(png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2)',
+        source: '/(.*)\\.png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
