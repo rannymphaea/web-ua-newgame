@@ -57,10 +57,10 @@ class ApiClient {
     }
   }
 
-  get(path: string) { return this.request(path); }
-  post(path: string, body: any) { return this.request(path, { method: 'POST', body: JSON.stringify(body) }); }
-  patch(path: string, body: any) { return this.request(path, { method: 'PATCH', body: JSON.stringify(body) }); }
-  delete(path: string) { return this.request(path, { method: 'DELETE' }); }
+  get<T = any>(path: string): Promise<T> { return this.request(path); }
+  post<T = any>(path: string, body: any): Promise<T> { return this.request(path, { method: 'POST', body: JSON.stringify(body) }); }
+  patch<T = any>(path: string, body: any): Promise<T> { return this.request(path, { method: 'PATCH', body: JSON.stringify(body) }); }
+  delete<T = any>(path: string): Promise<T> { return this.request(path, { method: 'DELETE' }); }
 
   async upload(path: string, formData: FormData) {
     const headers: Record<string, string> = {};

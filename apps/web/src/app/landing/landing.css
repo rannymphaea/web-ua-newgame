@@ -824,3 +824,49 @@
   background: rgba(17, 24, 39, 0.5) !important;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   LANDING KEYFRAMES — required for hero animations
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Main hero reveal: logo, eyebrow, title, subtitle, tagline, cta */
+@keyframes fadeUpBig {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero glow pulse */
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.08); }
+}
+
+/* Logo / OC image floating */
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+/* Typewriter per-character stagger */
+@keyframes staggerChar {
+  from { opacity: 0; transform: translateY(20px) rotate(-4deg); }
+  to   { opacity: 1; transform: translateY(0)    rotate(0deg); }
+}
+
+/* Scroll-hint arrow bounce */
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0)  rotate(45deg); }
+  50%       { transform: translateY(6px) rotate(45deg); }
+}
+
+/* Simple fade */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* OC ring spin */
+@keyframes heroRingSpin {
+  to { transform: rotate(360deg); }
+}
+
+

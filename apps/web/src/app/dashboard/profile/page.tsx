@@ -18,11 +18,12 @@ interface UserData {
   activeAvatar?: AvatarKey;
 }
 
-type AvatarKey = 'default' | 'neko' | 'chibi' | 'yua';
+type AvatarKey = 'default' | 'alpha' | 'omega' | 'yua';
 
 interface AvatarOption {
   key: AvatarKey;
   label: string;
+  symbol?: string;
   color: string;
   sfx?: string;
   animation?: string;
@@ -31,8 +32,8 @@ interface AvatarOption {
 // ─── Avatar definitions ───────────────────────────────────────────────────────
 const AVATAR_OPTIONS: AvatarOption[] = [
   { key: 'default', label: 'Default',  color: 'var(--clr-lavender)' },
-  { key: 'neko',    label: 'Neko',     color: '#f472b6' },
-  { key: 'chibi',   label: 'Chibi',    color: '#fb923c' },
+  { key: 'alpha',   label: 'Alpha',    symbol: 'α', color: '#3b82f6' },
+  { key: 'omega',   label: 'Omega',    symbol: 'Ω', color: '#f472b6' },
   { key: 'yua',     label: 'Yua',      color: '#3b82f6', animation: 'avatar_pulse' },
 ];
 
@@ -340,7 +341,7 @@ export default function ProfilePage() {
                       <img src="/yua.png" alt="Yua" style={{ height: 32, objectFit: 'contain' }} />
                     ) : (
                       <span className="avatar-choice-initial" style={{ color: option.color }}>
-                        {option.label.charAt(0)}
+                        {option.symbol || option.label.charAt(0)}
                       </span>
                     )}
                     <span className="avatar-choice-label">{option.label}</span>

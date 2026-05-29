@@ -2337,3 +2337,79 @@ input, textarea, select { font-family: var(--font-inter); }
   96%, 99%      { opacity: 0.7; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   GLOBAL KEYFRAMES — used throughout app
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Accent bar, gradient-text, progress bar */
+@keyframes gradientShift {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+/* Skeleton loading shimmer */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Background ambient orbs */
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0)   scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 15px)  scale(0.95); }
+}
+
+/* QR scan line */
+@keyframes scanLine {
+  0%   { top: 5%; }
+  50%  { top: 90%; }
+  100% { top: 5%; }
+}
+
+/* XP float reward */
+@keyframes xpFloat {
+  0%   { opacity: 1; transform: translateY(0)    scale(1); }
+  60%  { opacity: 1; transform: translateY(-60px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-90px) scale(0.8); }
+}
+
+/* Toast slide up */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Progress bar glow pulse */
+@keyframes progressGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(253,207,65,0.3); }
+  50%       { box-shadow: 0 0 16px rgba(253,207,65,0.6); }
+}
+
+/* Animate fade-in for pages */
+@keyframes animate-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: animate-fade-in 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+/* Animate glow for CTA cards */
+@keyframes animate-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(253,207,65,0.1); }
+  50%       { box-shadow: 0 0 40px rgba(253,207,65,0.25), 0 0 80px rgba(185,166,206,0.1); }
+}
+
+.animate-glow {
+  animation: animate-glow 4s ease-in-out infinite;
+}
+
+

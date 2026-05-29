@@ -31,6 +31,13 @@ async function bootstrap() {
 }
 
 module.exports = async (req, res) => {
+  // Redirect root path ke frontend landing page
+  if (req.url === '/' || req.url === '') {
+    const frontendUrl = process.env.WEB_URL || 'https://unandnewgame-tan.vercel.app';
+    res.redirect(301, `${frontendUrl}/landing`);
+    return;
+  }
+
   try {
     const server = await bootstrap();
     server(req, res);
