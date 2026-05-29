@@ -1,5 +1,5 @@
 'use client';
-// DO NOT EDIT - Auth guard + layout utama dashboard.
+// Auth guard + layout utama dashboard. Route group: (dashboard)
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
