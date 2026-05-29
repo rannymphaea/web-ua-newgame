@@ -1,5 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { FirebaseService } from '../../firebase/firebase.service';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import { Readable } from 'stream';
 
 export interface UploadMediaDto {
   data: string;
@@ -23,7 +25,13 @@ export class MediaService {
   private readonly MAX_SIZE_BYTES = 10 * 1024 * 1024;
   private readonly logger = new Logger(MediaService.name);
 
-  constructor(private firebaseService: FirebaseService) {}
+  constructor(private firebaseService: FirebaseService) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+  }
 
   async upload(uploaderId: string, dto: UploadMediaDto) {
     if (!uploaderId) throw new BadRequestException('User ID required');
@@ -43,24 +51,16 @@ export class MediaService {
     const uniqueName = `${dto.usage}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
 
     try {
-      const storage = this.firebaseService.getStorage();
-      const bucket = storage.bucket();
-      console.log('Using bucket:', bucket.name);
-      const file = bucket.file(`media/${uniqueName}`);
-
-      await file.save(buffer, {
-        metadata: {
-          contentType: dto.mimeType,
-          metadata: {
-            uploadedBy: uploaderId,
-            usage: dto.usage,
-            originalName: dto.filename,
-          },
-        },
+      const publicUrl = await new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: `media/${dto.usage}` },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        Readable.from(buffer).pipe(uploadStream);
       });
-
-      await file.makePublic();
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/media/${uniqueName}`;
 
       const db = this.firebaseService.getFirestore();
       const mediaRef = db.collection('media').doc();
@@ -108,23 +108,16 @@ export class MediaService {
     const uniqueName = `media/avatar/${userId}/profile.${ext}`;
 
     const doUpload = async () => {
-      const storage = this.firebaseService.getStorage();
-      const bucket = storage.bucket();
-      const fileRef = bucket.file(uniqueName);
-
-      await fileRef.save(file.buffer, {
-        metadata: {
-          contentType: file.mimetype,
-          metadata: {
-            uploadedBy: userId,
-            usage,
-            originalName: file.originalname,
-          },
-        },
+      const publicUrl = await new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: `media/avatar/${userId}` },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        Readable.from(file.buffer).pipe(uploadStream);
       });
-
-      await fileRef.makePublic();
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueName}`;
 
       const db = this.firebaseService.getFirestore();
       const mediaRef = db.collection('media').doc();
@@ -157,8 +150,8 @@ export class MediaService {
       return { url, profile_upload: 'ok' };
     } catch (retryErr) {
       this.logger.error(`Profile upload retry also failed for uid=${userId}:`, retryErr);
-      // Never crash — return clean error JSON
-      return { profile_upload: 'failed', error: 'unknown_system_error' };
+      // Never crash — return clean error JSON, with real message
+      return { profile_upload: 'failed', error: retryErr instanceof Error ? retryErr.message : String(retryErr) };
     }
   }
 
@@ -230,10 +223,23 @@ export class MediaService {
     const data = doc.data();
 
     try {
-      const storage = this.firebaseService.getStorage();
-      const bucket = storage.bucket();
-      await bucket.file(data.storagePath).delete();
-    } catch (e) {}
+      // Parse public_id from Cloudinary URL: https://res.cloudinary.com/.../image/upload/v.../media/avatar/...
+      if (data.url.includes('cloudinary.com')) {
+        const parts = data.url.split('/');
+        const versionIndex = parts.findIndex(p => p.startsWith('v') && !isNaN(parseInt(p.substring(1), 10)));
+        if (versionIndex !== -1) {
+          let publicId = parts.slice(versionIndex + 1).join('/');
+          publicId = publicId.substring(0, publicId.lastIndexOf('.')); // remove extension
+          await cloudinary.uploader.destroy(publicId);
+        }
+      } else {
+        const storage = this.firebaseService.getStorage();
+        const bucket = storage.bucket();
+        await bucket.file(data.storagePath).delete();
+      }
+    } catch (e) {
+      this.logger.warn('Failed to delete media file from storage:', e);
+    }
 
     await mediaRef.delete();
     return { message: 'Media deleted' };

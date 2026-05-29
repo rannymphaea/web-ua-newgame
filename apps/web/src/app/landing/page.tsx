@@ -197,7 +197,7 @@ export default function LandingPage() {
             <div className="hero-oc-blob" />
             <div className="hero-oc-ring" />
             <Image
-              src="/oc-main.png"
+              src="/yua.png"
               alt="NEWGAME Character"
               width={480}
               height={560}

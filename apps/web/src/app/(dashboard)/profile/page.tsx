@@ -33,7 +33,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
   { key: 'default', label: 'Default',  color: 'var(--clr-lavender)' },
   { key: 'neko',    label: 'Neko',     color: '#f472b6' },
   { key: 'chibi',   label: 'Chibi',    color: '#fb923c' },
-  { key: 'yua',     label: 'Yua',      color: 'var(--clr-gold-dim)', sfx: '/assets/sfx/yua-select.mp3', animation: 'avatar_pulse' },
+  { key: 'yua',     label: 'Yua',      color: '#3b82f6', animation: 'avatar_pulse' },
 ];
 
 // ─── SFX cooldown (600 ms) ────────────────────────────────────────────────────
@@ -252,7 +252,9 @@ export default function ProfilePage() {
           <div className="avatar-wrap">
             {photoURL
               ? <img src={photoURL} alt="Avatar" className="avatar-img" />
-              : (
+              : currentAvatarOption.key === 'yua'
+                ? <img src="/yua.png" alt="Yua Avatar" className="avatar-img" style={{ objectFit: 'contain', background: '#12121a' }} />
+                : (
                 <div
                   className="avatar-placeholder"
                   style={{ background: `linear-gradient(135deg, ${currentAvatarOption.color}, var(--clr-ink))` }}
@@ -334,15 +336,16 @@ export default function ProfilePage() {
                     style={{ '--avatar-color': option.color } as React.CSSProperties}
                     title={option.label}
                   >
-                    <span className="avatar-choice-initial" style={{ color: option.color }}>
-                      {option.label.charAt(0)}
-                    </span>
+                    {option.key === 'yua' ? (
+                      <img src="/yua.png" alt="Yua" style={{ height: 32, objectFit: 'contain' }} />
+                    ) : (
+                      <span className="avatar-choice-initial" style={{ color: option.color }}>
+                        {option.label.charAt(0)}
+                      </span>
+                    )}
                     <span className="avatar-choice-label">{option.label}</span>
                     {isActive && (
                       <span className="avatar-choice-check" aria-hidden="true">✓</span>
-                    )}
-                    {option.key === 'yua' && (
-                      <span className="avatar-yua-badge">NEW</span>
                     )}
                   </button>
                 );

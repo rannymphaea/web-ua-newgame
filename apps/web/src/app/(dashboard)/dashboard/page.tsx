@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
@@ -37,10 +37,38 @@ function useReveal() {
   }, []);
 }
 
+/* SFX cooldown — 600 ms, sama dengan profile page */
+const SFX_COOLDOWN_MS = 600;
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 export default function DashboardPage() {
   const { userData, user } = useAuthStore();
   useReveal();
+
+  /* ── Yua click: SFX + bounce ─────────────────────────────────────────────── */
+  const sfxCooldownRef  = useRef<boolean>(false);
+  const audioRef        = useRef<HTMLAudioElement | null>(null);
+  const [yuaBouncing, setYuaBouncing] = useState(false);
+
+  const handleYuaClick = useCallback(() => {
+    /* Animasi selalu jalan, tapi SFX hanya jika tidak cooldown */
+    setYuaBouncing(true);
+    setTimeout(() => setYuaBouncing(false), 400);
+
+    if (sfxCooldownRef.current) return;
+    sfxCooldownRef.current = true;
+    setTimeout(() => { sfxCooldownRef.current = false; }, SFX_COOLDOWN_MS);
+
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      const audio = new Audio('/assets/sfx/yua-select.mp3');
+      audioRef.current = audio;
+      audio.play().catch(() => { /* ignore autoplay policy */ });
+    } catch { /* ignore */ }
+  }, []);
 
   /* ── Phase 1: instantly from store ──────────────────────────────────────── */
   const level   = userData?.level    || 1;
@@ -145,18 +173,55 @@ export default function DashboardPage() {
               </Link>
             </div>
           </div>
-          <div className="animate-float" style={{ flexShrink: 0, lineHeight: 0 }}>
-            <img
-              src="/oc-main.png"
-              alt=""
-              aria-hidden="true"
-              width={180}
-              height={200}
-              loading="eager"
-              decoding="async"
-              style={{ height: 'clamp(110px, 16vw, 190px)', width: 'auto', objectFit: 'contain', display: 'block' }}
-            />
+          {/* Yua character — clickable, plays SFX + bounce */}
+          <div style={{ flexShrink: 0, lineHeight: 0 }}>
+            <button
+              type="button"
+              onClick={handleYuaClick}
+              aria-label="Klik Yua!"
+              title="Klik aku!"
+              className={`yua-btn${yuaBouncing ? ' yua-bounce' : ''}`}
+            >
+              <img
+                src="/yua.png"
+                alt="Yua"
+                width={180}
+                height={200}
+                loading="eager"
+                decoding="async"
+                className="animate-float"
+                style={{ height: 'clamp(110px, 16vw, 190px)', width: 'auto', objectFit: 'contain', display: 'block', pointerEvents: 'none', userSelect: 'none' }}
+              />
+            </button>
           </div>
+
+          <style>{`
+            @keyframes yua-bounce {
+              0%   { transform: scale(1)    rotate(0deg); }
+              25%  { transform: scale(1.12) rotate(-4deg); }
+              55%  { transform: scale(0.94) rotate(3deg); }
+              80%  { transform: scale(1.05) rotate(-1deg); }
+              100% { transform: scale(1)    rotate(0deg); }
+            }
+            .yua-btn {
+              background: none;
+              border: none;
+              padding: 0;
+              cursor: pointer;
+              display: block;
+              transform-origin: center bottom;
+              transition: filter 0.15s ease;
+            }
+            .yua-btn:hover img {
+              filter: drop-shadow(0 0 14px rgba(185, 166, 206, 0.7)) brightness(1.08);
+            }
+            .yua-btn:active {
+              filter: brightness(1.15);
+            }
+            .yua-btn.yua-bounce {
+              animation: yua-bounce 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+            }
+          `}</style>
         </div>
 
         {/* XP bar inside hero — no extra API needed, from store */}

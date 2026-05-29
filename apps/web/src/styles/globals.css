@@ -1295,7 +1295,7 @@ input, textarea, select { font-family: var(--font-inter); }
   animation: floatOC 4s ease-in-out infinite;
   transition: none !important;
 }
-.oc-main-img {
+.yua-img {
   width: 160px; height: 160px;
   object-fit: contain;
   filter: drop-shadow(0 8px 24px rgba(185,166,206,0.3));
