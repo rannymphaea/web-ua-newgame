@@ -29,20 +29,39 @@ export class FirebaseService implements OnModuleInit {
       this.configService.get<string>('FIREBASE_PROJECT_ID') ||
       'qr-absensi-unandnewgame';
 
-    // Cari service account key di beberapa lokasi
-    const searchPaths = [
-      path.resolve(process.cwd(), 'serviceAccountKey.json'),
-      path.resolve(process.cwd(), '..', 'serviceAccountKey.json'),
-      path.resolve(process.cwd(), '..', '..', 'serviceAccountKey.json'),
-    ];
+    let keyFound = false;
 
-    const envPath = this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS');
-    if (envPath) {
-      searchPaths.unshift(path.resolve(process.cwd(), envPath));
+    // 1. Coba ambil dari Environment Variable JSON string (untuk Vercel)
+    const envCredJson = this.configService.get<string>('FIREBASE_CREDENTIALS_JSON');
+    if (envCredJson) {
+      try {
+        const serviceAccount = JSON.parse(envCredJson);
+        this.app = admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+          projectId,
+          storageBucket,
+        });
+        this.logger.log(`✅ Firebase initialized with FIREBASE_CREDENTIALS_JSON`);
+        keyFound = true;
+      } catch (e) {
+        this.logger.error(`Gagal parsing FIREBASE_CREDENTIALS_JSON: ${e.message}`);
+      }
     }
 
-    let keyFound = false;
-    for (const keyPath of searchPaths) {
+    // 2. Jika tidak ada, cari service account key di lokal
+    if (!keyFound) {
+      const searchPaths = [
+        path.resolve(process.cwd(), 'serviceAccountKey.json'),
+        path.resolve(process.cwd(), '..', 'serviceAccountKey.json'),
+        path.resolve(process.cwd(), '..', '..', 'serviceAccountKey.json'),
+      ];
+
+      const envPath = this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS');
+      if (envPath) {
+        searchPaths.unshift(path.resolve(process.cwd(), envPath));
+      }
+
+      for (const keyPath of searchPaths) {
       if (fs.existsSync(keyPath)) {
         try {
           const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf-8'));
