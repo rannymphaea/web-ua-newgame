@@ -272,7 +272,7 @@ export default function LoginPage() {
                     <label className="label" htmlFor={id}><i className={icon} style={{ marginRight: 6 }} aria-hidden="true" />{label}</label>
                     <input id={id} type={type} className="input" value={val} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set(e.target.value)} placeholder={ph} required minLength={min} autoComplete={type === 'password' ? 'new-password' : 'off'} />
                   </div>
-                ))
+                ))}
                 <motion.button type="submit" className="btn btn-primary btn-depth w-full" disabled={loading} whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.97 }}>
                   {loading ? <><span className="spinner spinner-sm" /> Mendaftar...</> : <><i className="ri-quill-pen-line" style={{ fontSize: 17 }} aria-hidden="true" /> Daftar</>}
                 </motion.button>

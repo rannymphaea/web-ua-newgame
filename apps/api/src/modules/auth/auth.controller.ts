@@ -9,43 +9,29 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  /**
-   * POST /api/auth/verify-member
-   * Verifikasi ID member dan password sementara sebelum registrasi
-   */
+  /** POST /api/auth/verify-member — verifikasi Member ID + kode akses sebelum registrasi */
   @Post('verify-member')
   async verifyMember(@Body() body: { memberId: string; tempPassword: string }) {
     return this.authService.verifyMember(body.memberId, body.tempPassword);
   }
 
-  /**
-   * POST /api/auth/register
-   * Buat profil user di Firestore setelah Firebase Auth registration
-   */
+  /** POST /api/auth/register — buat profil Firestore setelah Firebase Auth registration */
   @Post('register')
   @UseGuards(FirebaseAuthGuard)
   async register(
     @CurrentUser() user: any,
-    @Body() body: {
-      memberId: string;
-      displayName: string;
-      division: string;
-      team?: string;
-    },
+    @Body() body: { memberId: string; displayName: string; division: string; team?: string },
   ) {
     return this.authService.createUserProfile(user.uid, {
-      memberId: body.memberId,
-      email: user.email,
+      memberId:    body.memberId,
+      email:       user.email,
       displayName: body.displayName,
-      division: body.division,
-      team: body.team,
+      division:    body.division,
+      team:        body.team,
     });
   }
 
-  /**
-   * GET /api/auth/me
-   * Ambil profil user yang sedang login
-   */
+  /** GET /api/auth/me — profil user yang sedang login */
   @Get('me')
   @UseGuards(FirebaseAuthGuard)
   async getProfile(@CurrentUser() user: any) {
@@ -53,13 +39,9 @@ export class AuthController {
   }
 
   /**
-   * POST /api/auth/set-role
-   * Update role user (admin+ only)
-   */
-  /**
-   * POST /api/auth/set-role
-   * Update role user. Superadmin bisa set role apapun;
-   * admin hanya bisa set 'member'.
+   * POST /api/auth/set-role — ubah role user.
+   * Superadmin: bisa set role apapun.
+   * Admin biasa: hanya bisa set ke 'member'.
    */
   @Post('set-role')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
@@ -71,10 +53,7 @@ export class AuthController {
     return this.authService.setUserRole(body.userId, body.role, caller.role);
   }
 
-  /**
-   * GET /api/auth/users
-   * List semua user — superadmin only
-   */
+  /** GET /api/auth/users — list semua user (superadmin only) */
   @Get('users')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
   @Roles('superadmin')
