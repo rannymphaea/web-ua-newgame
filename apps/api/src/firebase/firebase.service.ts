@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
-import * as fs from 'fs';
+import * as fs   from 'fs';
 import * as path from 'path';
 
 @Injectable()
@@ -15,40 +15,36 @@ export class FirebaseService implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    // Cegah duplikat inisialisasi
+    // Cegah duplikat inisialisasi jika module dimuat ulang (cold-start serverless)
     if (admin.apps.length > 0) {
       this.app = admin.apps[0];
       this._initServices();
       return;
     }
 
-    const storageBucket =
-      this.configService.get<string>('FIREBASE_STORAGE_BUCKET') ||
-      'qr-absensi-unandnewgame.appspot.com';
-    const projectId =
-      this.configService.get<string>('FIREBASE_PROJECT_ID') ||
-      'qr-absensi-unandnewgame';
+    const projectId     = this.configService.get<string>('FIREBASE_PROJECT_ID')      || 'qr-absensi-unandnewgame';
+    const storageBucket = this.configService.get<string>('FIREBASE_STORAGE_BUCKET')  || 'qr-absensi-unandnewgame.appspot.com';
 
     let keyFound = false;
 
-    // 1. Coba ambil dari Environment Variable JSON string (untuk Vercel)
+    // ── Opsi 1: Baca credentials dari env var JSON string (digunakan di Vercel) ──
     const envCredJson = this.configService.get<string>('FIREBASE_CREDENTIALS_JSON');
     if (envCredJson) {
       try {
         const serviceAccount = JSON.parse(envCredJson);
         this.app = admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount),
+          credential:    admin.credential.cert(serviceAccount),
           projectId,
           storageBucket,
         });
-        this.logger.log(`✅ Firebase initialized with FIREBASE_CREDENTIALS_JSON`);
+        this.logger.log('Firebase initialized via FIREBASE_CREDENTIALS_JSON');
         keyFound = true;
       } catch (e) {
         this.logger.error(`Gagal parsing FIREBASE_CREDENTIALS_JSON: ${e.message}`);
       }
     }
 
-    // 2. Jika tidak ada, cari service account key di lokal
+    // ── Opsi 2: Baca dari file serviceAccountKey.json (untuk development lokal) ──
     if (!keyFound) {
       const searchPaths = [
         path.resolve(process.cwd(), 'serviceAccountKey.json'),
@@ -56,37 +52,35 @@ export class FirebaseService implements OnModuleInit {
         path.resolve(process.cwd(), '..', '..', 'serviceAccountKey.json'),
       ];
 
-      const envPath = this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS');
-      if (envPath) {
-        searchPaths.unshift(path.resolve(process.cwd(), envPath));
+      const envFilePath = this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS');
+      if (envFilePath) {
+        searchPaths.unshift(path.resolve(process.cwd(), envFilePath));
       }
 
       for (const keyPath of searchPaths) {
-      if (fs.existsSync(keyPath)) {
+        if (!fs.existsSync(keyPath)) continue;
         try {
           const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf-8'));
           this.app = admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
+            credential:    admin.credential.cert(serviceAccount),
             projectId,
             storageBucket,
           });
-          this.logger.log(`✅ Firebase initialized with key: ${keyPath}`);
+          this.logger.log(`Firebase initialized from file: ${keyPath}`);
           keyFound = true;
           break;
         } catch (e) {
-          this.logger.warn(`Failed to parse key at ${keyPath}: ${e.message}`);
+          this.logger.warn(`Gagal membaca key di ${keyPath}: ${e.message}`);
         }
       }
     }
 
+    // ── Fallback: inisialisasi tanpa credentials — server tetap jalan ──
     if (!keyFound) {
-      this.logger.warn('⚠️  serviceAccountKey.json tidak ditemukan.');
-      this.logger.warn('Download dari Firebase Console → Project Settings → Service Accounts');
-      // Hapus env var agar firebase-admin tidak crash mencari file yang tidak ada
+      this.logger.warn('serviceAccountKey.json tidak ditemukan.');
+      this.logger.warn('Tambahkan FIREBASE_CREDENTIALS_JSON ke environment variables.');
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      // Inisialisasi tanpa credentials — server tetap jalan, tapi Firebase calls gagal
       this.app = admin.initializeApp({ projectId, storageBucket });
-      this.logger.warn('Firebase initialized tanpa credentials (mode terbatas)');
     }
 
     this._initServices();
@@ -96,12 +90,11 @@ export class FirebaseService implements OnModuleInit {
     try {
       this.firestoreInstance = this.app.firestore();
       this.firestoreInstance.settings({ ignoreUndefinedProperties: true });
-      this.authInstance = this.app.auth();
+      this.authInstance   = this.app.auth();
       this.storageInstance = this.app.storage();
-      const bucket = this.storageInstance.bucket().name;
-      this.logger.log(`✅ Firestore, Auth, Storage ready. Bucket: ${bucket}`);
+      this.logger.log('Firestore, Auth, Storage ready');
     } catch (e) {
-      this.logger.error(`Firebase services init failed: ${e.message}`);
+      this.logger.error(`Firebase services init gagal: ${e.message}`);
     }
   }
 
@@ -120,22 +113,13 @@ export class FirebaseService implements OnModuleInit {
     return this.storageInstance;
   }
 
-  // Legacy getters (backward compatible)
-  get firestore(): admin.firestore.Firestore {
-    return this.getFirestore();
-  }
+  // ── Legacy getters (kompatibel ke belakang) ──────────────────────────────────
 
-  get auth(): admin.auth.Auth {
-    return this.getAuth();
-  }
+  get firestore(): admin.firestore.Firestore { return this.getFirestore(); }
+  get auth(): admin.auth.Auth                { return this.getAuth(); }
 
-  get timestamp() {
-    return admin.firestore.FieldValue.serverTimestamp();
-  }
-
-  get timestampNow() {
-    return admin.firestore.Timestamp.now();
-  }
+  get timestamp()    { return admin.firestore.FieldValue.serverTimestamp(); }
+  get timestampNow() { return admin.firestore.Timestamp.now(); }
 
   createTimestamp(seconds: number, nanoseconds: number) {
     return new admin.firestore.Timestamp(seconds, nanoseconds);
