@@ -1,8 +1,9 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface UserData {
   name?: string;
   username?: string;
@@ -14,24 +15,60 @@ interface UserData {
   streak?: number;
   attendanceCount?: number;
   level?: number;
+  activeAvatar?: AvatarKey;
 }
 
+type AvatarKey = 'default' | 'neko' | 'chibi' | 'yua';
+
+interface AvatarOption {
+  key: AvatarKey;
+  label: string;
+  color: string;
+  sfx?: string;
+  animation?: string;
+}
+
+// ─── Avatar definitions ───────────────────────────────────────────────────────
+const AVATAR_OPTIONS: AvatarOption[] = [
+  { key: 'default', label: 'Default',  color: 'var(--clr-lavender)' },
+  { key: 'neko',    label: 'Neko',     color: '#f472b6' },
+  { key: 'chibi',   label: 'Chibi',    color: '#fb923c' },
+  { key: 'yua',     label: 'Yua',      color: 'var(--clr-gold-dim)', sfx: '/assets/sfx/yua-select.mp3', animation: 'avatar_pulse' },
+];
+
+// ─── SFX cooldown (600 ms) ────────────────────────────────────────────────────
+const SFX_COOLDOWN_MS = 600;
+
+// ─── Profile Page ─────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { userData, user } = useAuthStore();
   void user;
-  const [username,    setUsername]    = useState((userData as UserData)?.username || '');
-  const [displayName, setDisplayName] = useState((userData as UserData)?.name || '');
-  const [photoURL,    setPhotoURL]    = useState((userData as UserData)?.photoURL || '');
-  const [saving,      setSaving]      = useState(false);
-  const [message,     setMessage]     = useState('');
-  const [isSuccess,   setIsSuccess]   = useState(false);
-  const [darkMode,    setDarkMode]    = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const ud = userData as UserData | null;
+
+  const [username,      setUsername]      = useState(ud?.username    || '');
+  const [displayName,   setDisplayName]   = useState(ud?.name        || '');
+  const [photoURL,      setPhotoURL]      = useState(ud?.photoURL    || '');
+  const [saving,        setSaving]        = useState(false);
+  const [message,       setMessage]       = useState('');
+  const [isSuccess,     setIsSuccess]     = useState(false);
+  const [darkMode,      setDarkMode]      = useState(false);
+  const [activeAvatar,  setActiveAvatar]  = useState<AvatarKey>(ud?.activeAvatar || 'default');
+  const [pulsingAvatar, setPulsingAvatar] = useState<AvatarKey | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+
+  const fileInputRef   = useRef<HTMLInputElement>(null);
+  const sfxCooldownRef = useRef<boolean>(false);
+  const audioRef       = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('darkMode') === 'true';
     setDarkMode(saved);
     if (saved) document.documentElement.classList.add('dark');
+
+    const savedAvatar = localStorage.getItem('activeAvatar') as AvatarKey | null;
+    if (savedAvatar && AVATAR_OPTIONS.some(a => a.key === savedAvatar)) {
+      setActiveAvatar(savedAvatar);
+    }
   }, []);
 
   function toggleDarkMode() {
@@ -41,6 +78,75 @@ export default function ProfilePage() {
     document.documentElement.classList.toggle('dark', newMode);
   }
 
+  // ─── Avatar pulse animation (220ms, scale 1→1.15→1, ease-out) ─────────────
+  const triggerPulse = useCallback((avatarKey: AvatarKey) => {
+    setPulsingAvatar(avatarKey);
+    setTimeout(() => setPulsingAvatar(null), 220);
+  }, []);
+
+  // ─── Play SFX with cooldown ───────────────────────────────────────────────
+  const playSfx = useCallback((sfxPath: string): { sfx: string } | { sfx: 'cooldown_active' } => {
+    if (sfxCooldownRef.current) {
+      return { sfx: 'cooldown_active' };
+    }
+    sfxCooldownRef.current = true;
+    setTimeout(() => { sfxCooldownRef.current = false; }, SFX_COOLDOWN_MS);
+
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      const audio = new Audio(sfxPath);
+      audioRef.current = audio;
+      audio.play().catch(() => { /* ignore autoplay block */ });
+    } catch { /* ignore */ }
+
+    return { sfx: sfxPath };
+  }, []);
+
+  // ─── Handle avatar selection ──────────────────────────────────────────────
+  const handleAvatarSelect = useCallback(async (option: AvatarOption) => {
+    if (avatarLoading) return;
+
+    let sfxResult: { sfx: string } | { sfx: 'cooldown_active' } = { sfx: 'null' };
+
+    if (option.sfx) {
+      sfxResult = playSfx(option.sfx);
+    }
+
+    if (option.animation === 'avatar_pulse') {
+      triggerPulse(option.key);
+    }
+
+    setActiveAvatar(option.key);
+    localStorage.setItem('activeAvatar', option.key);
+
+    // Persist to backend
+    setAvatarLoading(true);
+    try {
+      const res = await api.post('/media/avatar/select', { avatar: option.key }) as {
+        status: string;
+        avatar: AvatarKey;
+        animation: string | null;
+        sfx: string | null;
+        profile_upload: string;
+      };
+      console.log('[avatar-select]', {
+        status:         res.status,
+        avatar:         res.avatar,
+        animation:      res.animation ?? null,
+        sfx:            sfxResult.sfx,
+        profile_upload: res.profile_upload,
+      });
+    } catch {
+      // Silently fail — local state already updated
+    } finally {
+      setAvatarLoading(false);
+    }
+  }, [avatarLoading, playSfx, triggerPulse]);
+
+  // ─── Save profile info ────────────────────────────────────────────────────
   async function handleSave() {
     if (!displayName.trim()) {
       setMessage('Nama lengkap wajib diisi.');
@@ -63,10 +169,10 @@ export default function ProfilePage() {
     } finally { setSaving(false); }
   }
 
+  // ─── Upload profile photo ─────────────────────────────────────────────────
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     e.target.value = '';
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -80,12 +186,26 @@ export default function ProfilePage() {
       setIsSuccess(false);
       return;
     }
+
     setSaving(true); setMessage('');
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('usage', 'avatar');
-      const res = await api.upload('/media/profile/upload', formData) as { url?: string };
+
+      const res = await api.upload('/media/upload-profile', formData) as {
+        url?: string;
+        profile_upload?: 'ok' | 'failed';
+        error?: string;
+      };
+
+      // Clean JSON response check
+      if (res?.profile_upload === 'failed') {
+        setMessage(`Upload gagal: ${res.error || 'unknown_system_error'}`);
+        setIsSuccess(false);
+        return;
+      }
+
       if (res?.url) {
         setPhotoURL(res.url);
         await api.patch('/users/profile', { photoURL: res.url });
@@ -101,7 +221,7 @@ export default function ProfilePage() {
   }
 
   const initials = (displayName || 'U').charAt(0).toUpperCase();
-  const ud = userData as UserData | null;
+  const currentAvatarOption = AVATAR_OPTIONS.find(a => a.key === activeAvatar) ?? AVATAR_OPTIONS[0];
 
   return (
     <div className="animate-fade-in">
@@ -127,14 +247,21 @@ export default function ProfilePage() {
 
       <div className="profile-layout">
 
-        {/* LEFT: Avatar */}
+        {/* LEFT: Avatar + Avatar Selector */}
         <div className="profile-avatar-card card">
           <div className="avatar-wrap">
             {photoURL
               ? <img src={photoURL} alt="Avatar" className="avatar-img" />
-              : <div className="avatar-placeholder">{initials}</div>
+              : (
+                <div
+                  className="avatar-placeholder"
+                  style={{ background: `linear-gradient(135deg, ${currentAvatarOption.color}, var(--clr-ink))` }}
+                >
+                  <span className="avatar-initials">{initials}</span>
+                </div>
+              )
             }
-            {/* Hidden file input — triggered via ref on button click */}
+            {/* Hidden file input */}
             <input
               ref={fileInputRef}
               type="file"
@@ -182,6 +309,48 @@ export default function ProfilePage() {
               <span className="avatar-stat-label">Streak</span>
             </div>
           </div>
+
+          {/* ─── Multi Avatar Selector ─────────────────────────────────── */}
+          <div className="avatar-selector-section">
+            <p className="avatar-selector-label">
+              <i className="ri-palette-fill" style={{fontSize:10,marginRight:4}} aria-hidden="true" />
+              Pilih Avatar
+            </p>
+            <div className="avatar-selector-grid" role="radiogroup" aria-label="Pilih avatar">
+              {AVATAR_OPTIONS.map(option => {
+                const isActive  = activeAvatar === option.key;
+                const isPulsing = pulsingAvatar === option.key;
+                return (
+                  <button
+                    key={option.key}
+                    id={`avatar-btn-${option.key}`}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    aria-label={`Avatar ${option.label}`}
+                    disabled={avatarLoading}
+                    onClick={() => handleAvatarSelect(option)}
+                    className={`avatar-choice-btn${isActive ? ' active' : ''}${isPulsing ? ' pulse' : ''}`}
+                    style={{ '--avatar-color': option.color } as React.CSSProperties}
+                    title={option.label}
+                  >
+                    <span className="avatar-choice-initial" style={{ color: option.color }}>
+                      {option.label.charAt(0)}
+                    </span>
+                    <span className="avatar-choice-label">{option.label}</span>
+                    {isActive && (
+                      <span className="avatar-choice-check" aria-hidden="true">✓</span>
+                    )}
+                    {option.key === 'yua' && (
+                      <span className="avatar-yua-badge">NEW</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {/* ──────────────────────────────────────────────────────────── */}
+
           <p className="avatar-hint">
             <i className="ri-information-line" style={{fontSize:10,marginRight:4}} aria-hidden="true" />
             Max 2MB, JPG/PNG
@@ -244,28 +413,91 @@ export default function ProfilePage() {
       </div>
 
       <style>{`
+        /* ── Keyframes ── */
+        @keyframes avatar-pulse {
+          0%   { transform: scale(1); }
+          50%  { transform: scale(1.15); }
+          100% { transform: scale(1); }
+        }
+
+        /* ── Layout ── */
         .profile-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
         .profile-eyebrow { font-family:var(--font-inter); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--clr-text-secondary); margin-bottom:6px; display:flex; align-items:center; }
         .profile-title { font-family:var(--font-lora); font-size:clamp(22px,3vw,28px); font-weight:700; color:var(--clr-text-primary); margin-bottom:4px; line-height:1.1; }
         .profile-sub { font-family:var(--font-cormorant); font-size:15px; color:var(--clr-text-secondary); font-style:italic; }
         .profile-role-badge { display:inline-flex; align-items:center; font-family:var(--font-inter); font-size:12px; font-weight:600; text-transform:capitalize; background:var(--clr-gold-subtle); border:1px solid var(--clr-border-gold); color:var(--clr-gold-dim); padding:6px 14px; border-radius:var(--radius-full); }
-        .profile-layout { display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start; }
+        .profile-layout { display:grid; grid-template-columns:280px 1fr; gap:20px; align-items:start; }
         .profile-avatar-card { text-align:center; padding:28px 20px; position:sticky; top:calc(var(--accent-bar-height) + var(--topbar-height) + 16px); }
+
+        /* ── Avatar photo ── */
         .avatar-wrap { position:relative; width:90px; margin:0 auto 14px; }
         .avatar-img,.avatar-placeholder { width:90px; height:90px; border-radius:50%; }
         .avatar-img { object-fit:cover; border:3px solid var(--clr-border-gold); box-shadow:0 4px 16px var(--clr-gold-glow); }
-        .avatar-placeholder { background:linear-gradient(135deg,var(--clr-gold),var(--clr-lavender)); display:flex; align-items:center; justify-content:center; font-family:var(--font-lora); font-size:32px; font-weight:700; color:var(--clr-ink); box-shadow:0 4px 16px var(--clr-gold-glow); }
+        .avatar-placeholder { display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px var(--clr-gold-glow); }
+        .avatar-initials { font-family:var(--font-lora); font-size:32px; font-weight:700; color:var(--clr-ink); }
         .avatar-change-btn { position:absolute; bottom:2px; right:2px; width:28px; height:28px; border-radius:50%; background:var(--clr-bg-surface-elevated); border:2px solid var(--clr-border-gold); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s ease !important; box-shadow:var(--shadow-sm); }
         .avatar-change-btn:hover { background:var(--clr-gold-subtle); transform:scale(1.08); }
         .avatar-name { font-family:var(--font-lora); font-size:16px; font-weight:600; color:var(--clr-text-primary); margin-bottom:3px; }
         .avatar-username { font-family:var(--font-inter); font-size:12px; color:var(--clr-text-secondary); margin-bottom:10px; }
         .avatar-division-badge { display:inline-flex; align-items:center; font-family:var(--font-inter); font-size:10px; font-weight:600; color:var(--clr-lavender); background:var(--clr-lavender-subtle); border:1px solid rgba(185,166,206,0.2); padding:3px 10px; border-radius:20px; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.5px; }
-        .avatar-stats { display:flex; align-items:center; gap:0; background:var(--clr-bg-muted); border:1px solid var(--clr-border); border-radius:10px; padding:12px 8px; margin-bottom:14px; }
+
+        /* ── Stats row ── */
+        .avatar-stats { display:flex; align-items:center; gap:0; background:var(--clr-bg-muted); border:1px solid var(--clr-border); border-radius:10px; padding:12px 8px; margin-bottom:16px; }
         .avatar-stat { flex:1; text-align:center; }
         .avatar-stat-val { display:block; font-family:var(--font-lora); font-size:18px; font-weight:700; line-height:1; margin-bottom:3px; }
         .avatar-stat-label { display:block; font-family:var(--font-inter); font-size:9px; color:var(--clr-text-secondary); text-transform:uppercase; letter-spacing:0.8px; }
         .avatar-stat-divider { width:1px; height:32px; background:var(--clr-border); }
-        .avatar-hint { font-family:var(--font-inter); font-size:10px; color:var(--clr-text-secondary); display:flex; align-items:center; justify-content:center; }
+        .avatar-hint { font-family:var(--font-inter); font-size:10px; color:var(--clr-text-secondary); display:flex; align-items:center; justify-content:center; margin-top:10px; }
+
+        /* ── Multi Avatar Selector ── */
+        .avatar-selector-section { margin-bottom:12px; text-align:left; }
+        .avatar-selector-label { font-family:var(--font-inter); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--clr-text-secondary); display:flex; align-items:center; margin-bottom:8px; }
+        .avatar-selector-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+        .avatar-choice-btn {
+          position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+          gap:4px; padding:10px 6px; border-radius:12px; cursor:pointer;
+          border:2px solid var(--clr-border);
+          background:var(--clr-bg-surface-elevated);
+          transition:all 0.18s ease !important;
+          font-family:var(--font-inter); font-size:11px; font-weight:600;
+          color:var(--clr-text-secondary);
+          min-height:68px;
+          /* critical: transform-origin for pulse */
+          transform-origin:center center;
+        }
+        .avatar-choice-btn:hover:not(:disabled) {
+          border-color:var(--avatar-color, var(--clr-lavender));
+          background:rgba(255,255,255,0.04);
+          transform:translateY(-2px);
+          box-shadow:0 4px 12px rgba(0,0,0,0.15);
+        }
+        .avatar-choice-btn.active {
+          border-color:var(--avatar-color, var(--clr-lavender));
+          background:rgba(255,255,255,0.06);
+          color:var(--clr-text-primary);
+          box-shadow:0 0 0 3px color-mix(in srgb, var(--avatar-color, var(--clr-lavender)) 25%, transparent);
+        }
+        /* avatar_pulse: scale 1→1.15→1, 220ms max, ease-out, no layout shift */
+        .avatar-choice-btn.pulse {
+          animation:avatar-pulse 220ms ease-out forwards;
+          will-change:transform;
+        }
+        .avatar-choice-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none !important; }
+        .avatar-choice-initial { font-size:20px; font-weight:800; font-family:var(--font-lora); line-height:1; display:block; }
+        .avatar-choice-label { display:block; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+        .avatar-choice-check {
+          position:absolute; top:4px; right:5px; font-size:10px; font-weight:800;
+          color:var(--avatar-color, var(--clr-lavender));
+          line-height:1;
+        }
+        .avatar-yua-badge {
+          position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+          font-size:8px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
+          background:var(--clr-gold-dim); color:var(--clr-ink);
+          padding:1px 5px; border-radius:4px; white-space:nowrap;
+        }
+
+        /* ── Form ── */
         .profile-form-card { padding:24px; }
         .form-group { margin-bottom:18px; }
         .form-label { display:flex; align-items:center; margin-bottom:7px; font-family:var(--font-inter); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:var(--clr-text-secondary); }
@@ -279,6 +511,7 @@ export default function ProfilePage() {
         .form-message { display:flex; align-items:center; gap:8px; padding:11px 16px; border-radius:10px; font-family:var(--font-inter); font-size:13px; font-weight:500; margin-bottom:16px; }
         .form-message.success { background:var(--clr-success-bg); border:1px solid var(--clr-success-border); color:var(--clr-success); }
         .form-message.error { background:var(--clr-danger-bg); border:1px solid var(--clr-danger-border); color:var(--clr-danger); }
+
         @media (max-width:900px) { .profile-layout { grid-template-columns:1fr; } .profile-avatar-card { position:static; } }
       `}</style>
     </div>

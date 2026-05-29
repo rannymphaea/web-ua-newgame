@@ -1,161 +1,113 @@
 # CHANGELOG
 
-Log perubahan NEWGAME Platform. Format: tanggal, kategori, detail.
+Log perubahan dan riwayat sesi pengembangan platform web NEWGAME.
 
 ---
 
-## 20 Mei 2026
+## Sesi 8 (29 Mei 2026) — Konsolidasi Dokumentasi dan Fitur Avatar
 
-### Landing Page — Redesign Total + Guidebook Integration
-- Konten dari [guidebook](https://2b-eternity.github.io/test/) terintegrasi penuh
-- Semua emoji dihapus, diganti dengan SVG icons konsisten (object `ICONS` di `data.ts`)
-- Komponen dipecah jadi modular: `data.ts`, `ScrollReveal.tsx`, `landing.css`
-- 12 section: Hero, Visi & Misi (combined), Main Core, 3 Pillar, Quest, Sistem EXP, Project Ideas, Stats, FAQ, CTA, Contact, Footer
+### Fitur Avatar dan Unggah Profil
+- **Upload Foto Profil**: Penulisan ulang uploadProfile dengan mekanisme doUpload yang dicoba maksimal 2 kali. Jika gagal pada percobaan pertama, mencatat log upload_retry. Jika tetap gagal, mengembalikan status kegagalan tanpa menyebabkan server crash.
+- **Dukungan Multi Avatar**: Menambahkan daftar avatar yang diizinkan (default, neko, chibi, yua) pada media service dan kontroler API.
+- **Interaksi Avatar Yua**: Implementasi efek khusus saat memilih avatar yua, yang memicu sfx yua-select.mp3 dan animasi avatar_pulse (skala 1 ke 1.15 ke 1 dalam durasi maksimal 220ms dengan transisi ease-out).
+- **Pembatasan Laju SFX (Cooldown)**: Menghindari spam suara dengan menambahkan jeda cooldown 600ms. Jika ditekan kembali selama cooldown, sistem memberikan respon cooldown_active.
+- **Format JSON Bersih**: Seluruh endpoint avatar dan profil selalu mengembalikan respon JSON terstruktur.
 
-### Konten Baru dari Guidebook
-- **Main Core**: Pixel President, Code Commander, Quest Keeper, Gold Guardian
-- **3 Pillar**: Game Logic, Game Design, Game Sound (dengan deskripsi lengkap)
-- **Quest**: 4 divisi (Hubungan Masyarakat, Riset & Pengembangan, Event & Kompetisi, Media & Dokumentasi)
-- **Sistem EXP**: Poin EXP, 5 Rank (Rookie → Mythic), Eligible Lomba
-- **Project Ideas**: Alpha Project, Beta Project, GOTS (Game of The Semester)
-- **Guidebook Link**: Tombol langsung ke https://2b-eternity.github.io/test/
-
-### Animasi Premium
-- Staggered text animation (judul NEWGAME huruf per huruf)
-- Parallax scroll (background orbs bergerak saat scroll)
-- Reveal-on-scroll: fade-up, slide-left, slide-right, scale-in
-- Staggered reveal delays (elemen muncul berurutan)
-- Animated counter (angka naik dari 0)
-- Floating animation, glow pulse, hover effects
-
-### UI/UX
-- Visi & Misi digabung jadi 2 kolom (slide dari kiri dan kanan)
-- Org-tree visual untuk Main Core dengan garis penghubung
-- Color-coded pillar cards dengan top accent border
-- Rank badges berwarna di section EXP
-- Scroll indicator di hero section
-- Responsive design untuk semua section
-
-### File Baru
-- `apps/web/src/app/landing/landing.css` — Styles khusus landing
-- `apps/web/src/app/landing/components/data.ts` — Semua data & ikon
-- `apps/web/src/app/landing/components/ScrollReveal.tsx` — Hooks animasi reusable
-
-### File Diubah
-- `apps/web/src/app/landing/page.tsx` — Rewrite total
-- `apps/web/src/styles/globals.css` — Tambah animasi parallax, staggered text, directional reveals
+### Konsolidasi Dokumen Markdown
+- Menggabungkan README.md, PENGENALAN.md, dan NOTULENSI.md menjadi satu dokumen README.md yang komprehensif.
+- Menggabungkan DEVELOPER_GUIDE.md, STYLE_GUIDE.md, CONTRIBUTING.md, dan dokumen panduan perbaikan (Firebase connection, Storage bucket, profile fix) menjadi satu file DEVELOPER_GUIDE.md.
+- Menggabungkan SECURITY_CHECKLIST.md, SECURITY_HARDENING.md, THREAT_INTEL.md, dan FIRESTORE_RULES.md ke dalam satu file SECURITY.md.
+- Menggabungkan CHANGELOG.md dan TRACKING.md menjadi satu file CHANGELOG.md.
+- Menghapus semua emoji dari seluruh dokumen Markdown agar tampilan lebih profesional dan bersih.
 
 ---
 
-## 17 Mei 2026
+## Sesi 7 — Integrasi Guidebook
 
-### Arsitektur
-- Migrasi penuh dari HTML/JS/Firebase ke monorepo NestJS + Next.js
-- Pembersihan 12,860 file lama (cloud functions, config deploy tidak terpakai)
-- Setup workspace: apps/api (backend) + apps/web (frontend)
-
-### Backend (16 Modul)
-- AuthModule: login, register, verify-member, set-role
-- UsersModule: dashboard stats, profile update, role management
-- AttendanceModule: process scan, history, check, event attendance
-- EventsModule: CRUD event, generate token, close event
-- MembersModule: list, import
-- XpModule: edit XP, history
-- LeaveModule: request, approve, reject
-- LogsModule: list, export
-- AnomaliesModule: list, resolve
-- NewsModule: CRUD, publish, archive, slider, tutorials
-- MediaModule: upload, list, update, delete
-- BadgesModule: 40+ badge, 20 kategori, 10 rarity, auto-check, manual award
-- PillarLevelsModule: 3 pillar x 4 level, assign oleh admin
-- NotificationsModule: placeholder (butuh FCM setup)
-- ExportModule: CSV export attendance, members, users
-- FirebaseModule: graceful fallback tanpa service account key
-
-### Frontend (17 Halaman)
-- /login: email + Google sign-in
-- /dashboard: statistik, XP, level, streak, news slider, quick actions
-- /scan: QR scanner dengan kamera
-- /news: berita, blog, event, tutorial dengan embed YouTube
-- /leaderboard: ranking XP dengan podium top 3
-- /badges: badge collection dengan filter kategori, rarity glow, progress bar
-- /profile: edit username, foto profil, nama lengkap
-- /admin: kelola event, generate QR
-- /admin/news: CRUD berita
-- /admin/media: gallery media
-- /admin/analytics: grafik XP distribution, stat cards, top 5, export CSV
-- /members: direktori 125 anggota
-- /logs: log aktivitas sistem
-- /change-password: ganti password
-- /landing: landing page publik dengan visi misi, 3 pillar, FAQ
-
-### UI/UX
-- Dark mode full
-- Glassmorphism sidebar dengan gradient
-- SVG icons (tanpa emoji)
-- Skeleton loading
-- Toast notification system (success, error, warning, info)
-- Responsive mobile sidebar
-- Brand color palette: merah, ungu, kuning, hijau
-- Favicon logo NEWGAME di tab browser
-
-### Keamanan
-- FirebaseAuthGuard di semua endpoint
-- RolesGuard untuk admin-only routes
-- Firestore transaction untuk absensi (anti duplikat)
-- QR token 12 detik (anti penyalahgunaan)
-- Device fingerprint (anti multi-device)
-- Anomaly detection otomatis
-
-### Dokumentasi
-- README.md: rebranded sebagai platform NEWGAME
-- PENGENALAN.md: flowchart, struktur file, skema database
-- DEVELOPER_GUIDE.md: panduan developer, apa boleh/tidak diubah
-- NEED_TO_DO.md: setup manual + roadmap lengkap
-- CHANGELOG.md: file ini
-
-### Data
-- Identitas organisasi NEWGAME dipertahankan
-- 125 member dari 2 generasi, 3 pillar
-- Visi misi organisasi terintegrasi di landing page
-- Presiden Pixel sebagai role khusus di badge system
+### Kerja Sesi
+- **Dashboard**: Menambahkan kartu banner Guidebook (ikon, judul, deskripsi, chip penanda, dan efek hover emas).
+- **Landing Page**: Menambahkan seksi Guidebook NEWGAME sebelum CTA menggunakan transisi Framer Motion dan chip indikator.
+- **Landing Hero**: Menambahkan tombol ketiga "Guidebook" untuk melakukan gulir otomatis ke bagian panduan.
 
 ---
 
-## 3 Mei 2026 (Update 2)
+## Sesi 6 — Optimalisasi Performa
 
-### Fitur Baru
-- /members/[id]: halaman detail profil per member dengan stats, badges, pillar levels
-- /calendar: kalender event dengan navigasi bulan dan daftar event mendatang
-- AnnouncementBanner: banner pengumuman penting di dashboard (info/warning/urgent)
-- Heatmap aktivitas mingguan di analytics dashboard
-- Rank user ditampilkan di dashboard stat card
-- Recent Activity section di dashboard
-- Upcoming Events section di dashboard
-- Daily Motivation widget di dashboard
+### Masalah Awal
+- Waktu muat halaman pertama melebihi 3 detik.
+- Remix Icon CSS menghalangi proses render awal (render-blocking).
+- Autentikasi Firebase menyebabkan layar kosong / pemutar berputar (spinner) selama 1-3 detik.
+- Panggilan API simultan sebelum halaman siap ditampilkan.
+- Pemuatan font tebal di semua halaman dashboard.
 
-### Landing Page
-- Struktur organisasi (placeholder - ISI DATA)
-- Testimoni anggota (placeholder - ISI DATA)
-- Contact section dengan link Instagram, YouTube, Email (ISI LINK)
-
-### Backend
-- Rate limiting: 100 request/menit/IP tanpa dependency tambahan
-- NEED_TO_DO.md: 10 item konfigurasi eksternal yang tidak bisa dilakukan dari kode
-
-### UI/UX
-- ErrorBoundary component untuk fallback saat crash
-- Empty states di semua section (Upcoming Events, Recent Activity)
-- Consistent error handling di semua halaman
-
-### Build
-- Backend: 16 modules, 0 errors
-- Frontend: 18 pages (termasuk /members/[id] dynamic), 0 errors
+### Solusi yang Diterapkan
+- **Pemuatan Optimistik pada Auth Store**: Memanfaatkan cache IndexedDB Firebase agar status login dapat dimuat secara instan tanpa menunggu siklus penuh auth state.
+- **Tata Letak Dashboard Lebih Ringan**: Menghapus pemutar layar penuh dan menggantinya dengan skeleton loading untuk mempercepat transisi.
+- **Sumber Daya Non-Blocking**: Memuat CSS Remix Icon secara asinkron dan menghapus font Cormorant serta Pinyon dari dashboard untuk menghemat ukuran bundle.
+- **Dua Fase Pemuatan Dashboard**: Fase pertama menampilkan data dasar secara instan dari Zustand, fase kedua mengambil data eksternal secara bertahap setelah halaman pertama selesai digambar.
+- **Konfigurasi Next.js**: Mengoptimalkan impor pustaka eksternal (framer-motion, zustand, sub-modul Firebase) dan mengaktifkan kompresi format gambar AVIF/WebP dengan waktu simpan (TTL) cache yang dioptimalkan.
 
 ---
 
-## Format Penambahan Log Baru
-Tambahkan entry baru di atas baris ini dengan format:
-## [Tanggal]
-### [Kategori]
-- [Detail perubahan]
+## Sesi 5 — Penyesuaian Tata Letak Dashboard dan XP Bar
+
+### Kerja Sesi
+- Mengembalikan desain dashboard ke tata letak awal menggunakan ilustrasi karakter utama.
+- **TopBar**: Menambahkan visualisasi bar tingkat pengalaman (XP liquid bar) setinggi 30px secara horizontal, lengkap dengan animasi gelombang SVG dan perubahan warna otomatis sesuai tingkatan level user.
+
+---
+
+## Sesi 4 — Pengerasan Keamanan
+
+### Kerja Sesi
+- Menyusun modul keamanan NestJS (SecurityModule) yang mencakup pembatasan laju permintaan, pelindung token JWT, penyaring input, CORS, dan tajuk keamanan (Helmet).
+- Menyiapkan berkas stubs konfigurasi untuk pengerasan NGINX dan aturan ModSecurity WAF.
+- Merancang fondasi awal pendeteksian anomali berbasis kecerdasan buatan.
+- Menambahkan sistem pencatatan aktivitas forensic logs dan pengiriman peringatan keamanan.
+
+---
+
+## Sesi 3 — Landing Page Premium
+
+### Kerja Sesi
+- Mendesain ulang landing page dengan tata letak modern, animasi pengetikan teks, seksi visi misi, struktur pengurus, dan pengenalan divisi.
+- Menambahkan visualisasi peta perjalanan keanggotaan (Pirate Map) dan presentasi kartu misi tiga dimensi.
+- Menambahkan efek suara interaktif, modal pemutaran video profil, dan latar belakang tekstur kertas.
+
+---
+
+## Sesi 2 — Antarmuka Halaman Dashboard dan Pengguna
+
+### Kerja Sesi
+- Membuat halaman login yang terintegrasi dengan Firebase Auth.
+- Implementasi halaman utama dashboard anggota, pemindaian QR absensi, daftar lencana, dan peringkat keaktifan.
+- Menyusun halaman administrasi untuk pengelolaan berita, berkas galeri media, dan analisis keaktifan anggota.
+
+---
+
+## Sesi 1 — Infrastruktur Dasar Monorepo
+
+### Kerja Sesi
+- Setup monorepo menggunakan Next.js (aplikasi web) dan NestJS (aplikasi API).
+- Konfigurasi database Firestore dan Firebase Auth.
+- Membuat modul sistem penanganan pesan kesalahan global dan manajemen tema visual aplikasi.
+
+---
+
+## Riwayat Rilis Sebelumnya
+
+### 20 Mei 2026 (Landing Page & Integrasi Guidebook)
+- Integrasi materi panduan dari guidebook resmi ke halaman web.
+- Mengganti seluruh emoji pada antarmuka publik dengan ikon berbasis SVG.
+- Membagi komponen landing page agar lebih modular untuk pemeliharaan yang lebih mudah.
+
+### 17 Mei 2026 (Migrasi Monorepo)
+- Migrasi penuh sistem lama berbasis HTML/JS mandiri ke monorepo terpadu.
+- Menghapus lebih dari 12,000 berkas konfigurasi lama yang tidak terpakai.
+- Menyusun 16 modul utama di backend API untuk menangani autentikasi, absensi, lencana, pilar keahlian, ekspor laporan, dan pendeteksian kecurangan.
+
+### 3 Mei 2026 (Fitur Anggota & Kalender)
+- Menambahkan halaman detail profil anggota beserta riwayat aktivitasnya.
+- Menambahkan kalender kegiatan interaktif.
+- Membuat banner pengumuman darurat di dashboard admin.
+- Integrasi visualisasi grafik heatmap mingguan untuk analisis keaktifan anggota.

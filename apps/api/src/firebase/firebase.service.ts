@@ -15,18 +15,25 @@ export class FirebaseService implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    const storageBucket = this.configService.get<string>('FIREBASE_STORAGE_BUCKET')
-      || 'qr-absensi-unandnewgame.appspot.com';
-    const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID') || 'qr-absensi-unandnewgame';
+    // Cegah duplikat inisialisasi
+    if (admin.apps.length > 0) {
+      this.app = admin.apps[0];
+      this._initServices();
+      return;
+    }
 
-    // Search for service account key in multiple locations
+    const storageBucket =
+      this.configService.get<string>('FIREBASE_STORAGE_BUCKET') ||
+      'qr-absensi-unandnewgame.appspot.com';
+    const projectId =
+      this.configService.get<string>('FIREBASE_PROJECT_ID') ||
+      'qr-absensi-unandnewgame';
+
+    // Cari service account key di beberapa lokasi
     const searchPaths = [
       path.resolve(process.cwd(), 'serviceAccountKey.json'),
-      path.resolve(process.cwd(), 'serviceAccountKey.json.json'),
-      path.resolve(process.cwd(), '..', '..', 'serviceAccountKey.json'),
-      path.resolve(process.cwd(), '..', '..', 'serviceAccountKey.json.json'),
       path.resolve(process.cwd(), '..', 'serviceAccountKey.json'),
-      path.resolve(process.cwd(), '..', 'serviceAccountKey.json.json'),
+      path.resolve(process.cwd(), '..', '..', 'serviceAccountKey.json'),
     ];
 
     const envPath = this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS');
@@ -44,7 +51,7 @@ export class FirebaseService implements OnModuleInit {
             projectId,
             storageBucket,
           });
-          this.logger.log(`Firebase initialized with key: ${keyPath}`);
+          this.logger.log(`✅ Firebase initialized with key: ${keyPath}`);
           keyFound = true;
           break;
         } catch (e) {
@@ -54,57 +61,53 @@ export class FirebaseService implements OnModuleInit {
     }
 
     if (!keyFound) {
-      this.logger.warn('No service account key found. Download from Firebase Console.');
-      this.logger.warn('See NEED_TO_DO.md for instructions.');
-      // Initialize without credentials - API calls will fail but server starts
-      try {
-        // Remove env var so Firebase SDK doesn't try to auto-detect
-        delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-        this.app = admin.initializeApp({ projectId, storageBucket });
-        this.logger.log('Firebase initialized without credentials (limited functionality)');
-      } catch (e) {
-        this.logger.error(`Firebase init failed: ${e.message}`);
-        this.logger.error('Backend will start but Firebase calls will fail.');
-        this.app = admin.initializeApp({ projectId, storageBucket, credential: admin.credential.applicationDefault() });
-      }
+      this.logger.warn('⚠️  serviceAccountKey.json tidak ditemukan.');
+      this.logger.warn('Download dari Firebase Console → Project Settings → Service Accounts');
+      // Hapus env var agar firebase-admin tidak crash mencari file yang tidak ada
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      // Inisialisasi tanpa credentials — server tetap jalan, tapi Firebase calls gagal
+      this.app = admin.initializeApp({ projectId, storageBucket });
+      this.logger.warn('Firebase initialized tanpa credentials (mode terbatas)');
     }
 
+    this._initServices();
+  }
+
+  private _initServices() {
     try {
       this.firestoreInstance = this.app.firestore();
-      this.firestoreInstance.settings({ 
-        ignoreUndefinedProperties: true,
-        timestampsInSnapshots: true,
-      });
+      this.firestoreInstance.settings({ ignoreUndefinedProperties: true });
       this.authInstance = this.app.auth();
       this.storageInstance = this.app.storage();
-      this.logger.log(`Firestore, Auth, and Storage ready. Bucket: ${storageBucket}`);
+      const bucket = this.storageInstance.bucket().name;
+      this.logger.log(`✅ Firestore, Auth, Storage ready. Bucket: ${bucket}`);
     } catch (e) {
       this.logger.error(`Firebase services init failed: ${e.message}`);
     }
   }
 
-  /** Get Firestore instance */
   getFirestore(): admin.firestore.Firestore {
+    if (!this.firestoreInstance) throw new Error('Firestore belum terinisialisasi');
     return this.firestoreInstance;
   }
 
-  /** Get Auth instance */
   getAuth(): admin.auth.Auth {
+    if (!this.authInstance) throw new Error('Auth belum terinisialisasi');
     return this.authInstance;
   }
 
-  /** Get Storage instance */
   getStorage(): admin.storage.Storage {
+    if (!this.storageInstance) throw new Error('Storage belum terinisialisasi');
     return this.storageInstance;
   }
 
-  // Legacy getters for backward compatibility
+  // Legacy getters (backward compatible)
   get firestore(): admin.firestore.Firestore {
-    return this.firestoreInstance;
+    return this.getFirestore();
   }
 
   get auth(): admin.auth.Auth {
-    return this.authInstance;
+    return this.getAuth();
   }
 
   get timestamp() {

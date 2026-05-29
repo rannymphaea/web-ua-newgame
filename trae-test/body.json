@@ -1,0 +1,3 @@
+{
+  "message": "TRAE AI, analisis backend ini untuk meningkatkan keamanan sistem secara menyeluruh dan aman dari celah, termasuk pengaturan akses, sanitasi input, validasi file, dan autentikasi. Selain itu, perbaiki endpoint upload foto profil (/api/media/profile/upload) yang saat ini gagal dengan 'Cannot POST', agar: 1. Mendukung upload file yang aman (cek ekstensi, ukuran, type mime). 2. Menyimpan file dengan path unik untuk setiap user. 3. Menangani error dan memberikan response jelas ke frontend. 4. Backend tidak rentan terhadap serangan seperti path traversal, injection, atau overwrite file. Berikan saya kode backend NestJS (Controller + Service) siap pakai, aman, efisien, dan optimal."
+}

@@ -19,5 +19,9 @@
     "concurrently": "^8.2.2",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0"
+  },
+  "dependencies": {
+    "groq-sdk": "^1.2.1",
+    "openai": "^6.39.0"
   }
 }

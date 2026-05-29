@@ -10,6 +10,10 @@ export interface UploadMediaDto {
   tags?: string[];
 }
 
+/** All supported avatar keys */
+export const AVATAR_LIST = ['default', 'neko', 'chibi', 'yua'] as const;
+export type AvatarKey = typeof AVATAR_LIST[number];
+
 @Injectable()
 export class MediaService {
   private readonly ALLOWED_TYPES = [
@@ -81,13 +85,18 @@ export class MediaService {
     }
   }
 
-  async uploadProfile(userId: string, file: any, usage: string = 'avatar') {
+  /** Upload foto profil — retry sekali jika gagal, kembalikan JSON clean jika tetap gagal */
+  async uploadProfile(
+    userId: string,
+    file: any,
+    usage: string = 'avatar',
+  ): Promise<{ url: string; profile_upload: 'ok' } | { profile_upload: 'failed'; error: string }> {
     if (!userId) throw new BadRequestException('User ID required');
     if (!file) throw new BadRequestException('File required');
 
     if (!this.ALLOWED_TYPES.includes(file.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type: ${file.mimetype}. Allowed: ${this.ALLOWED_TYPES.join(', ')}`
+        `Invalid file type: ${file.mimetype}. Allowed: ${this.ALLOWED_TYPES.join(', ')}`,
       );
     }
 
@@ -96,9 +105,9 @@ export class MediaService {
     }
 
     const ext = file.originalname.split('.').pop() || 'jpg';
-    const uniqueName = `users/${userId}/profile.${ext}`;
+    const uniqueName = `media/avatar/${userId}/profile.${ext}`;
 
-    try {
+    const doUpload = async () => {
       const storage = this.firebaseService.getStorage();
       const bucket = storage.bucket();
       const fileRef = bucket.file(uniqueName);
@@ -108,7 +117,7 @@ export class MediaService {
           contentType: file.mimetype,
           metadata: {
             uploadedBy: userId,
-            usage: usage,
+            usage,
             originalName: file.originalname,
           },
         },
@@ -119,23 +128,76 @@ export class MediaService {
 
       const db = this.firebaseService.getFirestore();
       const mediaRef = db.collection('media').doc();
-      const mediaData = {
+      await mediaRef.set({
         url: publicUrl,
         filename: file.originalname,
         storagePath: uniqueName,
         mimeType: file.mimetype,
         size: file.size,
-        usage: usage,
+        usage,
         uploadedBy: userId,
         createdAt: new Date(),
-      };
+      });
 
-      await mediaRef.set(mediaData);
-      return { url: publicUrl };
-    } catch (err) {
-      this.logger.error('Profile upload error:', err);
-      throw new BadRequestException(`Upload failed: ${err instanceof Error ? err.message : String(err)}`);
+      return publicUrl;
+    };
+
+    // First attempt
+    try {
+      const url = await doUpload();
+      return { url, profile_upload: 'ok' };
+    } catch (firstErr) {
+      this.logger.warn(`Profile upload first attempt failed for uid=${userId}: ${firstErr}`);
     }
+
+    // Retry once — send event marker before retry
+    this.logger.log(`upload_retry uid=${userId}`);
+    try {
+      const url = await doUpload();
+      return { url, profile_upload: 'ok' };
+    } catch (retryErr) {
+      this.logger.error(`Profile upload retry also failed for uid=${userId}:`, retryErr);
+      // Never crash — return clean error JSON
+      return { profile_upload: 'failed', error: 'unknown_system_error' };
+    }
+  }
+
+  /** Kembalikan daftar avatar yang tersedia */
+  getAvatarList(): { avatar_list: string[] } {
+    return { avatar_list: [...AVATAR_LIST] };
+  }
+
+  /** Simpan pilihan avatar ke Firestore untuk user tertentu */
+  async selectAvatar(
+    userId: string,
+    avatar: AvatarKey,
+  ): Promise<{
+    status: 'ok';
+    avatar: AvatarKey;
+    animation: string;
+    sfx: string | null;
+    profile_upload: 'ok' | 'failed';
+  }> {
+    if (!AVATAR_LIST.includes(avatar)) {
+      throw new BadRequestException(`Avatar tidak valid. Pilihan: ${AVATAR_LIST.join(', ')}`);
+    }
+
+    const db = this.firebaseService.getFirestore();
+    await db.collection('users').doc(userId).update({
+      activeAvatar: avatar,
+      avatarUpdatedAt: new Date().toISOString(),
+    });
+
+    const sfx = avatar === 'yua' ? '/assets/sfx/yua-select.mp3' : null;
+    const animation = avatar === 'yua' ? 'avatar_pulse' : null;
+
+    return {
+      status: 'ok',
+      avatar,
+      animation,
+      sfx,
+      profile_upload: 'ok',
+    };
   }
 
   async getAll(filters?: {
