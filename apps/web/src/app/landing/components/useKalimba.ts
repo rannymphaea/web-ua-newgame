@@ -15,45 +15,68 @@ interface AudioRefs {
   unlocked: boolean;
 }
 
-function initAudioGraph(refs: AudioRefs) {
+// ── Audio graph init — ONLY called inside a gesture handler ──────────────────
+function initAudioGraph(refs: AudioRefs): AudioContext {
   if (refs.ctx) return refs.ctx;
-  const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+
+  const Ctx = window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new Ctx();
+
+  // Expose for external resume (SoundToggle, etc.)
+  (window as unknown as Record<string, unknown>).__audioCtx = ctx;
 
   const compressor = ctx.createDynamicsCompressor();
   compressor.threshold.value = -15;
-  compressor.knee.value = 5;
-  compressor.ratio.value = 4;
-  compressor.attack.value = 0.002;
-  compressor.release.value = 0.1;
+  compressor.knee.value      = 5;
+  compressor.ratio.value     = 4;
+  compressor.attack.value    = 0.002;
+  compressor.release.value   = 0.1;
 
   const masterGain = ctx.createGain();
   masterGain.gain.value = 0.6;
 
-  const delay = ctx.createDelay(1.0);
+  const delay    = ctx.createDelay(1.0);
   delay.delayTime.value = 0.15;
 
   const feedback = ctx.createGain();
   feedback.gain.value = 0.15;
 
-  const wetGain = ctx.createGain();
+  const wetGain  = ctx.createGain();
   wetGain.gain.value = 0.15;
 
   masterGain.connect(compressor);
   compressor.connect(ctx.destination);
-
   masterGain.connect(delay);
   delay.connect(feedback);
   feedback.connect(delay);
   delay.connect(wetGain);
   wetGain.connect(compressor);
 
-  refs.ctx = ctx;
+  refs.ctx        = ctx;
   refs.masterGain = masterGain;
   refs.compressor = compressor;
-  refs.delay = delay;
-  refs.feedback = feedback;
-  refs.wetGain = wetGain;
+  refs.delay      = delay;
+  refs.feedback   = feedback;
+  refs.wetGain    = wetGain;
   return ctx;
+}
+
+// ── Gesture-unlock: init + resume inside the SAME gesture tick ───────────────
+// FIX MOBILE: AudioContext must be created AND resumed in one synchronous
+// gesture callstack. Separating them (create on load, resume on touch)
+// fails on iOS Safari & Chrome Android.
+async function gestureUnlock(refs: AudioRefs): Promise<void> {
+  if (refs.unlocked) return;
+  try {
+    const ctx = initAudioGraph(refs);        // create inside gesture ✓
+    if (ctx.state === 'suspended') {
+      await ctx.resume();                    // resume inside same gesture ✓
+    }
+    refs.unlocked = true;
+  } catch (e) {
+    console.warn('[Kalimba] AudioContext unlock failed:', e);
+  }
 }
 
 export function useKalimba(enabled: boolean) {
@@ -62,41 +85,45 @@ export function useKalimba(enabled: boolean) {
     delay: null, feedback: null, wetGain: null, unlocked: false,
   });
 
-  // Unlock on first user interaction
+  // ── Register gesture listeners ────────────────────────────────────────────
   useEffect(() => {
     if (!enabled) return;
-    const unlock = () => {
-      if (refs.current.unlocked) return;
-      const ctx = initAudioGraph(refs.current);
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(() => { refs.current.unlocked = true; });
-      } else {
-        refs.current.unlocked = true;
-      }
-      document.removeEventListener('click', unlock);
-      document.removeEventListener('touchstart', unlock);
-      document.removeEventListener('keydown', unlock);
-    };
-    document.addEventListener('click', unlock);
-    document.addEventListener('touchstart', unlock);
-    document.addEventListener('keydown', unlock);
+
+    // touchstart fires before touchend — gives iOS the synchronous gesture context
+    // click covers desktop; keydown covers keyboard users
+    const unlock = () => { void gestureUnlock(refs.current); };
+
+    // { passive: true } = no scroll penalty; { once: false } = re-try if first fails
+    document.addEventListener('touchstart', unlock, { passive: true });
+    document.addEventListener('touchend',   unlock, { passive: true });
+    document.addEventListener('click',      unlock);
+    document.addEventListener('keydown',    unlock);
+
+    // MOBILE FALLBACK: if already inside a gesture context on mount, try immediately
+    // e.g. user tapped a button that toggled enabled=true
+    void gestureUnlock(refs.current);
+
     return () => {
-      document.removeEventListener('click', unlock);
       document.removeEventListener('touchstart', unlock);
-      document.removeEventListener('keydown', unlock);
+      document.removeEventListener('touchend',   unlock);
+      document.removeEventListener('click',      unlock);
+      document.removeEventListener('keydown',    unlock);
     };
   }, [enabled]);
 
+  // ── Play a frequency ─────────────────────────────────────────────────────
   const play = useCallback((freq: number) => {
     if (!enabled) return;
     const { ctx, masterGain } = refs.current;
-    if (!ctx || !masterGain || ctx.state === 'suspended') return;
+
+    // Guard: context not ready or still suspended (mobile not yet unlocked)
+    if (!ctx || !masterGain || ctx.state !== 'running') return;
 
     const now = ctx.currentTime;
 
     // Fundamental sine (kalimba body)
     const osc1 = ctx.createOscillator();
-    const g1 = ctx.createGain();
+    const g1   = ctx.createGain();
     osc1.type = 'sine';
     osc1.frequency.setValueAtTime(freq, now);
     g1.gain.setValueAtTime(0.0, now);
@@ -106,7 +133,7 @@ export function useKalimba(enabled: boolean) {
 
     // 2nd partial (brightness)
     const osc2 = ctx.createOscillator();
-    const g2 = ctx.createGain();
+    const g2   = ctx.createGain();
     osc2.type = 'sine';
     osc2.frequency.setValueAtTime(freq * 2.75, now);
     g2.gain.setValueAtTime(0.0, now);
@@ -116,7 +143,7 @@ export function useKalimba(enabled: boolean) {
 
     // 3rd partial (attack click)
     const osc3 = ctx.createOscillator();
-    const g3 = ctx.createGain();
+    const g3   = ctx.createGain();
     osc3.type = 'sine';
     osc3.frequency.setValueAtTime(freq * 5.40, now);
     g3.gain.setValueAtTime(0.0, now);

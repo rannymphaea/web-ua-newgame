@@ -60,4 +60,18 @@ export class AuthController {
   async getAllUsers() {
     return this.authService.getAllUsers();
   }
+
+  /**
+   * POST /api/auth/register-admin
+   * Buat akun admin baru. Hanya bisa dipanggil oleh superadmin.
+   * Body: { email, password, displayName, division? }
+   */
+  @Post('register-admin')
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  async registerAdmin(
+    @Body() body: { email: string; password: string; displayName: string; division?: string },
+  ) {
+    return this.authService.registerAdmin(body);
+  }
 }

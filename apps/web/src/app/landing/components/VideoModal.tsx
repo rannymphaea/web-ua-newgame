@@ -1,45 +1,100 @@
 'use client';
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 
 interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Pass youtubeId to embed YouTube instead of local video */
+  youtubeId?: string;
 }
 
-export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+// ── YouTube iframe cleanup helper ─────────────────────────────────────────────
+function destroyYouTubeIframe(container: HTMLDivElement | null) {
+  if (!container) return;
+  // Stop playback by blanking src before removal (prevents audio ghost)
+  const iframe = container.querySelector('iframe');
+  if (iframe) {
+    iframe.src = '';
+    iframe.remove();
+  }
+  container.innerHTML = '';
+}
 
+function buildYouTubeUrl(id: string) {
+  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`;
+}
+
+export default function VideoModal({ isOpen, onClose, youtubeId }: VideoModalProps) {
+  const videoRef    = useRef<HTMLVideoElement>(null);
+  const ytContainer = useRef<HTMLDivElement>(null);
+
+  // ── YouTube: mount/unmount iframe on open/close ───────────────────────────
   useEffect(() => {
-    if (isOpen && videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {/* autoplay might be blocked */});
-    } else if (!isOpen && videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [isOpen]);
+    if (!youtubeId) return;
+    const container = ytContainer.current;
+    if (!container) return;
 
-  // Close on Escape
+    if (isOpen) {
+      const iframe = document.createElement('iframe');
+      iframe.src              = buildYouTubeUrl(youtubeId);
+      iframe.allow            = 'autoplay; encrypted-media; picture-in-picture';
+      iframe.allowFullscreen  = true;
+      iframe.style.cssText    = 'width:100%;height:100%;border:0;border-radius:12px;';
+      iframe.title            = 'Video Player';
+      container.appendChild(iframe);
+    } else {
+      // Full cleanup: blank src → remove node → clear container
+      destroyYouTubeIframe(container);
+    }
+
+    return () => {
+      // Cleanup on unmount too
+      destroyYouTubeIframe(container);
+    };
+  }, [isOpen, youtubeId]);
+
+  // ── Local video: play/stop via ref ────────────────────────────────────────
+  useEffect(() => {
+    if (youtubeId) return;
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (isOpen) {
+      vid.currentTime = 0;
+      vid.play().catch(() => { /* autoplay blocked — user can press play */ });
+    } else {
+      vid.pause();
+      vid.currentTime = 0;
+    }
+  }, [isOpen, youtubeId]);
+
+  // ── Escape + scroll lock ──────────────────────────────────────────────────
+  const handleKey = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
+
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [isOpen, onClose]);
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, handleKey]);
 
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) onClose();
-  }, [onClose]);
+  // ── Unmount when closed (prevents background play) ────────────────────────
+  if (!isOpen) return null;
 
   return (
     <div
       id="video-modal"
-      className={`video-modal${isOpen ? ' active' : ''}`}
-      onClick={handleBackdropClick}
-      aria-modal="true"
+      className="video-modal"
+      onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
+      aria-modal="true"
       aria-label="Video Player"
     >
-      <div className="video-modal-content">
+      <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
         <button
           id="close-video"
           className="close-video"
@@ -53,16 +108,16 @@ export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
         </button>
 
         <div className="video-container">
-          <video
-            ref={videoRef}
-            id="local-video"
-            playsInline
-            controls
-            loop
-          >
-            <source src="/rizz.mp4" type="video/mp4" />
-            Browser Anda tidak mendukung tag video.
-          </video>
+          {youtubeId ? (
+            /* YouTube: managed div — iframe injected/destroyed via ref */
+            <div ref={ytContainer} style={{ width: '100%', height: '100%' }} />
+          ) : (
+            /* Local MP4 */
+            <video ref={videoRef} id="local-video" playsInline controls loop>
+              <source src="/rizz.mp4" type="video/mp4" />
+              Browser Anda tidak mendukung tag video.
+            </video>
+          )}
         </div>
       </div>
     </div>

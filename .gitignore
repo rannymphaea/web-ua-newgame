@@ -57,3 +57,11 @@ afbof.md
 full_project.txt
 index.html
 storage.rules
+
+# G4 FIX: Raw/source asset files — terlalu besar untuk Git (logo.png 15.8MB)
+# Simpan di Git LFS atau cloud storage jika perlu track
+/assets/
+
+# Temp conversion outputs
+*.optimized.png
+*.optimized.webp

@@ -1,8 +1,13 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
 
+/* ─────────────────────────────────────────────────────────────────
+   H5 FIX: useScrollReveal — AbortController + MutationObserver
+   yang disconnect dirinya sendiri setelah semua visible
+   ───────────────────────────────────────────────────────────────── */
 export function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -12,60 +17,73 @@ export function useScrollReveal() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
+            observer.unobserve(entry.target); // stop observing once visible
           }
         });
       },
       { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
     );
 
-    // Observer untuk elemen reveal saat ini
-    const revealElements = el.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-    revealElements.forEach((child) => observer.observe(child));
+    const revealEls = el.querySelectorAll(
+      '.reveal, .reveal-left, .reveal-right, .reveal-scale'
+    );
+    revealEls.forEach((child) => observer.observe(child));
 
-    // MutationObserver untuk menangkap elemen baru yang ditambahkan
+    // MutationObserver — terbatas childList+subtree, disconnect setelah idle
+    let muTimeout: ReturnType<typeof setTimeout>;
     const mutationObserver = new MutationObserver(() => {
-      const newElements = el.querySelectorAll('.reveal:not(.visible), .reveal-left:not(.visible), .reveal-right:not(.visible), .reveal-scale:not(.visible)');
-      newElements.forEach((child) => {
-        if (!observer) return;
-        observer.observe(child);
-      });
+      clearTimeout(muTimeout);
+      const newEls = el.querySelectorAll(
+        '.reveal:not(.visible), .reveal-left:not(.visible), .reveal-right:not(.visible), .reveal-scale:not(.visible)'
+      );
+      newEls.forEach((child) => observer.observe(child));
+      // Auto-disconnect MutationObserver after 8s (all animations done)
+      muTimeout = setTimeout(() => mutationObserver.disconnect(), 8000);
     });
 
-    mutationObserver.observe(el, {
-      childList: true,
-      subtree: true,
-      attributes: false,
-    });
+    mutationObserver.observe(el, { childList: true, subtree: true, attributes: false });
 
     return () => {
+      clearTimeout(muTimeout);
       observer.disconnect();
       mutationObserver.disconnect();
     };
   }, []);
+
   return ref;
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   H5 FIX: useParallax — AbortController for clean listener removal
+   ───────────────────────────────────────────────────────────────── */
 export function useParallax() {
-  const handleScroll = useCallback(() => {
-    const scrollY = window.scrollY;
-    document.querySelectorAll('.parallax-slow').forEach((el) => {
-      (el as HTMLElement).style.transform = `translateY(${scrollY * 0.15}px)`;
-    });
-    document.querySelectorAll('.parallax-fast').forEach((el) => {
-      (el as HTMLElement).style.transform = `translateY(${scrollY * 0.3}px)`;
-    });
-  }, []);
-
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      document.querySelectorAll<HTMLElement>('.parallax-slow').forEach((el) => {
+        el.style.transform = `translateY(${scrollY * 0.12}px)`;
+      });
+      document.querySelectorAll<HTMLElement>('.parallax-fast').forEach((el) => {
+        el.style.transform = `translateY(${scrollY * 0.25}px)`;
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true, signal });
+
+    return () => controller.abort();
+  }, []);
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   AnimatedCounter — unchanged, functional
+   ───────────────────────────────────────────────────────────────── */
 export function AnimatedCounter({ end, suffix = '' }: { end: number; suffix?: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const counted = useRef(false);
+  const [count, setCount]   = useState(0);
+  const ref                 = useRef<HTMLSpanElement>(null);
+  const counted             = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -84,6 +102,7 @@ export function AnimatedCounter({ end, suffix = '' }: { end: number; suffix?: st
             if (progress < 1) requestAnimationFrame(step);
           };
           requestAnimationFrame(step);
+          observer.disconnect();
         }
       },
       { threshold: 0.5 }
@@ -95,6 +114,9 @@ export function AnimatedCounter({ end, suffix = '' }: { end: number; suffix?: st
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   StaggerText
+   ───────────────────────────────────────────────────────────────── */
 export function StaggerText({ text, className = '' }: { text: string; className?: string }) {
   return (
     <span className={`stagger-text ${className}`}>
@@ -107,50 +129,64 @@ export function StaggerText({ text, className = '' }: { text: string; className?
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   M1 FIX: TypewriterText — ref-based state, no cascading setState
+   ───────────────────────────────────────────────────────────────── */
 export function TypewriterText({ text, className = '' }: { text: string; className?: string }) {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [loopNum, setLoopNum] = useState(0);
-  const [typingSpeed, setTypingSpeed] = useState(150);
+  const [displayed, setDisplayed] = useState('');
+  const phaseRef   = useRef<'typing' | 'pause' | 'deleting'>('typing');
+  const timerRef   = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    phaseRef.current = 'typing';
+    setDisplayed('');
 
-    const handleTyping = () => {
-      const fullText = text;
-      
-      setDisplayedText(
-        isDeleting 
-          ? fullText.substring(0, displayedText.length - 1)
-          : fullText.substring(0, displayedText.length + 1)
-      );
+    const tick = () => {
+      setDisplayed(prev => {
+        const phase = phaseRef.current;
 
-      setTypingSpeed(isDeleting ? 80 : 150);
+        if (phase === 'typing') {
+          const next = text.substring(0, prev.length + 1);
+          if (next === text) {
+            // Done typing — pause before delete
+            phaseRef.current = 'pause';
+            timerRef.current = setTimeout(() => {
+              phaseRef.current = 'deleting';
+              tick();
+            }, 2500);
+            return next;
+          }
+          timerRef.current = setTimeout(tick, 150);
+          return next;
+        }
 
-      if (!isDeleting && displayedText === fullText) {
-        // Jeda bentar pas teks utuh sblm hapus
-        timer = setTimeout(() => setIsDeleting(true), 2500);
-      } else if (isDeleting && displayedText === '') {
-        // Teks udah kehapus semua, mulai ngetik lagi
-        setIsDeleting(false);
-        setLoopNum(loopNum + 1);
-        setTypingSpeed(200); // jeda sebelum ngetik ulang
-      } else {
-        // Lanjutkan ngetik/hapus
-        timer = setTimeout(handleTyping, typingSpeed);
-      }
+        if (phase === 'deleting') {
+          const next = prev.substring(0, prev.length - 1);
+          if (next === '') {
+            // Done deleting — restart
+            phaseRef.current = 'typing';
+            timerRef.current = setTimeout(tick, 200);
+            return '';
+          }
+          timerRef.current = setTimeout(tick, 80);
+          return next;
+        }
+
+        return prev;
+      });
     };
 
-    timer = setTimeout(handleTyping, typingSpeed);
+    timerRef.current = setTimeout(tick, 300);
 
-    return () => clearTimeout(timer);
-  }, [displayedText, isDeleting, loopNum, text, typingSpeed]);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [text]);
 
   return (
     <span className={`typewriter-text ${className}`}>
-      {displayedText}
+      {displayed}
       <span className="cursor-blink">|</span>
     </span>
   );
 }
-

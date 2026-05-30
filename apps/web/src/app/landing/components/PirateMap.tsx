@@ -172,8 +172,9 @@ export default function PirateMap() {
     });
 
     return () => {
-      while (nodesL.firstChild) nodesL.removeChild(nodesL.firstChild);
-      while (svg.lastChild && svg.lastChild !== svg.firstChild) svg.removeChild(svg.lastChild);
+      // Full cleanup — innerHTML is reliable, also clears defs/marker
+      nodesL.innerHTML = '';
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
       drawnRef.current.clear();
     };
   }, []);
@@ -263,13 +264,17 @@ export default function PirateMap() {
       rafRef.current = requestAnimationFrame(update);
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    const controller = new AbortController();
+    const { signal } = controller;
+    window.addEventListener('scroll', onScroll, { passive: true, signal });
+    window.addEventListener('resize', onScroll, { signal });
     update();
     return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      controller.abort(); // removes both scroll + resize listeners
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      }
     };
   }, []);
 

@@ -17,19 +17,18 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 3600,
+    // H6: proper device/image size hints for responsive images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes:  [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
   // Optimize package imports — kurangi JS bundle size
   experimental: {
     optimizePackageImports: [
-      'firebase',
-      'firebase/app',
-      'firebase/auth',
-      'firebase/firestore',
-      'firebase/storage',
       'framer-motion',
       'recharts',
       'zustand',
+      // firebase/* individual removed — Next.js handles them automatically
     ],
   },
 
@@ -58,11 +57,28 @@ const nextConfig = {
           { key: 'Permissions-Policy',         value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
-      // Cache static assets aggressively
       {
-        source: '/(.*)\\.png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2',
+        // H6 FIX: correct regex grouping — was broken (| precedence bug)
+        // BEFORE: '/(.*)\\.png|jpg|jpeg...' → only .png matched prefix (.*)
+        // AFTER:  '/:path*\\.(ext1|ext2|...)' → all extensions match correctly
+        source: '/:path*\\.(png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // H6: video files need range request support + shorter cache
+        source: '/:path*\\.(mp4|webm|ogg)',
+        headers: [
+          { key: 'Cache-Control',  value: 'public, max-age=86400' },
+          { key: 'Accept-Ranges',  value: 'bytes' },
+        ],
+      },
+      {
+        // Audio files
+        source: '/:path*\\.(mp3|wav|ogg)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400' },
         ],
       },
     ];

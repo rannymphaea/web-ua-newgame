@@ -52,6 +52,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 5,          // H3: allow pinch zoom up to 5x
+  userScalable: true,       // H3: never block zoom (accessibility)
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#FAF8F5' },
     { media: '(prefers-color-scheme: dark)',  color: '#0D1117' },

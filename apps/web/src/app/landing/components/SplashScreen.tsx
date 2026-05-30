@@ -91,7 +91,6 @@ export default function SplashScreen() {
             alt="NEWGAME"
             width={96}
             height={96}
-            priority
             style={{
               borderRadius: 24,
               filter: 'drop-shadow(0 8px 32px rgba(253,207,65,0.4))',

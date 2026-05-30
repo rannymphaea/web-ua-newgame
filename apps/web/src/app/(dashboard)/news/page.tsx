@@ -303,8 +303,28 @@ function TutorialCard({ tutorial, accentColor }: { tutorial: Post; accentColor: 
 }
 
 function PostModal({ post, onClose }: { post: Post; onClose: () => void }) {
+  // Escape key + scroll lock
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+      // Nuke iframe src on unmount — stops YouTube audio/video playback
+      document.querySelectorAll<HTMLIFrameElement>('.youtube-embed iframe')
+        .forEach(f => { f.src = ''; f.remove(); });
+    };
+  }, [onClose]);
+
   return (
-    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label={post.title}>
+    <div
+      className="modal-backdrop"
+      onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={post.title}
+    >
       <div className="modal-box animate-spring-modal" onClick={e => e.stopPropagation()}>
         <button className="modal-close-btn" onClick={onClose} aria-label="Tutup">
           <i className="ri-close-line" style={{fontSize:18}} aria-hidden="true" />
@@ -326,8 +346,14 @@ function PostModal({ post, onClose }: { post: Post; onClose: () => void }) {
           </p>
           {post.youtubeEmbedId && (
             <div className="youtube-embed mb-lg">
-              <iframe src={`https://www.youtube.com/embed/${post.youtubeEmbedId}`} title={post.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+              {/* lazy src — prevents autoplay before modal visible */}
+              <iframe
+                src={`https://www.youtube.com/embed/${post.youtubeEmbedId}?enablejsapi=1`}
+                title={post.title}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
           )}
           <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content || '' }} />

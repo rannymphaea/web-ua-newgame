@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -30,21 +30,64 @@ const AssessmentAccordion = dynamic(() => import('./components/AssessmentAccordi
 const VideoModal          = dynamic(() => import('./components/VideoModal'),           { ssr: false });
 const SplashScreen        = dynamic(() => import('./components/SplashScreen'),        { ssr: false });
 
-/* ── Sound toggle ─────────────────────────────────────────────── */
+/* ── Sound toggle ───────────────────────────────── */
 function SoundToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+  /**
+   * MOBILE SOUND FIX: AudioContext must be resumed INSIDE a synchronous
+   * user gesture. onPointerDown fires before onClick — perfect for iOS.
+   * We attempt resume here so the audio system is unlocked before toggle.
+   */
+  const handlePointerDown = useCallback(() => {
+    try {
+      // Find any suspended AudioContext and resume it immediately
+      const win = window as any;
+      const AudioCtx = win.AudioContext || win.webkitAudioContext;
+      if (!AudioCtx) return;
+      // Resume existing context if suspended (created by useKalimba)
+      if (win.__audioCtx && win.__audioCtx.state === 'suspended') {
+        win.__audioCtx.resume();
+      }
+    } catch (_) { /* ignore */ }
+  }, []);
+
   return (
     <button
       id="sound-toggle"
       className={`sound-toggle-btn${enabled ? '' : ' muted'}`}
+      onPointerDown={handlePointerDown}  /* gesture unlock — fires before onClick */
       onClick={onToggle}
       aria-label={enabled ? 'Matikan suara' : 'Aktifkan suara'}
       title={enabled ? 'Sound ON' : 'Sound OFF'}
+      style={{ touchAction: 'manipulation' }}
     >
       {enabled ? (
         <i className="ri-volume-up-line" style={{ fontSize: 18 }} />
       ) : (
         <i className="ri-volume-mute-line" style={{ fontSize: 18 }} />
       )}
+    </button>
+  );
+}
+
+/* ── Scroll To Top ─────────────────────────────────────────── */
+function ScrollToTop() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 600);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!visible) return null;
+  return (
+    <button
+      id="scroll-to-top"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Kembali ke atas"
+      className="sound-toggle-btn"
+      style={{ bottom: 148, touchAction: 'manipulation' }}
+      title="Scroll ke atas"
+    >
+      <i className="ri-arrow-up-line" style={{ fontSize: 18 }} />
     </button>
   );
 }
@@ -132,6 +175,9 @@ export default function LandingPage() {
       {/* ── Theme Toggle ─ */}
       <ThemeToggle />
 
+      {/* M2: Scroll To Top ─ */}
+      <ScrollToTop />
+
       {/* ════ HERO (Asymmetric Split) ═══════════════════════════ */}
       <section
         className="hero-section"
@@ -159,16 +205,16 @@ export default function LandingPage() {
           </p>
 
           {/* H1 — Typewriter Animation */}
-          <h1 
-            className="hero-title" 
-            style={{ 
-              fontSize: 'clamp(4rem, 8vw, 6.5rem)', /* Ukuran diperkecil agar pas */
-              fontWeight: 800, 
-              color: '#000000', 
-              fontFamily: 'var(--font-lora), serif', /* Menggunakan Lora yang lebih premium dan rapat */
+          <h1
+            className="hero-title"
+            style={{
+              fontSize: 'clamp(4rem, 8vw, 6.5rem)',
+              fontWeight: 800,
+              color: '#000000',
+              /* fontFamily intentionally removed — let .hero-title CSS class control */
               textShadow: '2px 2px 10px rgba(0,0,0,0.1)',
               marginBottom: '0.2rem',
-              letterSpacing: '-1px', /* Dibuat agak rapat */
+              letterSpacing: '-1px',
               minHeight: '1.2em'
             }}
           >
@@ -544,7 +590,7 @@ export default function LandingPage() {
             </div>
 
             {/* Text + chips */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
               <p style={{
                 fontFamily: 'var(--font-inter)', fontSize: '0.72rem',
                 letterSpacing: '0.18em', textTransform: 'uppercase',
@@ -588,7 +634,7 @@ export default function LandingPage() {
             </div>
 
             {/* CTA button */}
-            <div style={{ flexShrink: 0, textAlign: 'center' }}>
+            <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 120 }}>
               <div style={{
                 padding: '12px 24px', borderRadius: 12,
                 background: '#FDCF41', color: '#2c1810',
