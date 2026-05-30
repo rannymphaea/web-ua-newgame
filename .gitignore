@@ -65,3 +65,6 @@ storage.rules
 # Temp conversion outputs
 *.optimized.png
 *.optimized.webp
+
+# Credentials — JANGAN COMMIT (berisi kode akses semua anggota)
+MEMBER_CREDENTIALS.md

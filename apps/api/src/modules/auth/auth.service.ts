@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { FirebaseService } from '../../firebase/firebase.service';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,13 @@ export class AuthService {
       throw new BadRequestException('Member ID sudah terdaftar');
     }
 
-    if (member.tempPassword !== tempPassword) {
+    // Support both bcrypt hash (v2 seed) and plain legacy comparison
+    const isHashed = member.tempPassword?.startsWith('$2');
+    const passwordMatch = isHashed
+      ? await bcrypt.compare(tempPassword, member.tempPassword)
+      : member.tempPassword === tempPassword;
+
+    if (!passwordMatch) {
       throw new UnauthorizedException('Password sementara salah');
     }
 

@@ -1,21 +1,44 @@
 /**
- * NEWGAME Member Seed Script
- * Migrate 125 hardcoded members from members.html → Firestore
- * Run with: node apps/api/src/scripts/seed-members.js
+ * NEWGAME Member Seed Script — v2
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Fitur:
+ *   - tempPassword di-hash (bcryptjs) sebelum disimpan ke Firestore
+ *   - Plain-text credentials di-upload ke Cloudinary (raw, private)
+ *   - File lokal MEMBER_CREDENTIALS.md TIDAK dibuat (aman dari leak Git)
+ *
+ * Run:
+ *   node apps/api/src/scripts/seed-members.js
+ *
+ * Env (apps/api/.env atau root .env):
+ *   GOOGLE_APPLICATION_CREDENTIALS=<path ke serviceAccountKey.json>
+ *   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+ * ─────────────────────────────────────────────────────────────────────────────
  */
-const admin = require('firebase-admin');
 
-// Initialize with ADC or service account
-const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-if (serviceAccountPath) {
-  const serviceAccount = require(serviceAccountPath);
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+
+const admin      = require('firebase-admin');
+const bcrypt     = require('bcryptjs');
+const cloudinary = require('cloudinary').v2;
+
+// ── Firebase init ─────────────────────────────────────────────────────────────
+const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+if (keyPath) {
+  const resolved = require('path').resolve(process.cwd(), keyPath);
+  admin.initializeApp({ credential: admin.credential.cert(require(resolved)) });
 } else {
   admin.initializeApp({ projectId: 'qr-absensi-unandnewgame' });
 }
-
 const db = admin.firestore();
 
+// ── Cloudinary init ───────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// ── Member data ───────────────────────────────────────────────────────────────
 const MEMBER_DATA = [
   {no:1,gen:"GEN 1",pillar:"Game Logic",id:"NG11001001GL",name:"Zulfi Ariyan",status:"ACTIVE",team:"Project"},
   {no:2,gen:"GEN 1",pillar:"Game Design",id:"NG11001001GD",name:"Annisa Revalina Harahap",status:"ACTIVE",team:"Project"},
@@ -143,37 +166,146 @@ const MEMBER_DATA = [
   {no:125,gen:"GEN 2",pillar:"Game Sound",id:"NG11020125SF",name:"Raditya Wengki Maulana",status:"ACTIVE",team:"Inventory"},
 ];
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Generate plain-text kode akses dari memberId + nomor urut */
+function generateTempPassword(memberId, no) {
+  const suffix   = memberId.slice(-5).toLowerCase();
+  const noPadded = String(no).padStart(3, '0');
+  return `ng${noPadded}${suffix}`;
+}
+
+/** Upload string konten ke Cloudinary sebagai raw file (private, admin only) */
+async function uploadToCloudinary(content, filename) {
+  return new Promise((resolve, reject) => {
+    const buffer = Buffer.from(content, 'utf8');
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'raw',
+        folder:        'newgame-admin/credentials',
+        public_id:     filename,
+        access_mode:   'authenticated',   // private — butuh signed URL untuk akses
+        overwrite:     true,
+        tags:          ['credentials', 'admin-only'],
+      },
+      (err, result) => err ? reject(err) : resolve(result),
+    );
+    const { Readable } = require('stream');
+    Readable.from(buffer).pipe(stream);
+  });
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
 async function seedMembers() {
-  console.log(`🌱 Seeding ${MEMBER_DATA.length} members to Firestore...`);
-  
-  const batch = db.batch();
-  let count = 0;
+  console.log(`\n🌱 Seeding ${MEMBER_DATA.length} members to Firestore (dengan bcrypt hash)...\n`);
+
+  const SALT_ROUNDS = 10;
+  const creds       = [];
+  const batches     = [db.batch()];
+  let   batchIdx    = 0;
+  let   count       = 0;
 
   for (const m of MEMBER_DATA) {
+    const plain        = generateTempPassword(m.id, m.no);
+    const hashedPw     = await bcrypt.hash(plain, SALT_ROUNDS);   // hash untuk Firestore
+
     const docRef = db.collection('members').doc(m.id);
-    batch.set(docRef, {
-      memberId: m.id,
-      name: m.name,
-      pillar: m.pillar,
-      division: m.pillar,
-      generation: m.gen,
-      team: m.team || '',
-      status: m.status.toLowerCase(),
-      memberNo: m.no,
-      xpCache: 0,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    batches[batchIdx].set(docRef, {
+      memberId:         m.id,
+      name:             m.name,
+      pillar:           m.pillar,
+      division:         m.pillar,
+      generation:       m.gen,
+      team:             m.team || '',
+      status:           m.status.toLowerCase(),
+      memberNo:         m.no,
+      xpCache:          0,
+      // ── Auth fields ─────────────────────────────────────────────
+      tempPassword:     hashedPw,            // bcrypt hash — aman di Firestore
+      isRegistered:     false,
+      registeredUserId: null,
+      registeredAt:     null,
+      // ─────────────────────────────────────────────────────────────
+      createdAt:        admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
 
+    // Simpan plain text HANYA untuk dikirim ke Cloudinary & log lokal
+    creds.push({ no: m.no, id: m.id, name: m.name, pillar: m.pillar, plain });
+
     count++;
-    // Firestore batch limit = 500
+    process.stdout.write(`  Hashing ${count}/${MEMBER_DATA.length}: ${m.name.padEnd(40)}\r`);
+
+    // Firestore batch max 500 — split per 400
     if (count % 400 === 0) {
-      await batch.commit();
-      console.log(`  ✅ Committed ${count} members...`);
+      batches.push(db.batch());
+      batchIdx++;
     }
   }
 
-  await batch.commit();
-  console.log(`✅ All ${count} members seeded to Firestore!`);
+  // Commit semua batch
+  console.log('\n');
+  for (let i = 0; i < batches.length; i++) {
+    await batches[i].commit();
+    console.log(`  ✅ Batch ${i + 1}/${batches.length} committed`);
+  }
+
+  console.log(`\n✅ ${count} members seeded to Firestore!\n`);
+
+  // ── Build credentials markdown ────────────────────────────────────────────
+  const now  = new Date().toISOString();
+  const rows = creds.map(c =>
+    `| ${c.no} | \`${c.id}\` | ${c.name} | ${c.pillar.replace('Game ','')} | \`${c.plain}\` |`
+  ).join('\n');
+
+  const credDoc = [
+    `# MEMBER CREDENTIALS — NEWGAME Unand`,
+    `> Generated: ${now}`,
+    `> ⚠️ PRIVATE — Hanya admin yang boleh akses. Distribusikan secara personal.`,
+    '',
+    `| No | Member ID | Nama | Pillar | Kode Akses |`,
+    `|---|---|---|---|---|`,
+    rows,
+    '',
+    `## Cara Pakai`,
+    `1. Kirim Member ID + Kode Akses ke anggota secara personal`,
+    `2. Anggota buka https://unandnewgame.vercel.app → tab Daftar`,
+    `3. Isi: Nama, Member ID, Kode Akses, Email, Password baru`,
+    `4. Kode akses hanya bisa dipakai sekali`,
+    '',
+    `## Tambah Anggota Baru`,
+    `\`\`\`bash`,
+    `node apps/api/src/scripts/add-member.js`,
+    `\`\`\``,
+  ].join('\n');
+
+  // ── Upload ke Cloudinary ──────────────────────────────────────────────────
+  console.log('📤 Mengupload credentials ke Cloudinary (private/authenticated)...');
+  try {
+    const timestamp = now.replace(/[:.]/g, '-').slice(0, 19);
+    const result    = await uploadToCloudinary(credDoc, `member-credentials-${timestamp}`);
+    console.log(`✅ Uploaded! URL (signed): ${result.secure_url}`);
+    console.log(`   Public ID : ${result.public_id}`);
+    console.log(`   Access    : authenticated (private)\n`);
+  } catch (err) {
+    console.error('⚠️  Cloudinary upload gagal:', err.message);
+    console.log('   (Data sudah tersimpan di Firestore, credentials tidak terupload)\n');
+  }
+
+  // ── Console table ringkas ─────────────────────────────────────────────────
+  console.log('┌──────┬──────────────────────┬──────────────────────────────────┬──────────────┐');
+  console.log('│  No  │ Member ID            │ Nama                             │ Kode Akses   │');
+  console.log('├──────┼──────────────────────┼──────────────────────────────────┼──────────────┤');
+  for (const c of creds) {
+    const no   = String(c.no).padEnd(4);
+    const id   = c.id.padEnd(20);
+    const name = c.name.substring(0, 32).padEnd(32);
+    const pw   = c.plain.padEnd(12);
+    console.log(`│ ${no} │ ${id} │ ${name} │ ${pw} │`);
+  }
+  console.log('└──────┴──────────────────────┴──────────────────────────────────┴──────────────┘');
+  console.log('\n⚠️  Plain-text kode akses di atas HANYA tampil sekali. Distribusikan segera.\n');
+
   process.exit(0);
 }
 
