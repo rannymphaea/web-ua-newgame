@@ -2432,4 +2432,41 @@ input, textarea, select {
   animation: animate-glow 4s ease-in-out infinite;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   ANDROID / MOBILE RESPONSIVE FIXES — Dashboard
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Stat cards: 4-col → 2-col pada layar kecil */
+@media (max-width: 640px) {
+  .stat-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Guidebook banner chips — sembunyikan di mobile agar tidak overflow */
+  .guidebook-chips {
+    display: none !important;
+  }
+
+  /* Quick Actions + Events — 1 kolom di mobile */
+  .quick-events-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Kurangi padding main content agar konten tidak terlalu mepet */
+  main {
+    padding: var(--space-md) var(--space-sm) !important;
+  }
+
+  /* Welcome hero: kurangi min-height & teks agar muat di layar kecil */
+  .card {
+    padding: var(--space-md);
+  }
+}
+
+/* Tablet — stat cards tetap 2 col */
+@media (min-width: 641px) and (max-width: 900px) {
+  .stat-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
 

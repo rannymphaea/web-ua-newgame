@@ -1,19 +1,32 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const SVG_W = 540, SVG_H = 420;
 const TOTAL_STEPS = 10;
 
+/* ── Mobile step list (ringan, tanpa scroll animation) ──────────── */
+const MOBILE_STEPS = [
+  { num: 1, label: 'START',          color: '#9E2A2B' },
+  { num: 2, label: 'Trainee',        color: '#335C67' },
+  { num: 3, label: 'Training Phase', color: '#335C67' },
+  { num: 4, label: 'Eligible?',      color: '#E09F3E' },
+  { num: 5, label: 'Associate',      color: '#335C67' },
+  { num: 6, label: 'Start Project',  color: '#335C67' },
+  { num: 7, label: 'Be Trainer',     color: '#9E2A2B' },
+  { num: 8, label: 'Soldat',         color: '#9E2A2B' },
+  { num: 9, label: 'Join Comp.',     color: '#E09F3E' },
+];
+
 const NODES = [
-  { id:'start',     x:.13,y:.10,type:'circle',  bg:'#9E2A2B',sz:56, lines:['START'],         sub:'',           order:0 },
-  { id:'trainee',   x:.44,y:.13,type:'circle',  bg:'#335C67',sz:60, lines:['Trainee'],        sub:'New Player', order:1 },
-  { id:'training',  x:.80,y:.30,type:'rect',    bg:'#335C67',w:84,h:46,lines:['Training','Phase'],sub:'',       order:2 },
-  { id:'eligible',  x:.50,y:.50,type:'diamond', bg:'#E09F3E',sz:78, lines:['Eligible?'],       sub:'',           order:3 },
-  { id:'associate', x:.50,y:.70,type:'circle',  bg:'#335C67',sz:64, lines:['Associate'],       sub:'',           order:5 },
-  { id:'trainer',   x:.16,y:.58,type:'circle',  bg:'#9E2A2B',sz:60, lines:['Be','Trainer'],   sub:'',           order:7 },
-  { id:'project',   x:.30,y:.84,type:'rect',    bg:'#335C67',w:80,h:44,lines:['Start','Project'],sub:'',        order:6 },
-  { id:'soldat',    x:.59,y:.88,type:'circle',  bg:'#9E2A2B',sz:60, lines:['Soldat'],          sub:'',           order:8 },
-  { id:'comp',      x:.84,y:.78,type:'circle',  bg:'#E09F3E',sz:62, lines:['Join','Comp.'],   sub:'',tc:'#2c1810',order:9 },
+  { id:'start',     x:.13,y:.10,type:'circle',  bg:'#9E2A2B',sz:56, lines:['START'],          sub:'',           order:0 },
+  { id:'trainee',   x:.44,y:.13,type:'circle',  bg:'#335C67',sz:60, lines:['Trainee'],         sub:'New Player', order:1 },
+  { id:'training',  x:.80,y:.30,type:'rect',    bg:'#335C67',w:84,h:46,lines:['Training','Phase'],sub:'',        order:2 },
+  { id:'eligible',  x:.50,y:.50,type:'diamond', bg:'#E09F3E',sz:78, lines:['Eligible?'],        sub:'',           order:3 },
+  { id:'associate', x:.50,y:.70,type:'circle',  bg:'#335C67',sz:64, lines:['Associate'],        sub:'',           order:5 },
+  { id:'trainer',   x:.16,y:.58,type:'circle',  bg:'#9E2A2B',sz:60, lines:['Be','Trainer'],    sub:'',           order:7 },
+  { id:'project',   x:.30,y:.84,type:'rect',    bg:'#335C67',w:80,h:44,lines:['Start','Project'],sub:'',         order:6 },
+  { id:'soldat',    x:.59,y:.88,type:'circle',  bg:'#9E2A2B',sz:60, lines:['Soldat'],           sub:'',           order:8 },
+  { id:'comp',      x:.84,y:.78,type:'circle',  bg:'#E09F3E',sz:62, lines:['Join','Comp.'],    sub:'',tc:'#2c1810',order:9 },
 ] as const;
 
 type NodeId = typeof NODES[number]['id'];
@@ -52,7 +65,52 @@ function evalCurve(tpl: string, f: typeof NODES[number], t: typeof NODES[number]
 
 function easeOutCubic(t: number) { return 1 - Math.pow(1-t, 3); }
 
-export default function PirateMap() {
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE FALLBACK — ringan, tanpa scroll animation
+   ══════════════════════════════════════════════════════════════════ */
+function PirateMapMobile() {
+  return (
+    <section id="pemetaan" style={{ padding: '40px 20px', position: 'relative', zIndex: 1 }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <p className="section-badge">Alur</p>
+        <h2 className="section-title">Pemetaan Alur Anggota</h2>
+        <p style={{ fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--novel-cloud)', marginTop: 8 }}>
+          Alur bergabung hingga menjadi anggota aktif NEWGAME
+        </p>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420, margin: '0 auto' }}>
+        {MOBILE_STEPS.map((s, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '12px 16px', borderRadius: 12,
+            background: 'rgba(255,255,255,0.6)',
+            border: `1.5px solid ${s.color}33`,
+            backdropFilter: 'blur(8px)',
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+              background: s.color,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 700, color: '#f5f0e8',
+              fontFamily: 'var(--font-inter)',
+            }}>{s.num}</div>
+            <span style={{ fontFamily: 'var(--font-lora)', fontSize: 15, fontWeight: 600, color: 'var(--novel-ink)' }}>
+              {s.label}
+            </span>
+            {i < MOBILE_STEPS.length - 1 && (
+              <span style={{ marginLeft: 'auto', color: s.color, opacity: 0.6, fontSize: 14 }}>↓</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DESKTOP — scroll-driven animation (berat, hanya desktop)
+   ══════════════════════════════════════════════════════════════════ */
+function PirateMapDesktop() {
   const sectionRef = useRef<HTMLElement>(null);
   const rollRef    = useRef<HTMLDivElement>(null);
   const parchRef   = useRef<HTMLDivElement>(null);
@@ -172,7 +230,6 @@ export default function PirateMap() {
     });
 
     return () => {
-      // Full cleanup — innerHTML is reliable, also clears defs/marker
       nodesL.innerHTML = '';
       while (svg.firstChild) svg.removeChild(svg.firstChild);
       drawnRef.current.clear();
@@ -219,7 +276,6 @@ export default function PirateMap() {
       if (progressRef.current) progressRef.current.style.width = (raw*100) + '%';
       if (hintRef.current)     hintRef.current.style.opacity   = raw < 0.04 ? '1' : '0';
 
-      // Phase 1: Unroll (0 → 0.28)
       const unrollEnd = 0.28;
       const uP = Math.max(0, Math.min(1, raw / unrollEnd));
       const uE = easeOutCubic(uP);
@@ -228,7 +284,6 @@ export default function PirateMap() {
       roll.style.transform = `translateX(-50%) rotateX(${rotX}deg) scaleY(${uE})`;
       if (tubTop) tubTop.style.opacity = uP > 0.55 ? String(Math.min(1,(uP-0.55)*2.2)) : '0';
 
-      // Phase 2: Reveal steps (0.28 → 1.0)
       if (raw >= unrollEnd) {
         const rP = (raw - unrollEnd) / (1 - unrollEnd);
         const step = Math.floor(rP * TOTAL_STEPS);
@@ -270,7 +325,7 @@ export default function PirateMap() {
     window.addEventListener('resize', onScroll, { signal });
     update();
     return () => {
-      controller.abort(); // removes both scroll + resize listeners
+      controller.abort();
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = 0;
@@ -281,52 +336,44 @@ export default function PirateMap() {
   return (
     <section ref={sectionRef} id="pemetaan" className="map-scroll-section">
       <div className="map-sticky-container">
-        {/* Progress bar */}
         <div className="map-progress" ref={progressRef} />
-
         <div className="reveal" style={{ textAlign:'center', marginBottom:20, position:'relative', zIndex:2 }}>
           <p className="section-badge">Alur</p>
           <h2 className="section-title">Pemetaan Alur Anggota</h2>
         </div>
-
         <div className="map-scene">
-          {/* Scroll roll */}
           <div className="scroll-roll" ref={rollRef}>
-            {/* Top tube */}
             <div className="scroll-tube-top" ref={tubTopRef} />
-            {/* Torn edge */}
             <div className="torn-edge-top" />
-
-            {/* Parchment body */}
             <div className="parchment-body" ref={parchRef}>
-              {/* SVG path layer */}
-              <svg
-                ref={svgRef}
-                className="map-svg-layer"
-                viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-                preserveAspectRatio="none"
-              />
-              {/* HTML node layer */}
+              <svg ref={svgRef} className="map-svg-layer" viewBox={`0 0 ${SVG_W} ${SVG_H}`} preserveAspectRatio="none" />
               <div className="map-nodes-layer" ref={nodesLRef} />
-
-              {/* Decorations */}
               <div className="map-deco-compass">🧭</div>
               <div className="map-deco-brand">✦ NEWGAME ✦</div>
             </div>
-
-            {/* Bottom tube */}
             <div className="scroll-tube-bottom" />
           </div>
-
-          {/* Step counter */}
           <div className="map-step-ctr">
             <span ref={ctrRef}>0 / {TOTAL_STEPS}</span>
           </div>
         </div>
-
-        {/* Scroll hint */}
         <div className="map-scroll-hint" ref={hintRef}>▼ scroll untuk membuka peta ▼</div>
       </div>
     </section>
   );
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ROOT EXPORT — deteksi mobile, render komponen yang sesuai
+   ══════════════════════════════════════════════════════════════════ */
+export default function PirateMap() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  return isMobile ? <PirateMapMobile /> : <PirateMapDesktop />;
 }

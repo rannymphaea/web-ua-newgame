@@ -12,10 +12,11 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   useEffect(() => { init(); }, [init]);
 
-  // Redirect to login only after Firebase has resolved — not during optimistic phase
+  // Redirect to landing (not login) after Firebase has resolved — consistent with root page.tsx
+  // On Android, Firebase cache may be empty → always resolve to /landing first
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/login');
+      router.replace('/landing');
     }
   }, [loading, user, router]);
 

@@ -245,7 +245,7 @@ export default function DashboardPage() {
 
       {/* ── Stat Cards — skeleton while phase-2 loads ─────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 'var(--space-md)' }}
-           className="reveal">
+           className="reveal stat-cards-grid">
         {STAT_CARDS.map((s, i) =>
           statsLoading
             ? <div key={i} className="skeleton" style={{ height: 88, borderRadius: 16 }} />
@@ -322,8 +322,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Chips */}
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {/* Chips — hidden on small mobile to prevent overflow */}
+          <div className="guidebook-chips" style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {['Struktur', 'EXP', 'Quest', 'Pillar'].map(tag => (
               <span key={tag} style={{
                 padding: '3px 10px', borderRadius: 99,
@@ -359,7 +359,7 @@ export default function DashboardPage() {
 
       {/* ── Quick Actions + Events — deferred ─────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}
-           className="reveal">
+           className="reveal quick-events-grid">
 
         {/* Quick actions — static, no API needed */}
         <div className="card">

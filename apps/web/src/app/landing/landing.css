@@ -740,7 +740,76 @@
   .quest-grid    { grid-template-columns: repeat(2, 1fr); }
   .exp-grid      { grid-template-columns: 1fr; }
   .landing-footer{ padding: 20px 20px 48px; }
+
+  /* ── ANDROID FIX: Hero CTA stack vertikal di layar sempit ── */
+  .hero-cta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .hero-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ── ANDROID FIX: Fixed sound/theme toggle lebih kecil ── */
+  .sound-toggle-btn {
+    width: 42px !important;
+    height: 42px !important;
+    right: 16px !important;
+  }
+
+  /* ── ANDROID FIX: PirateMap scroll-quill sembunyikan di mobile ──
+     Widget ini terlalu berat untuk mobile dan mengganggu UX.
+     Diganti dengan .piratemap-mobile-hint yang ringan. */
+  .map-scroll-section {
+    min-height: unset !important;
+    height: auto !important;
+  }
+  .map-sticky-container {
+    position: static !important;
+    height: auto !important;
+    padding: 32px 20px !important;
+  }
+  /* Sembunyikan elemen scroll-driven yang berat */
+  .scroll-roll,
+  .map-scene,
+  .map-progress,
+  .map-step-ctr,
+  .map-scroll-hint {
+    display: none !important;
+  }
+  /* Tampilkan fallback mobile jika ada */
+  .piratemap-mobile-hint {
+    display: flex !important;
+  }
+
+  /* ── ANDROID FIX: Guidebook card stack vertical ── */
+  .guidebook-card-mobile {
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 24px 20px !important;
+  }
 }
+
+/* Extra small — 420px */
+@media (max-width: 420px) {
+  .hero-section  { padding: 72px 16px 48px; }
+  .landing-section { padding: 40px 16px; }
+  .section-title { font-size: 22px; }
+  .stats-grid    { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-counter  { font-size: 30px; }
+
+  /* Sound/theme toggle sangat kecil di layar kecil */
+  .sound-toggle-btn {
+    width: 38px !important;
+    height: 38px !important;
+    right: 12px !important;
+    bottom: 20px !important;
+  }
+}
+
+
 
 /* ══════════════════════════════════════════════════════════════════
    DARK MODE OVERRIDES — Landing Page
