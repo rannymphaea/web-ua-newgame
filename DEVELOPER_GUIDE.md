@@ -138,4 +138,4 @@ Buat Pull Request via GitHub. CI akan otomatis jalankan build dan type check. PR
 
 **Storage bucket tidak ditemukan (error 404)** — Firebase Storage butuh upgrade ke paket Blaze dan bucket harus diaktifkan manual di Firebase Console. Kalau tidak mau upgrade, gunakan Cloudinary — konfigurasinya sudah ada di `apps/api/.env.example`.
 
-**Upload foto gagal** — pastikan variabel `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, dan `CLOUDINARY_API_SECRET` sudah diisi di `.env`. Restart backend setelah mengisi variabel ini.
+**Upload foto gagal** — pastikan variabel `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, dan `CLOUDINARY_API_SECRET` sudah diisi di `.env`. Restart backend setelah mengisi variabel ini..
