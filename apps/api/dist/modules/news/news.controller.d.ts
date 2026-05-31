@@ -30,7 +30,7 @@ export declare class NewsController {
         youtubeEmbedId: string;
         thumbnail: string;
         tags: string[];
-        status: "draft" | "published" | "archived";
+        status: "published" | "draft" | "archived";
         featured: boolean;
         priority: number;
         eventDate: Date;

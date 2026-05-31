@@ -5,7 +5,7 @@ export declare class AppController {
     };
     health(): {
         status: string;
-        uptime: any;
+        uptime: number;
         timestamp: string;
     };
 }
