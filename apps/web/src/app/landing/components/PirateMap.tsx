@@ -367,13 +367,23 @@ function PirateMapDesktop() {
    ROOT EXPORT — deteksi mobile, render komponen yang sesuai
    ══════════════════════════════════════════════════════════════════ */
 export default function PirateMap() {
-  const [isMobile, setIsMobile] = useState(false);
+  // null = belum hydrate, false = desktop, true = mobile
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
     check();
     window.addEventListener('resize', check, { passive: true });
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // Belum hydrate — render placeholder ringan agar tidak blank
+  if (isMobile === null) {
+    return (
+      <section id="pemetaan" style={{ padding: '40px 20px', minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p className="section-badge" style={{ opacity: 0.5 }}>Alur</p>
+      </section>
+    );
+  }
 
   return isMobile ? <PirateMapMobile /> : <PirateMapDesktop />;
 }

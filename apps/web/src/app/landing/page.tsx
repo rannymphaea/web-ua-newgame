@@ -491,11 +491,25 @@ export default function LandingPage() {
                 whileHover={{ y: -6 }}
               >
                 <span className="project-level" style={{ color: 'var(--novel-ink)' }}>{p.level}</span>
-                <div className="project-icon" style={{ background: 'rgba(253,207,65,0.08)' }}>
-                  <i className="ri-gamepad-2-line" style={{ fontSize: 26, color: '#c49a10' }} />
+                {/* Project icon — SVG inline agar tidak jadi kotak hitam di Android */}
+                <div className="project-icon" style={{
+                  background: `${p.color}15`,
+                  border: `1.5px solid ${p.color}30`,
+                  borderRadius: 16,
+                  width: 60, height: 60,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: 16,
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={p.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={p.icon} />
+                  </svg>
                 </div>
                 <h4 style={{ fontWeight: 600, fontSize: 17, marginBottom: 8, fontFamily: 'var(--font-lora)', color: 'var(--novel-ink)' }}>{p.name}</h4>
                 <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: 15, color: 'var(--novel-cloud)', lineHeight: 1.75 }}>{p.desc}</p>
+                {/* GOTS label */}
+                {p.name === 'GOTS' && (
+                  <p style={{ fontFamily: 'var(--font-inter)', fontSize: 11, color: p.color, marginTop: 8, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Game of The Season</p>
+                )}
               </motion.div>
             ))}
           </div>
@@ -564,53 +578,50 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* GUIDEBOOK CARD — mobile responsive */}
           <motion.a
             href="https://2b-eternity.github.io/test/"
             target="_blank"
             rel="noopener noreferrer"
-            className="reveal reveal-delay-1 glow-card"
+            className="reveal reveal-delay-1 glow-card guidebook-card"
             style={{
-              display: 'flex', alignItems: 'center', gap: 28,
-              padding: '36px 40px', borderRadius: 24,
+              display: 'flex', alignItems: 'flex-start', gap: 24,
+              padding: '32px 28px', borderRadius: 24,
               background: 'linear-gradient(135deg,rgba(253,207,65,0.08) 0%,rgba(185,166,206,0.06) 100%)',
               textDecoration: 'none', color: 'inherit',
-              marginTop: 28,
+              marginTop: 28, flexWrap: 'wrap',
             }}
             whileHover={{ y: -5 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            {/* Big icon */}
+            {/* Book icon — SVG inline, tidak bergantung Remix Icon CDN */}
             <div style={{
-              flexShrink: 0, width: 80, height: 80, borderRadius: 20,
+              flexShrink: 0, width: 72, height: 72, borderRadius: 18,
               background: 'rgba(253,207,65,0.12)',
               border: '2px solid rgba(253,207,65,0.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <i className="ri-book-open-2-line" style={{ fontSize: 36, color: '#c49a10' }} />
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c49a10" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+              </svg>
             </div>
 
-            {/* Text + chips */}
-            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            {/* Text + chips — flex:1 dengan min-width:0 agar wrap benar */}
+            <div style={{ flex: 1, minWidth: 200 }}>
               <p style={{
                 fontFamily: 'var(--font-inter)', fontSize: '0.72rem',
                 letterSpacing: '0.18em', textTransform: 'uppercase',
                 color: 'var(--novel-cloud)', marginBottom: 6,
-              }}>
-                Dokumen Resmi · NEWGAME
-              </p>
+              }}>Dokumen Resmi · NEWGAME</p>
               <h3 style={{
-                fontFamily: 'var(--font-lora)', fontSize: 22, fontWeight: 700,
+                fontFamily: 'var(--font-lora)', fontSize: 20, fontWeight: 700,
                 color: 'var(--novel-ink)', marginBottom: 8,
-              }}>
-                Buka Guidebook Lengkap
-              </h3>
+              }}>Buka Guidebook Lengkap</h3>
               <p style={{
-                fontFamily: 'var(--font-cormorant)', fontSize: 16,
-                color: 'var(--novel-cloud)', lineHeight: 1.7, marginBottom: 16,
-              }}>
-                Panduan interaktif bergaya handwritten dengan animasi — cocok dibaca sebelum
-                bergabung atau sebagai referensi anggota aktif.
-              </p>
+                fontFamily: 'var(--font-cormorant)', fontSize: 15,
+                color: 'var(--novel-cloud)', lineHeight: 1.7, marginBottom: 14,
+              }}>Panduan interaktif bergaya handwritten dengan animasi — cocok dibaca sebelum bergabung atau sebagai referensi anggota aktif.</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[
                   { label: 'Struktur Org', color: '#335C67', bg: '#e8f0f2' },
@@ -623,35 +634,26 @@ export default function LandingPage() {
                   <span key={chip.label} style={{
                     padding: '4px 12px', borderRadius: 99,
                     background: chip.bg, color: chip.color,
-                    fontFamily: 'var(--font-inter)', fontSize: '0.75rem',
+                    fontFamily: 'var(--font-inter)', fontSize: '0.73rem',
                     fontWeight: 600, border: `1.5px solid ${chip.color}33`,
-                    letterSpacing: '0.04em',
-                  }}>
-                    {chip.label}
-                  </span>
+                  }}>{chip.label}</span>
                 ))}
               </div>
             </div>
 
-            {/* CTA button */}
-            <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 120 }}>
+            {/* CTA — full width on mobile via flexWrap */}
+            <div style={{ flexShrink: 0, width: '100%', maxWidth: 160 }}>
               <div style={{
-                padding: '12px 24px', borderRadius: 12,
+                padding: '11px 20px', borderRadius: 12,
                 background: '#FDCF41', color: '#2c1810',
-                fontFamily: 'var(--font-lora)', fontWeight: 700, fontSize: 15,
-                display: 'flex', alignItems: 'center', gap: 8,
+                fontFamily: 'var(--font-lora)', fontWeight: 700, fontSize: 14,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 boxShadow: '0 4px 16px rgba(253,207,65,0.4)',
-                whiteSpace: 'nowrap',
               }}>
                 Buka Sekarang
-                <i className="ri-arrow-right-up-line" style={{ fontSize: 16 }} />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
               </div>
-              <p style={{
-                fontFamily: 'var(--font-inter)', fontSize: '0.7rem',
-                color: 'var(--novel-cloud)', marginTop: 8,
-              }}>
-                Membuka tab baru
-              </p>
+              <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.68rem', color: 'var(--novel-cloud)', marginTop: 6, textAlign: 'center' }}>Membuka tab baru</p>
             </div>
           </motion.a>
         </div>
