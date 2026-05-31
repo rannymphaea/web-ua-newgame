@@ -722,7 +722,7 @@ export default function LandingPage() {
       </footer>
 
       {/* ════ VIDEO MODAL ════════════════════════════════════════ */}
-      <VideoModal isOpen={videoOpen} onClose={closeVideo} />
+      <VideoModal isOpen={videoOpen} onClose={closeVideo} youtubeId="dQw4w9WgXcQ" />
     </div>
   );
 }

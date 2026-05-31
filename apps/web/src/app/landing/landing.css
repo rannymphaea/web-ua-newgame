@@ -1349,3 +1349,20 @@
 @keyframes heroRingSpin {
   to { transform: rotate(360deg); }
 }
+
+/* PirateMap CSS visibility show/hide */
+.desktop-map-container {
+  display: block;
+}
+.mobile-map-container {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-map-container {
+    display: none !important;
+  }
+  .mobile-map-container {
+    display: block !important;
+  }
+}
