@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const firebase_service_1 = require("../../firebase/firebase.service");
+const bcrypt = require("bcryptjs");
 let AuthService = class AuthService {
     constructor(firebaseService) {
         this.firebaseService = firebaseService;
@@ -26,7 +27,11 @@ let AuthService = class AuthService {
         if (member.isRegistered) {
             throw new common_1.BadRequestException('Member ID sudah terdaftar');
         }
-        if (member.tempPassword !== tempPassword) {
+        const isHashed = member.tempPassword?.startsWith('$2');
+        const passwordMatch = isHashed
+            ? await bcrypt.compare(tempPassword, member.tempPassword)
+            : member.tempPassword === tempPassword;
+        if (!passwordMatch) {
             throw new common_1.UnauthorizedException('Password sementara salah');
         }
         return {
@@ -109,6 +114,66 @@ let AuthService = class AuthService {
             division: doc.data().division || '',
             status: doc.data().status || 'active',
         }));
+    }
+    async registerAdmin(data) {
+        if (!data.password || data.password.length < 8) {
+            throw new common_1.BadRequestException('Password minimal 8 karakter');
+        }
+        if (!data.email || !data.email.includes('@')) {
+            throw new common_1.BadRequestException('Email tidak valid');
+        }
+        if (!data.displayName || data.displayName.trim().length < 2) {
+            throw new common_1.BadRequestException('displayName minimal 2 karakter');
+        }
+        let uid;
+        try {
+            const userRecord = await this.firebaseService.auth.createUser({
+                email: data.email.trim().toLowerCase(),
+                password: data.password,
+                displayName: data.displayName.trim(),
+                emailVerified: false,
+            });
+            uid = userRecord.uid;
+        }
+        catch (e) {
+            if (e.code === 'auth/email-already-exists') {
+                throw new common_1.BadRequestException('Email sudah terdaftar');
+            }
+            throw new common_1.BadRequestException(`Firebase error: ${e.message}`);
+        }
+        const db = this.firebaseService.firestore;
+        const now = this.firebaseService.timestamp;
+        await this.firebaseService.auth.setCustomUserClaims(uid, { role: 'admin' });
+        const batch = db.batch();
+        const userRef = db.collection('users').doc(uid);
+        batch.set(userRef, {
+            email: data.email.trim().toLowerCase(),
+            displayName: data.displayName.trim(),
+            division: data.division || 'general',
+            role: 'admin',
+            status: 'active',
+            memberId: null,
+            xpCache: 0,
+            attendanceCount: 0,
+            streak: 0,
+            createdAt: now,
+        });
+        const logRef = db.collection('logs').doc();
+        batch.set(logRef, {
+            userId: uid,
+            action: 'register-admin',
+            result: 'success',
+            email: data.email,
+            timestamp: now,
+        });
+        await batch.commit();
+        return {
+            success: true,
+            uid,
+            email: data.email.trim().toLowerCase(),
+            displayName: data.displayName.trim(),
+            role: 'admin',
+        };
     }
 };
 exports.AuthService = AuthService;

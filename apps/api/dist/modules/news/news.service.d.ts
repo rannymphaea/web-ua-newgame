@@ -23,7 +23,7 @@ export declare class NewsService {
         slug: string;
         content: string;
         excerpt: string;
-        category: "event" | "blog" | "news" | "tutorial";
+        category: "event" | "news" | "blog" | "tutorial";
         tutorialCategory: "game-logic" | "game-design" | "game-sound";
         youtubeUrl: string;
         youtubeEmbedId: string;

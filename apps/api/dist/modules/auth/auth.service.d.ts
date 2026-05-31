@@ -35,4 +35,16 @@ export declare class AuthService {
         division: any;
         status: any;
     }[]>;
+    registerAdmin(data: {
+        email: string;
+        password: string;
+        displayName: string;
+        division?: string;
+    }): Promise<{
+        success: boolean;
+        uid: string;
+        email: string;
+        displayName: string;
+        role: string;
+    }>;
 }

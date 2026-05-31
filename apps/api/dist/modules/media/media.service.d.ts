@@ -30,8 +30,8 @@ export declare class MediaService {
         url: string;
         filename: string;
         mimeType: string;
-        size: number;
-        usage: "content" | "thumbnail" | "other" | "logo" | "banner" | "avatar";
+        size: any;
+        usage: "logo" | "thumbnail" | "banner" | "avatar" | "content" | "other";
         altText: string;
         tags: string[];
         uploadedBy: string;

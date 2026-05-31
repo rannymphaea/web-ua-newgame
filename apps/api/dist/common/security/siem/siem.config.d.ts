@@ -1,25 +1,25 @@
 export declare const siemConfig: {
     elastic: {
-        url: string;
-        apiKey: string;
-        index: string;
+        url: any;
+        apiKey: any;
+        index: any;
     };
     loki: {
-        url: string;
-        user: string;
-        pass: string;
+        url: any;
+        user: any;
+        pass: any;
     };
     splunk: {
-        url: string;
-        token: string;
+        url: any;
+        token: any;
     };
     wazuh: {
-        url: string;
-        token: string;
+        url: any;
+        token: any;
     };
     webhook: {
-        url: string;
-        key: string;
+        url: any;
+        key: any;
     };
     keyRotationDays: number;
     minSeverity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";

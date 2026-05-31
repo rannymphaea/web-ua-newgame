@@ -19,7 +19,8 @@
     "bcryptjs": "^3.0.3",
     "concurrently": "^8.2.2",
     "postcss": "^8.5.15",
-    "tailwindcss": "^4.3.0"
+    "tailwindcss": "^4.3.0",
+    "typescript": "^5.5.4"
   },
   "dependencies": {
     "cloudinary": "^2.10.0",

@@ -40,4 +40,16 @@ export declare class AuthController {
         division: any;
         status: any;
     }[]>;
+    registerAdmin(body: {
+        email: string;
+        password: string;
+        displayName: string;
+        division?: string;
+    }): Promise<{
+        success: boolean;
+        uid: string;
+        email: string;
+        displayName: string;
+        role: string;
+    }>;
 }
