@@ -1,110 +1,113 @@
-# Riwayat Perubahan (Changelog) NEWGAME
+# Riwayat Pembaruan — NEWGAME
 
-Catatan komprehensif perjalanan pengembangan dan pembaruan platform NEWGAME UKM Game Development Universitas Andalas. Pembaruan diurutkan dari yang paling baru.
+Catatan lengkap perjalanan pengembangan platform NEWGAME UKM Game Development Universitas Andalas. Entri diurutkan dari yang paling baru ke yang paling lama.
 
 ---
 
-## 🚀 Juni 2026 — Rilis Besar Arsitektur V2
+## Juni 2026 — Rilis Besar Arsitektur V2
 
-Rilis besar ini berfokus pada perombakan total arsitektur data, pengerasan sistem keamanan, optimasi performa backend & frontend secara signifikan, serta penambahan kakas (tools) simulator untuk mendukung kenyamanan developer.
+Rilis ini merupakan perombakan total arsitektur data, pengerasan keamanan sistem, optimasi performa backend dan frontend secara menyeluruh, serta penambahan alat (tools) simulator untuk kenyamanan developer.
 
-### 💾 Pembaruan Arsitektur & Database
-- **Prisma & PostgreSQL**: Mengimigrasi sistem database utama dari Firestore-centric ke arsitektur relasional menggunakan PostgreSQL (Neon Serverless). Skema mencakup 9 model utama: `User`, `UserProfile`, `Session`, `NewsArticle`, `Event`, `Attendance`, `XpHistory`, `Activity`, dan `Notification`.
-- **Better Auth Integration**: Mengintegrasikan `Better Auth` dengan Prisma adapter untuk mengelola manajemen sesi pengguna secara mandiri di database relasional, mendukung login tradisional Email/Password dan Google OAuth.
-- **Upstash Redis Caching**: Memasang global `RedisModule` NestJS berbasis Upstash Redis REST SDK. Digunakan untuk caching leaderboard (`leaderboard:all`), profile cache, dan penanganan rate limiting.
-- **Milvus Vector DB Module**: Menyediakan `VectorService` berbasis Milvus SDK Node untuk mendukung fitur pencarian semantik cerdas (AI) dan pencarian berita terkait secara instan menggunakan text embedding OpenAI.
+### Arsitektur dan Database
 
-### 🛡️ Keamanan & Kualitas Kode
-- **Global Interceptor & Response Standardizer**: Membuat `ResponseInterceptor` NestJS untuk menstandardisasi semua keluaran HTTP Response ke format terpadu `{ success, data, meta, timestamp }` secara otomatis.
-- **Global Exceptions Filter**: Mendaftarkan `AllExceptionsFilter` secara global di `main.ts` untuk menangani logging error forensik dan menyusun respons kegagalan API agar seragam.
-- **Mitigasi Kebocoran Kunci (Security Fix)**: Menghapus baris cetak log sensitif `console.log("GROQ KEY:", ...)` pada file `providers.ts` yang berpotensi mengekspos API key rahasia ke sistem log produksi. Diganti dengan logging safe check length.
-- **Supresi CSS Warning**: Menambahkan pengecualian aturan `@theme` Tailwind CSS v4 di VS Code (`.vscode/settings.json`) dan linter CSS (`globals.css`) agar tidak memunculkan false-positive warnings pada IDE.
+- **Prisma dan PostgreSQL** — Migrasi sistem database utama dari Firestore-centric ke arsitektur relasional menggunakan PostgreSQL (Neon Serverless). Skema mencakup 9 model utama: `User`, `UserProfile`, `Session`, `NewsArticle`, `Event`, `Attendance`, `XpHistory`, `Activity`, dan `Notification`.
+- **Better Auth** — Integrasi Better Auth dengan Prisma adapter untuk mengelola sesi pengguna secara mandiri di database relasional. Mendukung login Email/Password dan Google OAuth.
+- **Upstash Redis** — Pemasangan global `RedisModule` berbasis Upstash Redis REST SDK untuk caching leaderboard (`leaderboard:all`), cache profil pengguna, dan penanganan rate limiting.
+- **Milvus Vector DB** — Penyediaan `VectorService` berbasis Milvus SDK Node untuk pencarian semantik dan pencarian berita terkait menggunakan text embedding OpenAI.
 
-### 📱 Kakas Pengembangan & Visual (UI/UX)
-- **Web Mobile Simulator**: Membuat halaman simulator interaktif khusus developer di `/dev-tools` Next.js, dilengkapi dengan 8 preset device, portrait/landscape toggle, quick navigation links, dan scale slider.
-- **Flutter Desktop Simulator App**: Membuat program simulator eksternal berbasis Flutter Desktop pada direktori `tools/mobile-simulator/` untuk memfasilitasi preview live web frame real-time.
-- **Interactive PirateMap**: Menulis ulang komponen `PirateMap.tsx` dengan visualisasi peta informasi interaktif terpadu berbentuk pohon diagram (left-to-right tree), animasi stroke-dashoffset SVG konektor, junction nodes, dan panel deskripsi instan saat hover.
-- **PostHog Analytics Integration**: Mengintegrasikan PostHog provider di frontend Next.js untuk mengotomatisasi perekaman data demografi dan pelacakan event interaksi user secara real-time.
+### Keamanan dan Kualitas Kode
+
+- **Global Response Interceptor** — Pembuatan `ResponseInterceptor` NestJS untuk menstandardisasi semua HTTP Response ke format terpadu `{ success, data, meta, timestamp }`.
+- **Global Exception Filter** — Pendaftaran `AllExceptionsFilter` secara global di `main.ts` untuk logging forensik dan penyusunan respons error yang seragam.
+- **Perbaikan Kebocoran Kunci** — Penghapusan baris `console.log("GROQ KEY:", ...)` pada `providers.ts` yang berpotensi mengekspos API key ke log produksi. Diganti dengan pengecekan panjang karakter yang aman.
+- **Supresi CSS Warning** — Penambahan pengecualian aturan `@theme` Tailwind CSS v4 di `.vscode/settings.json` agar tidak memunculkan false-positive warning di IDE.
+
+### Alat Developer dan Tampilan (UI/UX)
+
+- **Web Mobile Simulator** — Pembuatan halaman simulator di route `/dev-tools`, dilengkapi 8 preset perangkat, toggle portrait/landscape, quick navigation links, dan slider skala tampilan.
+- **Flutter Desktop Simulator** — Aplikasi simulator eksternal berbasis Flutter Desktop di `tools/mobile-simulator/` untuk preview live web frame secara real-time.
+- **PirateMap Interaktif** — Penulisan ulang komponen `PirateMap.tsx` dengan visualisasi pohon diagram interaktif (left-to-right tree), animasi stroke SVG, junction nodes, dan panel deskripsi saat hover.
+- **PostHog Analytics** — Integrasi PostHog provider di frontend untuk perekaman demografi dan pelacakan event interaksi pengguna secara real-time.
 
 ---
 
 ## 29 Mei 2026
 
-**Migrasi storage ke Cloudinary**
-Firebase Storage sekarang butuh upgrade berbayar, jadi kita pindah ke Cloudinary yang gratis dan tidak perlu kartu kredit. Media service di backend ditulis ulang sepenuhnya — semua upload sekarang pakai `cloudinary.uploader.upload_stream` via readable stream, bukan lagi `file.save()` ke Firebase bucket. Fungsi hapus file juga diperbarui agar bisa parsing public ID dari URL Cloudinary.
+**Migrasi Storage ke Cloudinary**
+Firebase Storage memerlukan upgrade berbayar sehingga layanan dipindah ke Cloudinary (gratis, tanpa kartu kredit). Media service di backend ditulis ulang sepenuhnya — semua upload menggunakan `cloudinary.uploader.upload_stream` via readable stream. Fungsi hapus file diperbarui agar bisa mengurai public ID dari URL Cloudinary.
 
-**Perbaikan upload foto profil**
-Error `unknown_system_error` yang sudah lama mengganggu akhirnya terselesaikan. Akar masalahnya ada di dua hal: pertama, `makePublic()` selalu gagal karena Firebase Storage belum pernah diaktifkan; kedua, error aslinya tidak pernah sampai ke frontend karena selalu ditimpa dengan pesan generik. Sekarang kedua hal itu sudah diperbaiki.
+**Perbaikan Upload Foto Profil**
+Error `unknown_system_error` yang sudah lama muncul diselesaikan. Akar masalahnya: `makePublic()` selalu gagal karena Firebase Storage belum diaktifkan, dan error aslinya tidak pernah mencapai frontend karena tertimpa pesan generik. Keduanya sudah diperbaiki.
 
-**Interaksi karakter Yua di dashboard**
-Gambar Yua di hero section sekarang bisa diklik. Klik memicu animasi bounce (scale + rotate kecil dalam 400ms) dan memutar `yua-select.mp3`. SFX punya cooldown 600ms supaya tidak spam, tapi animasinya tetap jalan setiap klik.
+**Interaksi Karakter Yua di Dashboard**
+Gambar Yua di hero section sekarang dapat diklik. Klik memicu animasi bounce (scale + rotate kecil dalam 400ms) dan memutar `yua-select.mp3`. SFX memiliki cooldown 600ms untuk mencegah spam, namun animasi tetap berjalan setiap klik.
 
-**Tampilan avatar Yua di halaman profil**
-Tombol pilih avatar Yua sekarang menampilkan gambar karakter Yua langsung, bukan huruf inisial. Kalau avatar aktif adalah Yua dan tidak ada foto profil yang diupload, foto profil utama juga menampilkan gambar Yua. Badge "NEW" sudah dihapus. Warna aksen Yua diganti ke biru (`#3b82f6`).
+**Tampilan Avatar Yua di Halaman Profil**
+Tombol pilih avatar Yua menampilkan gambar karakter secara langsung, bukan huruf inisial. Jika avatar aktif adalah Yua dan tidak ada foto profil yang diunggah, foto profil utama juga menampilkan gambar Yua. Badge "NEW" dihapus. Warna aksen Yua diubah ke biru (`#3b82f6`).
 
-**Konsolidasi dokumentasi**
-Semua file `.md` yang berserakan digabungkan jadi empat file saja: README, DEVELOPER_GUIDE, SECURITY, dan CHANGELOG ini. Semua emoji dihapus dari dokumentasi.
+**Konsolidasi Dokumentasi**
+Semua file `.md` yang terpencar digabungkan menjadi empat file utama: README, DEVELOPER_GUIDE, SECURITY, dan CHANGELOG.
 
-**Perbaikan deploy Vercel**
-`vercel.json` di `apps/web` yang sebelumnya sengaja memblokir deployment (`ignoreCommand: exit 0`) sudah dibenarkan. Root `vercel.json` dibuat ulang dengan konfigurasi yang benar untuk monorepo. Rewrite API di `next.config.js` sekarang hanya aktif saat development — di production, traffic langsung ke `NEXT_PUBLIC_API_URL`. Hostname Cloudinary ditambahkan ke `remotePatterns` untuk image optimization.
+**Perbaikan Deploy Vercel**
+`vercel.json` di `apps/web` yang sebelumnya memblokir deployment (`ignoreCommand: exit 0`) diperbaiki. Root `vercel.json` dibuat ulang dengan konfigurasi yang benar untuk monorepo. Rewrite API di `next.config.js` sekarang hanya aktif saat development — di production, traffic langsung menuju `NEXT_PUBLIC_API_URL`. Hostname Cloudinary ditambahkan ke `remotePatterns` untuk optimasi gambar.
 
 ---
 
 ## Sesi 7
 
 **Integrasi Guidebook**
-Menambahkan kartu Guidebook di dashboard dan halaman landing. Di landing, ada seksi baru sebelum CTA dengan animasi Framer Motion. Di hero, ada tombol ketiga untuk scroll otomatis ke bagian panduan.
+Penambahan kartu Guidebook di dashboard dan landing page. Di landing, terdapat seksi baru sebelum CTA dengan animasi Framer Motion. Di hero, ditambahkan tombol ketiga untuk scroll otomatis ke bagian panduan.
 
 ---
 
 ## Sesi 6
 
-**Optimasi performa**
-Masalahnya waktu itu: halaman pertama butuh 3+ detik untuk tampil, spinner login bertahan 1-3 detik, dan font berat dimuat di semua halaman dashboard.
+**Optimasi Performa**
+Waktu muat halaman pertama mencapai 3+ detik, spinner login bertahan 1-3 detik, dan font berat dimuat di semua halaman dashboard.
 
-Solusinya: auth store sekarang memanfaatkan cache IndexedDB Firebase sehingga status login dimuat instan. Dashboard punya dua fase — fase pertama tampilkan data dari Zustand cache, fase kedua baru ambil data dari server. CSS Remix Icon dimuat secara async dan font Cormorant dihapus dari dashboard untuk menghemat bundle size.
+Solusinya: auth store memanfaatkan cache IndexedDB Firebase agar status login dimuat instan. Dashboard menggunakan dua fase — fase pertama menampilkan data dari Zustand cache, fase kedua mengambil data terbaru dari server. CSS Remix Icon dimuat secara async dan font Cormorant dihapus dari dashboard untuk menghemat bundle size.
 
 ---
 
 ## Sesi 5
 
-**XP liquid bar di TopBar**
-Bar XP setinggi 30px ditambahkan secara horizontal di bagian atas. Ada animasi gelombang SVG dan warna berubah otomatis sesuai level user. Dashboard dikembalikan ke desain dengan ilustrasi karakter.
+**XP Liquid Bar di TopBar**
+Bar XP setinggi 30px ditambahkan secara horizontal di bagian atas halaman. Animasi gelombang SVG dan warna berubah otomatis sesuai level pengguna. Dashboard dikembalikan ke desain dengan ilustrasi karakter.
 
 ---
 
 ## Sesi 4
 
-**Pengerasan keamanan**
-SecurityModule NestJS dibuat — berisi rate limiting, validasi JWT, CORS, Helmet, dan filter input. Konfigurasi NGINX dan ModSecurity WAF dibuat sebagai stub. Fondasi awal anomaly detection dan forensic logging juga dipasang di sesi ini.
+**Pengerasan Keamanan**
+SecurityModule NestJS dibuat — berisi rate limiting, validasi JWT, CORS, Helmet, dan filter input. Konfigurasi NGINX dan ModSecurity WAF dibuat sebagai stub. Fondasi anomaly detection dan forensic logging dipasang di sesi ini.
 
 ---
 
 ## Sesi 3
 
-**Landing page premium**
-Desain ulang total landing page. Animasi typewriter di hero, seksi visi misi, struktur pengurus, dan pengenalan pilar. Ada juga Pirate Map untuk journey anggota, efek suara interaktif, dan modal video profil organisasi.
+**Landing Page Premium**
+Desain ulang total landing page. Animasi typewriter di hero, seksi visi misi, struktur pengurus, dan pengenalan pilar. Pirate Map untuk perjalanan anggota, efek suara interaktif, dan modal video profil organisasi.
 
 ---
 
 ## Sesi 2
 
-**Halaman dashboard dan pengguna**
+**Halaman Dashboard dan Pengguna**
 Halaman login dengan Firebase Auth, dashboard anggota, scan QR absensi, halaman lencana, leaderboard, dan panel admin dengan manajemen berita, media, dan analytics.
 
 ---
 
 ## Sesi 1
 
-**Setup dasar monorepo**
-Next.js untuk frontend, NestJS untuk backend, Firestore dan Firebase Auth sebagai infrastruktur data. Modul error handling global dan sistem tema visual dibuat di sesi pertama ini.
+**Setup Dasar Monorepo**
+Next.js untuk frontend, NestJS untuk backend, Firestore dan Firebase Auth sebagai infrastruktur data awal. Modul error handling global dan sistem tema visual dibuat di sesi pertama ini.
 
 ---
 
-## Rilis sebelumnya
+## Rilis Sebelumnya
 
-**20 Mei 2026** — Integrasi materi dari guidebook resmi NEWGAME ke halaman landing. Semua emoji di UI publik diganti dengan ikon SVG. Komponen landing dipecah jadi lebih modular.
+**20 Mei 2026** — Integrasi materi dari guidebook resmi NEWGAME ke halaman landing. Semua ikon emoji di UI publik diganti dengan ikon SVG. Komponen landing dipecah menjadi lebih modular.
 
-**17 Mei 2026** — Migrasi dari sistem lama berbasis HTML/JS mandiri ke monorepo terpadu. Lebih dari 12.000 file konfigurasi lama dihapus. 16 modul backend dibuat untuk menangani seluruh kebutuhan sistem.
+**17 Mei 2026** — Migrasi dari sistem lama berbasis HTML/JS mandiri ke monorepo terpadu. Lebih dari 12.000 file konfigurasi lama dihapus. 16 modul backend dibuat untuk menangani kebutuhan sistem.
 
 **3 Mei 2026** — Halaman detail profil anggota dengan riwayat aktivitas. Kalender kegiatan interaktif. Banner pengumuman darurat untuk admin. Heatmap mingguan untuk analisis kehadiran.

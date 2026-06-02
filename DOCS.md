@@ -1,30 +1,30 @@
-# NEWGAME V2 — Auth & Database Architecture Documentation
+# NEWGAME V2 — Dokumentasi Arsitektur dan API
 
-Dokumen ini mendokumentasikan sistem autentikasi, manajemen pengguna, dan arsitektur database relasional modern terpadu pada platform **NEWGAME V2**.
+Dokumen ini mendokumentasikan sistem autentikasi, manajemen pengguna, arsitektur database relasional, standar respons API, dan strategi caching pada platform **NEWGAME V2**.
 
 ---
 
-## 🛡️ Matriks Peran & Izin Akses (Role & Permissions)
+## Matriks Peran dan Izin Akses
 
-Platform ini mengadopsi 6 tingkatan role pengguna berbasis struktur organisasi UKM Game Development Universitas Andalas:
+Platform mengadopsi 6 tingkatan role berbasis hierarki organisasi UKM Game Development Universitas Andalas:
 
-| Peran (Role) | Kemampuan Utama | Tingkat Akses |
+| Peran | Kemampuan Utama | Level Akses |
 |---|---|---|
-| `OWNER` | Pemilik sistem, kendali penuh infrastruktur dan billing. | Level 5 (Maksimal) |
-| `ADMIN` | Pengaturan role user, melihat log forensik, & AI analytics dashboard. | Level 4 |
-| `TRAINER` | Manajemen modul belajar, pembuatan event, input absensi manual. | Level 3 |
-| `SOLDAT` | Pengurus inti, membuat artikel berita, mengelola media galeri. | Level 2 |
-| `ASSOCIATE` | Anggota tingkat lanjut, dapat mengakses modul proyek khusus. | Level 1 |
-| `TRAINEE` | Anggota baru/magang. Akses absensi, leaderboard, & riwayat XP. | Level 0 |
+| `OWNER` | Kendali penuh infrastruktur, billing, dan semua pengaturan sistem | Level 5 |
+| `ADMIN` | Manajemen role user, log forensik, dasbor AI analytics | Level 4 |
+| `TRAINER` | Manajemen modul belajar, pembuatan event, input absensi manual | Level 3 |
+| `SOLDAT` | Membuat artikel berita, mengelola galeri media | Level 2 |
+| `ASSOCIATE` | Anggota tingkat lanjut, akses modul proyek khusus | Level 1 |
+| `TRAINEE` | Anggota baru. Akses absensi, leaderboard, dan riwayat XP | Level 0 |
 
 ---
 
-## 🔀 Standarisasi API & Interceptor
+## Standar Respons API
 
-Untuk memastikan keandalan komunikasi data frontend dan backend, semua HTTP Response diproses secara terpusat melalui `ResponseInterceptor` NestJS:
+Semua endpoint REST API diproses secara terpusat melalui `ResponseInterceptor` yang terdaftar secara global di `main.ts`. Ini menjamin format respons yang seragam di seluruh sistem.
 
-### Struktur Response Sukses (`ApiResponse<T>`)
-Semua endpoint REST API yang sukses akan mengembalikan struktur JSON terpadu berikut:
+### Respons Sukses
+
 ```json
 {
   "success": true,
@@ -37,8 +37,10 @@ Semua endpoint REST API yang sukses akan mengembalikan struktur JSON terpadu ber
 }
 ```
 
-### Struktur Response Error (`AllExceptionsFilter`)
-Jika terjadi error (misalnya validasi gagal atau unauthorized), global filter akan menyusun error response:
+### Respons Error
+
+Ditangani oleh `AllExceptionsFilter` yang terdaftar secara global:
+
 ```json
 {
   "success": false,
@@ -51,21 +53,62 @@ Jika terjadi error (misalnya validasi gagal atau unauthorized), global filter ak
 }
 ```
 
+### Respons Berhalaman (Paginated)
+
+Untuk endpoint yang mengembalikan daftar data:
+
+```json
+{
+  "success": true,
+  "data": [...],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 87
+  },
+  "timestamp": "2026-06-02T09:30:00.000Z"
+}
+```
+
 ---
 
-## 💾 Skema Database Relasional (Prisma PostgreSQL)
+## Daftar Endpoint API
 
-Berikut adalah cetak biru model data relasional pada PostgreSQL (`apps/api/prisma/schema.prisma`):
+### Autentikasi — `/api/auth`
+
+| Method | Endpoint | Akses | Deskripsi |
+|---|---|---|---|
+| `POST` | `/api/auth/verify-member` | Publik | Verifikasi Member ID + kode akses sebelum registrasi |
+| `POST` | `/api/auth/register` | Authenticated | Buat profil setelah Firebase Auth registration |
+| `GET` | `/api/auth/me` | Authenticated | Ambil profil user yang sedang login |
+| `POST` | `/api/auth/set-role` | Admin, Owner | Ubah role user tertentu |
+| `GET` | `/api/auth/users` | Owner | Ambil seluruh daftar user |
+| `POST` | `/api/auth/register-admin` | Owner | Buat akun admin baru |
+
+### Anggota — `/api/members`
+
+Semua endpoint ini memerlukan autentikasi dan hak akses `superadmin` / `admin`.
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `GET` | `/api/members` | Daftar semua anggota (dengan filter dan pagination) |
+| `GET` | `/api/members/:uid` | Detail satu anggota beserta riwayat aktivitas |
+| `POST` | `/api/members` | Tambah anggota baru satu per satu |
+| `POST` | `/api/members/import` | Import anggota massal via CSV atau JSON |
+| `PATCH` | `/api/members/:uid` | Perbarui data anggota |
+| `DELETE` | `/api/members/:uid` | Nonaktifkan anggota (soft delete) |
+
+---
+
+## Skema Database Relasional (PostgreSQL via Prisma)
+
+File skema: `apps/api/prisma/schema.prisma`
 
 ```prisma
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-}
-
-generator client {
-  provider = "prisma-client-client"
 }
 
 // 1. Akun Pengguna Utama
@@ -78,12 +121,11 @@ model User {
   photoUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relasi
-  profile     UserProfile?
-  sessions    Session[]
-  activities  Activity[]
-  
+
+  profile    UserProfile?
+  sessions   Session[]
+  activities Activity[]
+
   @@map("users")
 }
 
@@ -96,18 +138,19 @@ enum Role {
   OWNER
 }
 
-// 2. Profil Detil Anggota (Gamifikasi)
+// 2. Profil Detail Anggota (Gamifikasi)
 model UserProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  bio         String?
-  github      String?
-  linkedin    String?
-  skills      String[] // Tag keahlian
-  exp         Int      @default(0)
-  level       Int      @default(1)
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id      String   @id @default(cuid())
+  userId  String   @unique
+  bio     String?
+  github  String?
+  linkedin String?
+  skills  String[]
+  exp     Int      @default(0)
+  level   Int      @default(1)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("user_profiles")
 }
 
@@ -118,28 +161,29 @@ model Session {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("sessions")
 }
 
-// 4. Modul Berita & Tutorial
+// 4. Artikel Berita dan Tutorial
 model NewsArticle {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  slug        String   @unique
-  content     String   @db.Text
+  slug        String    @unique
+  content     String    @db.Text
   excerpt     String?
   coverUrl    String?
-  published   Boolean  @default(false)
+  published   Boolean   @default(false)
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   @@map("news_articles")
 }
 
-// 5. Log Aktivitas & Kehadiran Anggota
+// 5. Log Aktivitas dan Kehadiran
 model Activity {
   id          String   @id @default(cuid())
   userId      String
@@ -148,58 +192,118 @@ model Activity {
   description String?
   expGained   Int      @default(0)
   date        DateTime
-  
-  user        User     @relation(fields: [userId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
+
   @@map("activities")
 }
 ```
 
 ---
 
-## ⚡ Strategi Caching & Rate Limiting (Upstash Redis)
+## Strategi Caching (Upstash Redis)
 
-Untuk meminimalkan beban query langsung ke PostgreSQL, NEWGAME V2 menerapkan caching pintar:
+Untuk meminimalkan beban query langsung ke PostgreSQL, setiap request API melewati lapisan caching:
 
 ```
-                  [ API Request ]
-                         │
-               RateLimitGuard? (100 req/min)
-                         │
-                 💡 Ada di Redis?
-                  /             \
-             (Ya)               (Tidak)
-             /                     \
-   [ Balas Instan ]         [ Query PostgreSQL ]
-                                     │
-                             Tulis ke Redis Cache
-                                     │
-                               [ Balas User ]
+[ Request Masuk ]
+        |
+  RateLimitGuard
+  (100 req/min per IP)
+        |
+  Cek Redis Cache
+     /       \
+  HIT         MISS
+   |            |
+Balas       Query PostgreSQL
+Instan           |
+           Tulis ke Redis
+                 |
+           Balas ke Client
 ```
 
-### Konfigurasi Kunci Cache & TTL (Time To Live)
-- `leaderboard:all` — Menyimpan data leaderboard global. TTL: **60 detik**.
-- `news:published` — Menyimpan daftar artikel berita publik. TTL: **300 detik**.
-- `user:{id}:profile` — Profil detil individu. TTL: **60 detik** (otomatis dihapus / di-invalidate jika user melakukan update data).
-- `ip:{address}:count` — Counter in-memory rate limiter untuk memitigasi serangan brute force.
+### Kunci Cache dan TTL
+
+| Kunci Cache | Data | TTL |
+|---|---|---|
+| `leaderboard:all` | Data leaderboard global | 60 detik |
+| `news:published` | Daftar artikel berita publik | 300 detik |
+| `user:{id}:profile` | Profil detail per pengguna | 60 detik |
+| `ip:{address}:count` | Counter rate limiter per IP | 60 detik |
+
+Cache pada kunci `user:{id}:profile` akan dihapus secara otomatis (cache invalidation) setiap kali pengguna memperbarui data profilnya.
 
 ---
 
-## 🛡️ Alur Autentikasi (Better Auth Integration)
-
-Modul `Better Auth` di NestJS bertindak sebagai server otentikasi mandiri.
+## Alur Autentikasi (Better Auth)
 
 ```
-[ Frontend Next.js ]                     [ Backend NestJS ]
-         │                                      │
-   Kirim Kredensial  ─── POST /api/auth/me ───>  │
-         │                                      │  Verifikasi & Validasi
-         │  <─────── Cookie / Session Token ───  │  Sesi di PostgreSQL
-         │                                      │
-  Akses Dashboard (Zustand)
+[ Frontend Next.js ]                 [ Backend NestJS ]
+        |                                    |
+  Kirim Kredensial  --- POST /api/auth/me --> |
+        |                                    |
+        |                           Verifikasi & buat sesi
+        |                           di tabel `sessions` PostgreSQL
+        |                                    |
+        | <-- Set Cookie Session Token ----- |
+        |
+  Simpan ke Zustand Store
+  Akses halaman dashboard
 ```
 
-1. **Email & Password**: Enkripsi password menggunakan `bcrypt` bawaan adapter Prisma Better Auth sebelum ditulis ke PostgreSQL.
-2. **Google OAuth**: Integrasi REST API yang secara aman melakukan redirect callback URL ke:
-   `http://localhost:3000/api/auth/callback/google` (Development)
-   `https://unandnewgame-tan.vercel.app/api/auth/callback/google` (Production)
-3. **Guard Sesi**: `FirebaseAuthGuard` (Legacy) dan `BetterAuthGuard` bertugas mengamankan route API sensitif dengan memeriksa token session.
+**Detail Mekanisme:**
+
+1. **Email & Password** — Password di-hash menggunakan `bcrypt` (work factor 10) sebelum disimpan ke PostgreSQL. Tidak ada plaintext yang tersimpan di manapun.
+2. **Google OAuth** — Callback URL yang valid:
+   - Development: `http://localhost:3000/api/auth/callback/google`
+   - Production: `https://unandnewgame-tan.vercel.app/api/auth/callback/google`
+3. **Session Guard** — `FirebaseAuthGuard` (legacy) dan `BetterAuthGuard` mengamankan semua route API sensitif dengan memverifikasi token sesi pada setiap request.
+
+---
+
+## Aturan Keamanan Firestore (Legacy Fallback)
+
+Jika Firestore masih digunakan sebagai dual-write fallback, pastikan aturan keamanan berikut terpasang di Firebase Console:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'OWNER'];
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
