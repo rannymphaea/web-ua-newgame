@@ -55,7 +55,8 @@ export class RedisService implements OnModuleInit {
   /** Get nilai dari Redis, return null jika tidak ada atau Redis offline */
   async get<T>(key: string): Promise<T | null> {
     if (!this.available) return null;
-    try { return await this.redis.get<T>(key); }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    try { return (await this.redis.get(key)) as T | null; }
     catch (e) { this.logger.error(`Redis GET [${key}]`, e); return null; }
   }
 
