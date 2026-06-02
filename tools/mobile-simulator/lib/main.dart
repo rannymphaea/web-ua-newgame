@@ -35,29 +35,49 @@ class DevicePreset {
 }
 
 const List<DevicePreset> kDevices = [
-  DevicePreset(name: 'iPhone SE (3rd)',    emoji: '📱', width: 375, height: 667, os: 'ios'),
-  DevicePreset(name: 'iPhone 14',          emoji: '📱', width: 390, height: 844, os: 'ios'),
-  DevicePreset(name: 'iPhone 14 Pro Max',  emoji: '📱', width: 430, height: 932, os: 'ios'),
-  DevicePreset(name: 'Pixel 7',            emoji: '📱', width: 412, height: 915),
-  DevicePreset(name: 'Samsung Galaxy S23', emoji: '📱', width: 360, height: 780),
-  DevicePreset(name: 'Redmi Note 12',      emoji: '📱', width: 393, height: 873),
-  DevicePreset(name: 'OPPO Reno 10',       emoji: '📱', width: 412, height: 892),
-  DevicePreset(name: 'iPad Mini 6',        emoji: '📟', width: 768, height: 1024, isTablet: true, os: 'ios'),
-  DevicePreset(name: 'iPad Air 5',         emoji: '📟', width: 820, height: 1180, isTablet: true, os: 'ios'),
+  DevicePreset(
+      name: 'iPhone SE (3rd)', emoji: '📱', width: 375, height: 667, os: 'ios'),
+  DevicePreset(
+      name: 'iPhone 14', emoji: '📱', width: 390, height: 844, os: 'ios'),
+  DevicePreset(
+      name: 'iPhone 14 Pro Max',
+      emoji: '📱',
+      width: 430,
+      height: 932,
+      os: 'ios'),
+  DevicePreset(name: 'Pixel 7', emoji: '📱', width: 412, height: 915),
+  DevicePreset(
+      name: 'Samsung Galaxy S23', emoji: '📱', width: 360, height: 780),
+  DevicePreset(name: 'Redmi Note 12', emoji: '📱', width: 393, height: 873),
+  DevicePreset(name: 'OPPO Reno 10', emoji: '📱', width: 412, height: 892),
+  DevicePreset(
+      name: 'iPad Mini 6',
+      emoji: '📟',
+      width: 768,
+      height: 1024,
+      isTablet: true,
+      os: 'ios'),
+  DevicePreset(
+      name: 'iPad Air 5',
+      emoji: '📟',
+      width: 820,
+      height: 1180,
+      isTablet: true,
+      os: 'ios'),
 ];
 
 const String kBaseUrl = 'http://localhost:3000';
 
 // ── Quick navigation links ────────────────────────────────────
 const List<(String label, String path, String emoji)> kNavLinks = [
-  ('Landing',      '/landing',                     '🏠'),
-  ('Login',        '/login',                       '🔐'),
-  ('Dashboard',    '/dashboard',                   '📊'),
-  ('Leaderboard',  '/dashboard/leaderboard',       '🏆'),
-  ('Berita',       '/dashboard/news',              '📰'),
-  ('Profile',      '/dashboard/profile',           '👤'),
-  ('Admin',        '/dashboard/admin',             '⚙️'),
-  ('Dev Profile',  '/dev-profile',                 '💻'),
+  ('Landing', '/landing', '🏠'),
+  ('Login', '/login', '🔐'),
+  ('Dashboard', '/dashboard', '📊'),
+  ('Leaderboard', '/dashboard/leaderboard', '🏆'),
+  ('Berita', '/dashboard/news', '📰'),
+  ('Profile', '/dashboard/profile', '👤'),
+  ('Admin', '/dashboard/admin', '⚙️'),
+  ('Dev Profile', '/dev-profile', '💻'),
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -102,12 +122,12 @@ class NewgameSimApp extends StatelessWidget {
   }
 
   ThemeData _buildTheme() {
-    const gold   = Color(0xFFFDCF41);
-    const ink    = Color(0xFF1F293A);
-    const bg     = Color(0xFF080D14);
-    const surf   = Color(0xFF0C1420);
-    const muted  = Color(0xFF8892A4);
-    const txt    = Color(0xFFF0EEF4);
+    const gold = Color(0xFFFDCF41);
+    const ink = Color(0xFF1F293A);
+    const bg = Color(0xFF080D14);
+    const surf = Color(0xFF0C1420);
+    const muted = Color(0xFF8892A4);
+    const txt = Color(0xFFF0EEF4);
 
     return ThemeData(
       brightness: Brightness.dark,
@@ -121,7 +141,8 @@ class NewgameSimApp extends StatelessWidget {
         onSurface: txt,
         surfaceVariant: Color(0xFF111827),
       ),
-      sliderTheme: const SliderThemeData(activeTrackColor: gold, thumbColor: gold),
+      sliderTheme:
+          const SliderThemeData(activeTrackColor: gold, thumbColor: gold),
       textTheme: const TextTheme(
         bodySmall: TextStyle(color: muted, fontSize: 11),
         bodyMedium: TextStyle(color: txt, fontSize: 12),
@@ -153,7 +174,7 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
 
   // ── Computed helpers ───────────────────────────────────────
   double get _devW => _landscape ? _device.height : _device.width;
-  double get _devH => _landscape ? _device.width  : _device.height;
+  double get _devH => _landscape ? _device.width : _device.height;
   double get _frameW => _devW * _scale + (_device.isTablet ? 28 : 22) * 2;
   double get _frameH => _devH * _scale + (_device.isTablet ? 18 : 38) * 2;
   String get _sizeTxt => '${_devW.round()}×${_devH.round()}';
@@ -217,7 +238,8 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
       width: 264,
       decoration: BoxDecoration(
         color: const Color(0xFF080D14),
-        border: Border(right: BorderSide(color: Colors.white.withOpacity(0.06))),
+        border:
+            Border(right: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
       child: Column(
         children: [
@@ -225,29 +247,37 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
           Container(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
+              border: Border(
+                  bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 34, height: 34,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: [c.primary, c.secondary]),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.phone_android, size: 18, color: Color(0xFF1F293A)),
+                  child: const Icon(Icons.phone_android,
+                      size: 18, color: Color(0xFF1F293A)),
                 ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('NEWGAME', style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w800,
-                      color: c.primary, letterSpacing: 1.5,
-                    )),
-                    Text('Mobile Simulator', style: TextStyle(
-                      fontSize: 10, color: const Color(0xFF8892A4),
-                    )),
+                    Text('NEWGAME',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: c.primary,
+                          letterSpacing: 1.5,
+                        )),
+                    const Text('Mobile Simulator',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF8892A4),
+                        )),
                   ],
                 ),
               ],
@@ -274,11 +304,14 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
                   _section('Skala Tampilan', [
                     Row(children: [
                       Text('${(_scale * 100).round()}%',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF8892A4))),
+                          style: const TextStyle(
+                              fontSize: 11, color: Color(0xFF8892A4))),
                       Expanded(
                         child: Slider(
                           value: _scale,
-                          min: 0.3, max: 1.0, divisions: 14,
+                          min: 0.3,
+                          max: 1.0,
+                          divisions: 14,
                           onChanged: (v) => setState(() => _scale = v),
                         ),
                       ),
@@ -287,9 +320,11 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
                   const SizedBox(height: 18),
                   _section('Orientasi', [
                     Row(children: [
-                      _orientBtn('Portrait',  Icons.stay_current_portrait,  false),
+                      _orientBtn(
+                          'Portrait', Icons.stay_current_portrait, false),
                       const SizedBox(width: 8),
-                      _orientBtn('Landscape', Icons.stay_current_landscape, true),
+                      _orientBtn(
+                          'Landscape', Icons.stay_current_landscape, true),
                     ]),
                   ]),
                   const SizedBox(height: 18),
@@ -299,24 +334,31 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
                     decoration: BoxDecoration(
                       color: const Color(0xFFFDCF41).withOpacity(0.06),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFDCF41).withOpacity(0.15)),
+                      border: Border.all(
+                          color: const Color(0xFFFDCF41).withOpacity(0.15)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(children: [
-                          const Icon(Icons.info_outline, size: 12, color: Color(0xFFFDCF41)),
+                          const Icon(Icons.info_outline,
+                              size: 12, color: Color(0xFFFDCF41)),
                           const SizedBox(width: 6),
-                          Text('INFO', style: TextStyle(
-                            fontSize: 9, fontWeight: FontWeight.w800,
-                            color: const Color(0xFFFDCF41).withOpacity(0.8),
-                            letterSpacing: 1.2,
-                          )),
+                          Text('INFO',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFFFDCF41).withOpacity(0.8),
+                                letterSpacing: 1.2,
+                              )),
                         ]),
                         const SizedBox(height: 6),
-                        Text(
+                        const Text(
                           'Pastikan dev server berjalan:\nnpm run dev (port 3000)',
-                          style: const TextStyle(fontSize: 10, color: Color(0xFF8892A4), height: 1.5),
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: Color(0xFF8892A4),
+                              height: 1.5),
                         ),
                       ],
                     ),
@@ -337,10 +379,13 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title.toUpperCase(), style: const TextStyle(
-          fontSize: 9.5, fontWeight: FontWeight.w800,
-          color: Color(0xFF8892A4), letterSpacing: 1.8,
-        )),
+        Text(title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF8892A4),
+              letterSpacing: 1.8,
+            )),
         const SizedBox(height: 8),
         ...children,
       ],
@@ -362,7 +407,8 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
               controller: _urlCtrl,
               style: const TextStyle(fontSize: 11, color: Color(0xFFF0EEF4)),
               decoration: const InputDecoration(
-                border: InputBorder.none, isDense: true,
+                border: InputBorder.none,
+                isDense: true,
                 contentPadding: EdgeInsets.zero,
                 hintText: 'http://localhost:3000/...',
                 hintStyle: TextStyle(fontSize: 11, color: Color(0xFF8892A4)),
@@ -391,27 +437,37 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
         margin: const EdgeInsets.only(bottom: 3),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFFDCF41).withOpacity(0.1) : Colors.transparent,
+          color: isActive
+              ? const Color(0xFFFDCF41).withOpacity(0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(7),
           border: Border.all(
-            color: isActive ? const Color(0xFFFDCF41).withOpacity(0.25) : Colors.transparent,
+            color: isActive
+                ? const Color(0xFFFDCF41).withOpacity(0.25)
+                : Colors.transparent,
           ),
         ),
         child: Row(
           children: [
             Text(emoji, style: const TextStyle(fontSize: 12)),
             const SizedBox(width: 8),
-            Text(label, style: TextStyle(
-              fontSize: 12,
-              color: isActive ? const Color(0xFFFDCF41) : const Color(0xFFF0EEF4),
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.normal,
-            )),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isActive
+                      ? const Color(0xFFFDCF41)
+                      : const Color(0xFFF0EEF4),
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.normal,
+                )),
             if (isActive) ...[
               const Spacer(),
-              Container(width: 4, height: 4, decoration: BoxDecoration(
-                color: const Color(0xFFFDCF41),
-                shape: BoxShape.circle,
-              )),
+              Container(
+                  width: 4,
+                  height: 4,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFDCF41),
+                    shape: BoxShape.circle,
+                  )),
             ],
           ],
         ),
@@ -428,23 +484,33 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
         margin: const EdgeInsets.only(bottom: 3),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFB9A6CE).withOpacity(0.12) : Colors.transparent,
+          color: isActive
+              ? const Color(0xFFB9A6CE).withOpacity(0.12)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(7),
           border: Border.all(
-            color: isActive ? const Color(0xFFB9A6CE).withOpacity(0.25) : Colors.transparent,
+            color: isActive
+                ? const Color(0xFFB9A6CE).withOpacity(0.25)
+                : Colors.transparent,
           ),
         ),
         child: Row(
           children: [
             Text(d.emoji, style: const TextStyle(fontSize: 11)),
             const SizedBox(width: 8),
-            Expanded(child: Text(d.name, style: TextStyle(
-              fontSize: 11,
-              color: isActive ? const Color(0xFFB9A6CE) : const Color(0xFFF0EEF4),
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.normal,
-            ))),
+            Expanded(
+                child: Text(d.name,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isActive
+                          ? const Color(0xFFB9A6CE)
+                          : const Color(0xFFF0EEF4),
+                      fontWeight:
+                          isActive ? FontWeight.w700 : FontWeight.normal,
+                    ))),
             Text('${d.width.round()}×${d.height.round()}',
-                style: const TextStyle(fontSize: 9.5, color: Color(0xFF8892A4))),
+                style:
+                    const TextStyle(fontSize: 9.5, color: Color(0xFF8892A4))),
           ],
         ),
       ),
@@ -471,13 +537,19 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
             ),
           ),
           child: Column(children: [
-            Icon(icon, size: 17,
-                color: isActive ? const Color(0xFFFDCF41) : const Color(0xFF8892A4)),
+            Icon(icon,
+                size: 17,
+                color: isActive
+                    ? const Color(0xFFFDCF41)
+                    : const Color(0xFF8892A4)),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(
-              fontSize: 10,
-              color: isActive ? const Color(0xFFFDCF41) : const Color(0xFF8892A4),
-            )),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isActive
+                      ? const Color(0xFFFDCF41)
+                      : const Color(0xFF8892A4),
+                )),
           ]),
         ),
       ),
@@ -496,14 +568,22 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
           // Status dot
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 6, height: 6,
+            width: 6,
+            height: 6,
             decoration: BoxDecoration(
-              color: _isLoading ? const Color(0xFFFDCF41) : const Color(0xFF22C55E),
+              color: _isLoading
+                  ? const Color(0xFFFDCF41)
+                  : const Color(0xFF22C55E),
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(
-                color: (_isLoading ? const Color(0xFFFDCF41) : const Color(0xFF22C55E)).withOpacity(0.5),
-                blurRadius: 4,
-              )],
+              boxShadow: [
+                BoxShadow(
+                  color: (_isLoading
+                          ? const Color(0xFFFDCF41)
+                          : const Color(0xFF22C55E))
+                      .withOpacity(0.5),
+                  blurRadius: 4,
+                )
+              ],
             ),
           ),
           const SizedBox(width: 6),
@@ -514,9 +594,12 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(_sizeTxt, style: const TextStyle(
-            fontSize: 9.5, color: Color(0xFF8892A4), fontFamily: 'monospace',
-          )),
+          Text(_sizeTxt,
+              style: const TextStyle(
+                fontSize: 9.5,
+                color: Color(0xFF8892A4),
+                fontFamily: 'monospace',
+              )),
         ],
       ),
     );
@@ -529,7 +612,8 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
       child: Stack(
         children: [
           // Dot grid bg
-          CustomPaint(painter: _DotGridPainter(), child: const SizedBox.expand()),
+          CustomPaint(
+              painter: _DotGridPainter(), child: const SizedBox.expand()),
 
           Center(
             child: SingleChildScrollView(
@@ -551,7 +635,9 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
           // Progress bar
           if (_isLoading)
             Positioned(
-              top: 0, left: 0, right: 0,
+              top: 0,
+              left: 0,
+              right: 0,
               child: LinearProgressIndicator(
                 value: _loadProgress / 100,
                 backgroundColor: Colors.transparent,
@@ -577,24 +663,35 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
         children: [
           Text(_device.emoji, style: const TextStyle(fontSize: 14)),
           const SizedBox(width: 8),
-          Text(_device.name, style: const TextStyle(
-            fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFF0EEF4),
-          )),
+          Text(_device.name,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFF0EEF4),
+              )),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 8),
-            width: 1, height: 12,
+            width: 1,
+            height: 12,
             color: Colors.white.withOpacity(0.12),
           ),
-          Text(_sizeTxt, style: const TextStyle(
-            fontSize: 11, color: Color(0xFF8892A4), fontFamily: 'monospace',
-          )),
+          Text(_sizeTxt,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF8892A4),
+                fontFamily: 'monospace',
+              )),
           const SizedBox(width: 8),
-          Text('${(_scale * 100).round()}%', style: const TextStyle(
-            fontSize: 11, color: Color(0xFFFDCF41), fontWeight: FontWeight.w700,
-          )),
+          Text('${(_scale * 100).round()}%',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFFFDCF41),
+                fontWeight: FontWeight.w700,
+              )),
           if (_landscape) ...[
             const SizedBox(width: 6),
-            const Icon(Icons.screen_rotation, size: 12, color: Color(0xFF8892A4)),
+            const Icon(Icons.screen_rotation,
+                size: 12, color: Color(0xFF8892A4)),
           ],
         ],
       ),
@@ -614,8 +711,14 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
         borderRadius: BorderRadius.circular(_device.isTablet ? 22 : 42),
         border: Border.all(color: const Color(0xFF2A3650), width: 2.5),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.7), blurRadius: 70, spreadRadius: 8),
-          BoxShadow(color: const Color(0xFFFDCF41).withOpacity(0.03), blurRadius: 100, spreadRadius: 30),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.7),
+              blurRadius: 70,
+              spreadRadius: 8),
+          BoxShadow(
+              color: const Color(0xFFFDCF41).withOpacity(0.03),
+              blurRadius: 100,
+              spreadRadius: 30),
         ],
       ),
       child: ClipRRect(
@@ -629,7 +732,8 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
                 color: const Color(0xFF0F1521),
                 child: Center(
                   child: Container(
-                    width: 100, height: 18,
+                    width: 100,
+                    height: 18,
                     decoration: BoxDecoration(
                       color: const Color(0xFF18202E),
                       borderRadius: BorderRadius.circular(9),
@@ -637,15 +741,19 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(width: 10, height: 10,
+                        Container(
+                            width: 10,
+                            height: 10,
                             decoration: BoxDecoration(
                               color: const Color(0xFF0F1521),
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white.withOpacity(0.08)),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.08)),
                             )),
                         const SizedBox(width: 4),
                         Container(
-                          width: 36, height: 6,
+                          width: 36,
+                          height: 6,
                           decoration: BoxDecoration(
                             color: const Color(0xFF0F1521),
                             borderRadius: BorderRadius.circular(3),
@@ -664,7 +772,8 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
                 child: _wvc != null
                     ? WebViewWidget(controller: _wvc!)
                     : const Center(
-                        child: CircularProgressIndicator(color: Color(0xFFFDCF41)),
+                        child:
+                            CircularProgressIndicator(color: Color(0xFFFDCF41)),
                       ),
               ),
             ),
@@ -692,32 +801,37 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
 
   Widget _buildNavButtons() {
     final btns = [
-      (Icons.arrow_back_ios_new, 'Back',    () => _wvc?.goBack()),
-      (Icons.arrow_forward_ios,  'Forward', () => _wvc?.goForward()),
-      (Icons.refresh,            'Reload',  () => _wvc?.reload()),
-      (Icons.home_outlined,      'Home',    () => _navigate('/landing')),
+      (Icons.arrow_back_ios_new, 'Back', () => _wvc?.goBack()),
+      (Icons.arrow_forward_ios, 'Forward', () => _wvc?.goForward()),
+      (Icons.refresh, 'Reload', () => _wvc?.reload()),
+      (Icons.home_outlined, 'Home', () => _navigate('/landing')),
     ];
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: btns.map((b) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Tooltip(
-          message: b.$2,
-          child: GestureDetector(
-            onTap: () => b.$3(),
-            child: Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0C1420),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withOpacity(0.07)),
-              ),
-              child: Icon(b.$1, size: 15, color: const Color(0xFF8892A4)),
-            ),
-          ),
-        ),
-      )).toList(),
+      children: btns
+          .map((b) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Tooltip(
+                  message: b.$2,
+                  child: GestureDetector(
+                    onTap: () => b.$3(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0C1420),
+                        borderRadius: BorderRadius.circular(10),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.07)),
+                      ),
+                      child:
+                          Icon(b.$1, size: 15, color: const Color(0xFF8892A4)),
+                    ),
+                  ),
+                ),
+              ))
+          .toList(),
     );
   }
 }
