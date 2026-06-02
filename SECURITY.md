@@ -1,12 +1,12 @@
-# Keamanan Platform NEWGAME V2
+# Keamanan Platform NEWGAME V1.1
 
-Dokumen ini menjelaskan rancangan sistem keamanan berlapis pada **NEWGAME V2**, mencakup pertahanan jaringan, kontrol autentikasi, mitigasi brute force, dan keamanan integritas data relasional.
+Dokumen ini menjelaskan rancangan sistem keamanan berlapis pada NEWGAME V1.1, mencakup pertahanan jaringan, kontrol autentikasi, mitigasi brute force, dan keamanan integritas data relasional.
 
 ---
 
-## Gambaran Arsitektur Keamanan Berlapis
+### Arsitektur Keamanan Berlapis
 
-NEWGAME V2 menerapkan strategi **Defense in Depth** — setiap lapisan didesain agar kegagalan satu lapisan tidak membuka akses ke lapisan berikutnya.
+NEWGAME V1.1 menerapkan strategi Defense in Depth — setiap lapisan didesain agar kegagalan satu lapisan tidak membuka akses ke lapisan berikutnya.
 
 ```
                 Internet
@@ -26,62 +26,52 @@ NEWGAME V2 menerapkan strategi **Defense in Depth** — setiap lapisan didesain 
 
 ---
 
-## Rate Limiting (Upstash Redis Guard)
+### Rate Limiting
 
-Pencegahan serangan brute force dan penyalahgunaan endpoint API ditangani di tingkat aplikasi menggunakan `RateLimitGuard`.
+Pencegahan serangan brute force dan penyalahgunaan endpoint ditangani di tingkat aplikasi menggunakan `RateLimitGuard`.
 
 | Endpoint | Batas Request | Jendela Waktu | Respons jika Terlampaui |
 |---|---|---|---|
-| `/api/auth/*` | 10 request | per 1 menit per IP | HTTP `429 Too Many Requests` |
-| `/api/*` (umum) | 100 request | per 1 menit per IP/Token | HTTP `429 Too Many Requests` |
+| `/api/auth/*` | 10 request | per 1 menit per IP | HTTP 429 Too Many Requests |
+| `/api/*` umum | 100 request | per 1 menit per IP | HTTP 429 Too Many Requests |
 
-Counter request disimpan di Upstash Redis secara terdistribusi, sehingga tahan terhadap serangan yang memanfaatkan banyak proses server sekaligus.
-
----
-
-## Autentikasi Mandiri (Better Auth)
-
-Migrasi ke Better Auth meningkatkan keamanan manajemen pengguna secara signifikan dibandingkan Firebase Auth:
-
-**Session Rotation**
-Setiap kali pengguna masuk atau melakukan perubahan penting, token sesi (Session ID) dirotasi untuk mencegah eksploitasi Session Fixation Attack.
-
-**Perlindungan CSRF dan XSS**
-- CSRF: Dilindungi melalui mekanisme validasi double-submit cookie bawaan Better Auth.
-- XSS: Input pengguna disanitasi menggunakan `DOMPurify` di sisi client dan disaring via NestJS `ValidationPipe` (`class-validator`) di sisi server.
-
-**Penyimpanan Password**
-Kata sandi di-hash menggunakan algoritma **bcrypt** dengan work factor 10 sebelum tersimpan di PostgreSQL. Tidak ada password yang disimpan dalam bentuk plaintext atau enkripsi reversibel.
-
-**Google OAuth**
-State parameter divalidasi ketat pada setiap callback untuk memitigasi serangan OAuth Replay.
+Counter request disimpan di Upstash Redis secara terdistribusi, tahan terhadap serangan multi-proses.
 
 ---
 
-## Keamanan Data Relasional (Prisma PostgreSQL)
+### Autentikasi Mandiri (Better Auth)
 
-**Pencegahan SQL Injection**
-Prisma ORM secara otomatis memparameterisasi semua query SQL. Input pengguna tidak pernah digabungkan langsung sebagai string mentah ke dalam query, sehingga celah SQL Injection dimitigasi secara absolut di tingkat arsitektur.
+Session Rotation — Setiap kali pengguna masuk atau melakukan perubahan penting, token sesi dirotasi untuk mencegah eksploitasi Session Fixation Attack.
 
-**Fault Tolerance Database**
-`PrismaService` memuat penanganan toleransi kegagalan yang mendeteksi apabila server PostgreSQL offline, kemudian memberikan respons fallback yang aman tanpa membocorkan stack trace database ke pengguna umum.
+Perlindungan CSRF dan XSS — CSRF dilindungi melalui validasi double-submit cookie bawaan Better Auth. Input pengguna disanitasi menggunakan DOMPurify di sisi client dan ValidationPipe di sisi server.
 
-**Graceful Disconnect**
-NestJS mendaftarkan hook siklus hidup (`beforeApplicationShutdown`) untuk memutus koneksi PostgreSQL secara bersih ketika server dimatikan, mencegah kebocoran resource koneksi.
+Penyimpanan Password — Kata sandi di-hash menggunakan bcrypt dengan work factor 10 sebelum tersimpan di PostgreSQL. Tidak ada password yang disimpan dalam bentuk plaintext.
+
+Google OAuth — State parameter divalidasi ketat pada setiap callback untuk memitigasi serangan OAuth Replay.
 
 ---
 
-## Keamanan Konfigurasi dan Kredensial
+### Keamanan Data Relasional (Prisma PostgreSQL)
+
+Pencegahan SQL Injection — Prisma ORM secara otomatis memparameterisasi semua query SQL. Input pengguna tidak pernah digabungkan langsung sebagai string mentah ke dalam query.
+
+Fault Tolerance Database — PrismaService memuat penanganan toleransi kegagalan yang mendeteksi apabila server PostgreSQL offline, kemudian memberikan respons fallback yang aman tanpa membocorkan stack trace.
+
+Graceful Disconnect — NestJS mendaftarkan hook siklus hidup untuk memutus koneksi PostgreSQL secara bersih ketika server dimatikan.
+
+---
+
+### Keamanan Konfigurasi dan Kredensial
 
 > [!CAUTION]
-> Jangan pernah melakukan `console.log` terhadap variabel yang berisi API key, token, atau password. Gunakan pengecekan panjang karakter sebagai gantinya.
+> Jangan pernah melakukan console.log terhadap variabel yang berisi API key, token, atau password.
 
 Contoh pengecekan yang aman:
 ```typescript
-// SALAH — membocorkan nilai kunci ke log produksi
+// Salah — membocorkan nilai kunci ke log produksi
 console.log('GROQ KEY:', process.env.GROQ_API_KEY);
 
-// BENAR — hanya mengecek keberadaan dan panjang
+// Benar — hanya mengecek keberadaan dan panjang
 this.logger.log(`GROQ_API_KEY loaded: ${process.env.GROQ_API_KEY?.length ?? 0} chars`);
 ```
 
@@ -89,9 +79,7 @@ Semua nilai sensitif disimpan di file `.env` yang masuk dalam daftar `.gitignore
 
 ---
 
-## Aturan Keamanan Firestore (Legacy Fallback)
-
-Jika Firestore masih digunakan, pastikan aturan berikut terpasang di Firebase Console:
+### Aturan Keamanan Firestore (Legacy Fallback)
 
 ```javascript
 rules_version = '2';
@@ -138,13 +126,13 @@ service cloud.firestore {
 
 ---
 
-## Melaporkan Kerentanan Keamanan
+### Melaporkan Kerentanan Keamanan
 
 > [!IMPORTANT]
-> Jika Anda menemukan celah keamanan atau bug sensitif, **jangan membuat public issue di GitHub**. Laporkan secara pribadi agar tidak dieksploitasi sebelum diperbaiki.
+> Jika Anda menemukan celah keamanan atau bug sensitif, jangan membuat public issue di GitHub. Laporkan secara pribadi agar tidak dieksploitasi sebelum diperbaiki.
 
-Kirimkan laporan lengkap beserta langkah reproduksi (Proof of Concept) melalui email ke:
+Kirimkan laporan lengkap beserta langkah reproduksi ke:
 
-**unandnewgame@gmail.com**
+unandnewgame@gmail.com
 
-Tim kami berkomitmen merespons dan memperbaiki setiap laporan kerentanan dalam waktu kurang dari **24 jam**.
+Tim berkomitmen merespons dan memperbaiki setiap laporan dalam waktu kurang dari 24 jam.

@@ -1,54 +1,49 @@
-# NEWGAME V2 — Frontend Application
+# NEWGAME V1.1 — Frontend Application
 
-Dokumentasi teknis untuk aplikasi frontend Next.js 14 yang berada di direktori `apps/web/`. Mencakup fitur utama V2, spesifikasi desain, peta direktori, dan konfigurasi environment.
-
----
-
-## Fitur Utama V2
-
-### Space Grotesk Typography
-Font brand NEWGAME dimigrasikan ke **Space Grotesk** untuk tampilan yang modern dan keterbacaan tinggi di semua perangkat. Diintegrasikan langsung menggunakan `next/font/google` sehingga tidak ada permintaan jaringan tambahan saat runtime dan CLS (Cumulative Layout Shift) bernilai nol.
-
-### Interactive PirateMap
-Komponen `PirateMap.tsx` dibangun ulang sepenuhnya menggunakan pure SVG interaktif dengan diagram pohon (left-to-right tree). Animasi stroke konektor berjalan secara staggered dan panel deskripsi muncul secara reaktif saat node di-hover.
-
-### Web Mobile Simulator
-Halaman khusus internal developer di route `/dev-tools` untuk mempreview tampilan aplikasi pada berbagai ukuran layar ponsel. Menggunakan iframe yang dapat dikonfigurasi dengan 8 preset perangkat, toggle orientasi, dan slider skala.
-
-### PostHog Observability
-Terintegrasi penuh dengan `PostHogProvider` untuk perekaman pageview secara manual dan asinkron serta pelacakan event CTA tanpa memperlambat First Contentful Paint (FCP).
-
-### ErrorBoundary Resilience
-Komponen `ErrorBoundary` membungkus seluruh layout utama. Jika terjadi error crash di sisi client, komponen ini menangkap error, mengirim laporan ke PostHog, dan menyediakan tombol retry tanpa perlu reload penuh.
+Dokumentasi teknis untuk aplikasi frontend Next.js 14 di direktori `apps/web/`. Mencakup fitur utama V1.1, spesifikasi desain, peta direktori, dan konfigurasi environment.
 
 ---
 
-## Spesifikasi Desain
+### Fitur Utama V1.1
 
-### Dark Mode
+Space Grotesk Typography — Font brand NEWGAME dimigrasikan ke Space Grotesk untuk tampilan modern dan keterbacaan tinggi di semua perangkat. Diintegrasikan langsung menggunakan `next/font/google` sehingga tidak ada permintaan jaringan tambahan saat runtime dan CLS (Cumulative Layout Shift) bernilai nol.
+
+Interactive PirateMap — Komponen PirateMap.tsx dibangun ulang sepenuhnya menggunakan pure SVG interaktif dengan diagram pohon (left-to-right tree). Animasi stroke konektor berjalan secara staggered dan panel deskripsi muncul secara reaktif saat node di-hover.
+
+Web Mobile Simulator — Halaman khusus internal developer di route `/dev-tools` untuk mempreview tampilan aplikasi pada berbagai ukuran layar ponsel. Menggunakan iframe dengan 8 preset perangkat, toggle orientasi, dan slider skala.
+
+PostHog Observability — Terintegrasi penuh dengan PostHogProvider untuk perekaman pageview secara manual dan asinkron serta pelacakan event CTA tanpa memperlambat First Contentful Paint.
+
+ErrorBoundary Resilience — Komponen ErrorBoundary membungkus seluruh layout utama. Jika terjadi error crash di sisi client, komponen ini menangkap error, mengirim laporan ke PostHog, dan menyediakan tombol retry tanpa perlu reload penuh.
+
+---
+
+### Spesifikasi Desain
+
+#### Dark Mode
 
 | Aspek | Detail |
 |---|---|
 | File konfigurasi | `src/lib/theme-engine.ts` |
-| Mekanisme | Script inline anti-FOUC disisipkan di `<head>` sebelum rendering awal |
+| Mekanisme | Script inline anti-FOUC disisipkan di head sebelum rendering awal |
 | Sumber preferensi | `localStorage.theme` atau preferensi media-query OS |
-| Implementasi | Kelas `.dark` diterapkan pada elemen `<html>` |
+| Implementasi | Kelas `.dark` diterapkan pada elemen html |
 | Aturan warna | Dilarang menggunakan hex/rgb hardcoded di komponen. Selalu gunakan `var(--clr-*)` |
 
-### Animasi CSS
+#### Animasi CSS
 
 Semua animasi diatur menggunakan pure CSS keyframes dengan `will-change` untuk akselerasi GPU:
 
 | Kelas Animasi | Deskripsi | Durasi | Easing |
 |---|---|---|---|
-| `.animate-fade-in` | Transisi opacity masuk halus | 0.5s | `ease` |
-| `.animate-slide-up` | Efek slide dari bawah ke atas | 0.4s | `cubic-bezier(0.16, 1, 0.3, 1)` |
-| `.animate-float` | Animasi mengambang melingkar untuk ilustrasi | 4.0s | `ease-in-out infinite` |
-| `.skeleton` | Efek shimmer gradien untuk status loading | 1.5s | `ease-in-out infinite` |
+| `.animate-fade-in` | Transisi opacity masuk halus | 0.5s | ease |
+| `.animate-slide-up` | Efek slide dari bawah ke atas | 0.4s | cubic-bezier(0.16, 1, 0.3, 1) |
+| `.animate-float` | Animasi mengambang melingkar untuk ilustrasi | 4.0s | ease-in-out infinite |
+| `.skeleton` | Efek shimmer gradien untuk status loading | 1.5s | ease-in-out infinite |
 
 ---
 
-## Peta Direktori Frontend
+### Peta Direktori Frontend
 
 ```
 apps/web/src/
@@ -71,7 +66,7 @@ apps/web/src/
 │   │   └── PostHogProvider.tsx     # Perekam otomatis navigasi pageview
 │   ├── ui/
 │   │   ├── ErrorBoundary.tsx       # Penahan crash runtime client-side
-│   │   ├── ProfileCard.tsx         # Kartu informasi anggota (avatar + detail)
+│   │   ├── ProfileCard.tsx         # Kartu informasi anggota (avatar dan detail)
 │   │   ├── Toast.tsx               # Notifikasi pop-up ARIA live
 │   │   └── ToggleDarkMode.tsx      # Tombol toggle tema gelap/terang
 │   └── layout/
@@ -93,19 +88,16 @@ apps/web/src/
 
 ---
 
-## Konfigurasi Environment Variables
+### Konfigurasi Environment Variables
 
 Buat file `apps/web/.env.local` untuk konfigurasi lokal:
 
 ```env
-# URL Backend API (NestJS)
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
-# PostHog Analytics
 NEXT_PUBLIC_POSTHOG_KEY=phc_xxxxxxxxxxxxxxxx
 NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 
-# Firebase Fallback (Legacy)
 NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
@@ -115,14 +107,16 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 
 ---
 
-## Menjalankan Development Server
+### Menjalankan Development Server
 
 Dari direktori root monorepo:
+
 ```bash
 npm run dev:web
 ```
 
-Atau dari dalam direktori `apps/web/` langsung:
+Atau dari dalam direktori `apps/web/`:
+
 ```bash
 npm run dev
 ```
@@ -131,9 +125,9 @@ Aplikasi berjalan di: `http://localhost:3000`
 
 ---
 
-## Catatan Penting untuk Developer
+### Catatan Penting untuk Developer
 
-- **Jangan gunakan warna hardcoded** (`#fff`, `rgb(...)`) di dalam file komponen. Semua warna harus merujuk ke variabel CSS yang didefinisikan di `globals.css`.
-- **Jangan tambahkan font baru** ke dashboard tanpa persetujuan. Setiap font tambahan meningkatkan ukuran bundle dan memperlambat loading.
-- **Hindari `useEffect` yang tidak perlu** untuk data fetching. Gunakan pola async yang sudah ada di `lib/api.ts` agar konsisten dengan format respons backend.
-- **Komponen baru wajib mobile-responsive** menggunakan breakpoint yang sudah didefinisikan di `globals.css`.
+- Jangan gunakan warna hardcoded di dalam file komponen. Semua warna harus merujuk ke variabel CSS yang didefinisikan di `globals.css`.
+- Jangan tambahkan font baru ke dashboard tanpa persetujuan. Setiap font tambahan meningkatkan ukuran bundle dan memperlambat loading.
+- Hindari useEffect yang tidak perlu untuk data fetching. Gunakan pola async yang sudah ada di `lib/api.ts` agar konsisten dengan format respons backend.
+- Komponen baru wajib mobile-responsive menggunakan breakpoint yang sudah didefinisikan di `globals.css`.
