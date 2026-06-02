@@ -4,6 +4,7 @@ const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
+const response_interceptor_1 = require("./common/interceptors/response.interceptor");
 const rateLimitMap = new Map();
 function rateLimiter(req, res, next) {
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
@@ -36,6 +37,7 @@ async function bootstrap() {
         transform: true,
     }));
     app.useGlobalFilters(new http_exception_filter_1.AllExceptionsFilter());
+    app.useGlobalInterceptors(new response_interceptor_1.ResponseInterceptor());
     const port = process.env.PORT || 3001;
     await app.listen(port);
     logger.log(`NEWGAME API running on http://localhost:${port}`);

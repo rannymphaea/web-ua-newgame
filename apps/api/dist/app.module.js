@@ -32,6 +32,8 @@ const pillar_levels_module_1 = require("./modules/pillar-levels/pillar-levels.mo
 const user_history_module_1 = require("./modules/user-history/user-history.module");
 const user_vault_module_1 = require("./modules/user-vault/user-vault.module");
 const ai_module_1 = require("./modules/ai/ai.module");
+const redis_module_1 = require("./common/redis/redis.module");
+const database_module_1 = require("./database/database.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -62,6 +64,8 @@ exports.AppModule = AppModule = __decorate([
             user_history_module_1.UserHistoryModule,
             user_vault_module_1.UserVaultModule,
             ai_module_1.AiModule,
+            redis_module_1.RedisModule,
+            database_module_1.DatabaseModule,
         ],
     })
 ], AppModule);
