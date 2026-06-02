@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:window_manager/window_manager.dart';
@@ -699,7 +698,6 @@ class _SimulatorPageState extends State<SimulatorPage> with WindowListener {
   }
 
   Widget _buildPhoneFrame() {
-    final borderW = _device.isTablet ? 24.0 : 18.0;
     final topBarH = _device.isTablet ? 16.0 : 28.0;
     final botBarH = _device.isTablet ? 12.0 : 20.0;
 
