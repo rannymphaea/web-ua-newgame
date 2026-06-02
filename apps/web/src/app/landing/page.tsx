@@ -207,16 +207,7 @@ export default function LandingPage() {
           {/* H1 — Typewriter Animation */}
           <h1
             className="hero-title"
-            style={{
-              fontSize: 'clamp(4rem, 8vw, 6.5rem)',
-              fontWeight: 800,
-              color: '#000000',
-              /* fontFamily intentionally removed — let .hero-title CSS class control */
-              textShadow: '2px 2px 10px rgba(0,0,0,0.1)',
-              marginBottom: '0.2rem',
-              letterSpacing: '-1px',
-              minHeight: '1.2em'
-            }}
+            style={{ minHeight: '1.1em' }}
           >
             <TypewriterText text="NEWGAME" />
           </h1>

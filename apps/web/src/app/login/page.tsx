@@ -166,7 +166,7 @@ export default function LoginPage() {
               style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block', filter: 'drop-shadow(0 4px 20px var(--clr-gold-glow))' }}
             />
           </motion.div>
-          <h1 style={{ fontFamily: 'var(--font-pinyon)', fontSize: 48, fontWeight: 400, color: 'var(--clr-text-primary)', letterSpacing: 1, lineHeight: 1, marginBottom: 6 }}>NEWGAME</h1>
+          <h1 style={{ fontFamily: 'var(--font-grotesk)', fontSize: 36, fontWeight: 800, color: 'var(--clr-text-primary)', letterSpacing: '-2px', lineHeight: 0.92, marginBottom: 8, textTransform: 'uppercase' }}>NEWGAME</h1>
           <p style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic', fontSize: 13, color: 'var(--clr-text-secondary)' }}>Portal Anggota</p>
         </div>
 

@@ -1,4 +1,4 @@
-'use client';
+// VideoModal — rendered inside 'use client' landing page, no separate directive needed
 import { useRef, useEffect, useCallback } from 'react';
 
 interface VideoModalProps {

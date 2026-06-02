@@ -102,12 +102,14 @@ export default function SplashScreen() {
         {/* NEWGAME title */}
         <div style={{ textAlign: 'center' }}>
           <h1 style={{
-            fontFamily: '"Pinyon Script", cursive',
-            fontSize: 'clamp(64px, 10vw, 100px)',
-            fontWeight: 400,
+            fontFamily: 'var(--font-grotesk)',
+            fontSize: 'clamp(42px, 7vw, 70px)',
+            fontWeight: 800,
             color: 'var(--novel-ink)',
-            lineHeight: 1,
-            textShadow: '0 4px 24px rgba(253,207,65,0.2)',
+            lineHeight: 0.92,
+            letterSpacing: '-3px',
+            textTransform: 'uppercase' as const,
+            textShadow: '0 2px 30px rgba(253,207,65,0.15)',
             margin: 0,
           }}>
             NEWGAME
