@@ -1,32 +1,83 @@
 'use client';
-import { Component, ReactNode } from 'react';
+/**
+ * ErrorBoundary — React error boundary untuk NEWGAME
+ * Tangkap error rendering tanpa crash seluruh halaman.
+ * 
+ * Penggunaan:
+ *   <ErrorBoundary fallback={<p>Error!</p>}>
+ *     <ComponentYangBisaError />
+ *   </ErrorBoundary>
+ */
+import { Component, ReactNode, ErrorInfo } from 'react';
 
-interface Props { children: ReactNode; }
-interface State { hasError: boolean; error?: Error; }
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, info: ErrorInfo) => void;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // Kirim ke monitoring (PostHog / Sentry) jika tersedia
+    if (typeof window !== 'undefined') {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { posthog } = require('@/lib/posthog');
+        posthog.captureException?.(error, { extra: info });
+      } catch { /* posthog opsional */ }
+    }
+    this.props.onError?.(error, info);
+    console.error('[ErrorBoundary]', error, info);
   }
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback;
+
       return (
-        <div style={{padding:40,textAlign:'center'}}>
-          <div style={{width:56,height:56,margin:'0 auto 16px',borderRadius:'50%',background:'var(--clr-danger-bg)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--clr-danger)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-          </div>
-          <h3 style={{fontSize:18,fontWeight:600,marginBottom:8,color:'var(--clr-text-primary)'}}>Terjadi Kesalahan</h3>
-          <p style={{fontSize:13,color:'var(--clr-text-secondary)',marginBottom:20}}>{this.state.error?.message || 'Halaman gagal dimuat'}</p>
-          <button onClick={() => this.setState({ hasError: false })} className="btn-depth" style={{padding:'10px 24px',background:'var(--clr-danger)',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontSize:13,fontWeight:600}}>Coba Lagi</button>
+        <div style={{
+          padding: '32px 24px',
+          textAlign: 'center',
+          fontFamily: 'var(--font-inter)',
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+          <h3 style={{
+            fontSize: 16, fontWeight: 700,
+            color: 'var(--novel-ink)', marginBottom: 8,
+          }}>
+            Terjadi kesalahan rendering
+          </h3>
+          <p style={{ fontSize: 13, color: 'var(--novel-cloud)', marginBottom: 20 }}>
+            {this.state.error?.message ?? 'Unknown error'}
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            style={{
+              padding: '8px 20px', borderRadius: 8, border: 'none',
+              background: 'var(--clr-gold)', color: '#1a0a00',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer',
+            }}
+          >
+            Coba lagi
+          </button>
         </div>
       );
     }
+
     return this.props.children;
   }
 }

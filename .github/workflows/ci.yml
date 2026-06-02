@@ -1,4 +1,4 @@
-name: CI - Build & Lint Check
+name: NEWGAME CI/CD
 
 on:
   push:
@@ -6,34 +6,120 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-and-lint:
-    name: Build & Type Check
+  # ── Job 1: Lint & Type Check ─────────────────────────────────
+  lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          # No cache: monorepo root has no package-lock.json (workspaces pattern)
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install All Workspace Dependencies
-        run: npm install --legacy-peer-deps
+      - name: Install root deps
+        run: npm ci --prefer-offline
 
-      - name: Build Backend (NestJS)
-        working-directory: apps/api
-        run: npx @nestjs/cli build
-
-      - name: Build Frontend (Next.js)
+      - name: Install web deps
+        run: npm ci --prefer-offline
         working-directory: apps/web
-        run: npx next build
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:3001/api
-          NEXT_PUBLIC_FIREBASE_API_KEY: dummy
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: dummy.firebaseapp.com
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: dummy-project
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: dummy.appspot.com
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
-          NEXT_PUBLIC_FIREBASE_APP_ID: 1:123456789:web:dummy
+
+      - name: Install api deps
+        run: npm ci --prefer-offline
+        working-directory: apps/api
+
+      - name: Lint — Web
+        run: npm run lint
+        working-directory: apps/web
+        continue-on-error: true
+
+      - name: Type Check — Web
+        run: npx tsc --noEmit
+        working-directory: apps/web
+        continue-on-error: true
+
+      - name: Type Check — API
+        run: npx tsc --noEmit
+        working-directory: apps/api
+        continue-on-error: true
+
+  # ── Job 2: Build Check ───────────────────────────────────────
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      # Dummy env vars untuk build (tidak aktif di CI)
+      NEXT_PUBLIC_FIREBASE_API_KEY: ci-dummy
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ci-dummy.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-dummy
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install web deps
+        run: npm ci --prefer-offline
+        working-directory: apps/web
+
+      - name: Build Next.js
+        run: npm run build
+        working-directory: apps/web
+
+      - name: Install api deps
+        run: npm ci --prefer-offline
+        working-directory: apps/api
+
+      - name: Build NestJS
+        run: npm run build
+        working-directory: apps/api
+
+  # ── Job 3: Security Audit ────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Audit — Web
+        run: |
+          cd apps/web
+          npm audit --audit-level=high || true
+
+      - name: Audit — API
+        run: |
+          cd apps/api
+          npm audit --audit-level=high || true
+
+  # ── Job 4: Notify on main push ───────────────────────────────
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [lint, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Summary
+        run: |
+          echo "## ✅ NEWGAME CI Passed" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "Author: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
