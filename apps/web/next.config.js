@@ -3,6 +3,8 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Turbopack di dev mode (lebih cepat HMR)
+  // Aktifkan dengan: next dev --turbo
 
   // Compress semua response
   compress: true,
@@ -28,8 +30,13 @@ const nextConfig = {
       'framer-motion',
       'recharts',
       'zustand',
-      // firebase/* individual removed — Next.js handles them automatically
+      'posthog-js',
     ],
+    // ISR fallback caching
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
 
   // API proxy ke backend NestJS — hanya aktif di development (localhost)
