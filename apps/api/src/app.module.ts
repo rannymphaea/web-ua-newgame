@@ -23,6 +23,8 @@ import { PillarLevelsModule } from './modules/pillar-levels/pillar-levels.module
 import { UserHistoryModule } from './modules/user-history/user-history.module';
 import { UserVaultModule } from './modules/user-vault/user-vault.module';
 import { AiModule } from './modules/ai/ai.module';
+import { RedisModule } from './common/redis/redis.module';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   controllers: [AppController],
@@ -50,6 +52,8 @@ import { AiModule } from './modules/ai/ai.module';
     UserHistoryModule,
     UserVaultModule,
     AiModule,
+    RedisModule,
+    DatabaseModule,
   ],
 })
 export class AppModule {}

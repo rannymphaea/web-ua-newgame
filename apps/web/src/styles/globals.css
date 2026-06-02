@@ -113,7 +113,7 @@
 
   /* ── Fonts ─────────────────────────────────────────────────── */
   --font-pinyon:    'Pinyon Script', cursive;
-  --font-grotesk:   'Space Grotesk', 'Inter', sans-serif;
+  --font-grotesk:   var(--font-space-grotesk, 'Space Grotesk', 'Inter', sans-serif);
   --font-lora:      'Lora', serif;
   --font-cormorant: 'Cormorant Garamond', serif;
   --font-inter:     'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

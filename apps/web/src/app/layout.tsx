@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next';
-import { Lora, Inter } from 'next/font/google';
+import { Lora, Inter, Space_Grotesk } from 'next/font/google';
 import '@/styles/globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
 import { NovelCursor } from '@/components/ui/NovelCursor';
 import { THEME_SCRIPT } from '@/lib/theme-engine';
+import { PostHogProvider } from '@/components/providers/PostHogProvider';
 
 /*
  * Only load fonts needed globally (Inter + Lora).
@@ -22,6 +23,13 @@ const inter = Inter({
   weight: ['300', '400', '500', '600', '700', '800'],
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+  preload: true,
+});
+const spaceGrotesk = Space_Grotesk({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
   display: 'swap',
   preload: true,
 });
@@ -65,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="id"
-      className={`${lora.variable} ${inter.variable}`}
+      className={`${lora.variable} ${inter.variable} ${spaceGrotesk.variable}`}
     >
       <head>
         {/* Anti-FOUC: set theme before first paint */}
@@ -76,6 +84,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://securetoken.googleapis.com" crossOrigin="anonymous" />
+        {/* PostHog — analytics preconnect */}
+        <link rel="preconnect" href="https://app.posthog.com" crossOrigin="anonymous" />
 
         {/* Remix Icon — preload agar browser mulai download lebih awal */}
         <link
@@ -91,7 +101,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="accent-bar" />
         <NovelCursor />
-        <ToastProvider>{children}</ToastProvider>
+        <PostHogProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
