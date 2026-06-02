@@ -1,153 +1,83 @@
-# Panduan Membuat Akun NEWGAME
+# Panduan Pendaftaran Akun NEWGAME V2
 
-> Dokumen ini menjelaskan cara mendaftar ke portal anggota NEWGAME Universitas Andalas.
+Dokumen ini memandu Anda (anggota baru) untuk mendaftar dan masuk ke portal **NEWGAME V2** Universitas Andalas menggunakan sistem autentikasi modern terpadu.
 
 ---
 
-## Syarat Sebelum Mendaftar
+## 📋 Syarat Sebelum Mendaftar
 
-Kamu **HARUS sudah terdaftar** sebagai anggota oleh pengurus/admin terlebih dahulu.  
-Admin akan memberikan dua hal ini saat kamu diterima sebagai anggota baru:
+Anda **HARUS sudah terdaftar secara resmi** di basis data UKM oleh admin/pengurus. 
+Sebelum membuka halaman registrasi, pastikan Anda telah mendapatkan dua kredensial berikut dari pengurus/admin saat orientasi:
 
-| Yang kamu terima | Contoh | Keterangan |
+| Kredensial | Format Contoh | Keterangan |
 |---|---|---|
-| **Member ID** | `NEWGAME-001` | Identitas unik kamu di sistem — huruf kapital, format tetap |
-| **Kode Akses** | `temp-xyz123` | Password sementara 1 kali pakai, diberikan admin saat orientasi |
-
-Jika kamu belum menerima keduanya, hubungi **Ketua / Admin** terlebih dahulu.
-
----
-
-## Data yang Wajib Disiapkan
-
-Siapkan semua ini **sebelum** membuka halaman daftar:
-
-| # | Data | Wajib | Sumber | Contoh |
-|---|---|---|---|---|
-| 1 | **Member ID** | ✅ | Diberikan admin | `NEWGAME-001` |
-| 2 | **Kode Akses** | ✅ | Diberikan admin | `kode-sementara` |
-| 3 | **Nama Lengkap** | ✅ | Data dirimu | `Budi Santoso` |
-| 4 | **Email** | ✅ | Email aktif milikmu | `budi@gmail.com` |
-| 5 | **Password Baru** | ✅ | Dibuat sendiri | Min. 6 karakter |
+| **Member ID** | `NEWGAME-042` | Identitas unik Anda di dalam sistem (Huruf Kapital, Case-Sensitive). |
+| **Kode Akses** | `temp-sec-772` | Sandi sementara sekali pakai untuk memverifikasi keanggotaan Anda. |
 
 > [!IMPORTANT]
-> **Kode Akses hanya bisa dipakai sekali.** Setelah berhasil daftar, kode itu tidak bisa dipakai lagi.  
-> **Member ID bersifat case-sensitive** — ketik persis sesuai yang diberikan admin (termasuk huruf kapital dan tanda hubung).
+> **Kode Akses hanya dapat digunakan tepat satu kali.** Setelah Anda berhasil menautkan akun, Kode Akses tersebut otomatis hangus demi alasan keamanan.
 
 ---
 
-## Langkah Membuat Akun
+## ⚡ Langkah Melakukan Registrasi Anggota
 
-### Langkah 1 — Buka Halaman Daftar
+### Langkah 1: Kunjungi Halaman Registrasi
+1. Buka browser dan arahkan ke alamat production: **https://unandnewgame-tan.vercel.app** (atau `http://localhost:3000` di lingkungan lokal).
+2. Klik tombol **"Masuk ke Portal"**.
+3. Pada halaman autentikasi, beralihlah ke tab **"Daftar"** (Register).
 
-1. Buka browser → kunjungi: **https://unandnewgame.vercel.app**
-2. Klik tombol **"Masuk ke Portal"** di halaman utama
-3. Di halaman login, klik tab **"Daftar"**
+### Langkah 2: Verifikasi Keanggotaan (Member Validation)
+Sebelum membuat akun digital, sistem akan memeriksa kecocokan data Anda:
+1. Masukkan **Member ID** Anda persis seperti yang diberikan admin.
+2. Masukkan **Kode Akses** sementara.
+3. Klik tombol **"Verifikasi Anggota"**. Jika berhasil, sistem akan menampilkan nama lengkap Anda beserta divisi yang ditetapkan pengurus.
 
----
+### Langkah 3: Membuat Akun & Menautkan Autentikasi
+Setelah data terverifikasi, Anda memiliki dua cara mudah untuk membuat akun login permanen:
 
-### Langkah 2 — Isi Form Pendaftaran
+#### Pilihan A: Lanjutkan dengan Google OAuth (Sangat Direkomendasikan)
+1. Klik tombol **"Lanjutkan dengan Google"** (atau logo Google).
+2. Pilih akun Google Kampus Anda yang aktif.
+3. Sistem akan otomatis membuat akun yang aman, menautkan profil ke Member ID Anda, dan langsung mengarahkan Anda masuk ke Dashboard. Anda tidak perlu lagi menghafal password terpisah!
 
-Isi **5 kolom** berikut secara berurutan:
-
-| Kolom | Isi dengan | Catatan |
-|---|---|---|
-| **Nama Lengkap** | Nama lengkap kamu | Boleh berbeda dari nama di sistem |
-| **Member ID** | Kode ID dari admin | Contoh: `NEWGAME-001` — huruf kapital |
-| **Kode Akses** | Password sementara dari admin | 1 kali pakai |
-| **Email** | Email aktif yang akan dipakai login | Harus bisa menerima email verifikasi |
-| **Password Baru** | Password yang kamu buat sendiri | Minimal **6 karakter** |
-
-Klik **"Daftar"** setelah semua kolom terisi.
-
----
-
-### Langkah 3 — Verifikasi Email
-
-Setelah klik **"Daftar"**:
-
-1. Cek inbox email yang kamu daftarkan
-2. Cek juga folder **Spam / Promotions** jika tidak ada di inbox
-3. Klik link **verifikasi** dari Firebase / NEWGAME
-4. Kembali ke halaman login
-
-> [!WARNING]
-> Kamu **tidak bisa login** sebelum email terverifikasi.
+#### Pilihan B: Pendaftaran Manual (Email + Password Baru)
+1. Masukkan **Email aktif** Anda yang sering digunakan.
+2. Buat **Password Baru** yang aman (minimal 8 karakter, mengandung huruf dan angka).
+3. Klik **"Daftar"**.
+4. Cek kotak masuk (Inbox) atau folder **Spam/Promosi** pada email Anda, lalu klik tautan **Verifikasi Email** yang dikirimkan oleh sistem.
+5. Kembali ke halaman portal, masuk ke tab **"Masuk"**, lalu login menggunakan email dan password baru Anda.
 
 ---
 
-### Langkah 4 — Login
+## 🛡️ Panduan Pengurus: Cara Menambahkan Anggota Baru
 
-1. Buka tab **"Masuk"**
-2. Isi **Email** dan **Password** yang kamu buat tadi
-3. Klik **"Masuk"**
-4. Kamu akan diarahkan ke **Dashboard**
+Agar anggota baru dapat melakukan registrasi di atas, admin wajib menambahkan data mereka terlebih dahulu. 
 
-**Atau** — klik **"Lanjutkan dengan Google"** untuk login lebih cepat (tanpa perlu ingat password).
-
----
-
-## Jika Ada Masalah
-
-| Pesan Error | Penyebab | Solusi |
-|---|---|---|
-| `Member ID tidak ditemukan` | Member ID salah ketik atau belum terdaftar | Cek ejaan, pastikan huruf kapital benar |
-| `Password sementara salah` | Kode Akses tidak sesuai | Hubungi admin untuk minta kode ulang |
-| `Member ID sudah terdaftar` | Akun sudah pernah dibuat | Coba login atau hubungi admin |
-| `Please verify your email` | Email belum diklik verifikasi | Cek inbox / spam, klik link verifikasi |
-| Email verifikasi tidak masuk | Bisa masuk spam atau typo email | Cek spam; jika email salah hubungi admin |
-| Lupa password setelah daftar | — | Hubungi admin untuk reset |
-
----
-
-## Alternatif Login — Google
-
-Tersedia tombol **"Lanjutkan dengan Google"** di bawah form login.  
-Pastikan akun Google yang kamu pilih sudah terdaftar di sistem (hubungi admin jika ragu).
-
----
-
-## Untuk Admin: Cara Menambahkan Member Baru
-
-Sebelum anggota bisa daftar, admin harus membuat dokumen di Firestore:
+### Alur V2 (PostgreSQL via Admin Panel)
+Admin dapat mendaftarkan anggota baru langsung melalui halaman admin di portal, yang otomatis menulis ke database PostgreSQL (dan melakukan dual-write ke Firestore as fallback):
 
 ```
-Collection : members
-Document ID: <Member ID>   → contoh: NEWGAME-001
-
-Fields wajib:
-  memberId:     "NEWGAME-001"        ← harus sama dengan Document ID
-  name:         "Nama Lengkap Member"
-  division:     "Programming"        ← sesuaikan divisi
-  status:       "active"
-  tempPassword: "kode-akses-rahasia" ← berikan langsung ke anggota
-  isRegistered: false                ← JANGAN diubah manual, sistem akan update otomatis
-
-Fields opsional:
-  team:         "Alpha"
-```
-
-Setelah anggota berhasil daftar, sistem akan otomatis set:
-```
-  isRegistered:    true
-  registeredUserId: "<firebase-uid>"
-  registeredAt:    <Timestamp>
+Table: users & user_profiles
+- id          : CUID otomatis
+- email       : Email anggota (akan diisi otomatis setelah mereka login/daftar)
+- displayName : "Nama Lengkap Anggota"
+- memberId    : "NEWGAME-XXX"
+- role        : "MEMBER" (Trainee/Associate/Trainer/Soldat/Admin)
+- status      : "ACTIVE"
+- tempPassword: "kode-akses-rahasia"
 ```
 
 > [!WARNING]
-> Jangan pernah commit `tempPassword` ke GitHub atau bagikan secara publik.  
-> Berikan kode akses langsung ke anggota baru secara personal (chat pribadi / tatap muka).
+> JANGAN PERNAH menyebarkan kode akses sementara ini secara publik di grup WhatsApp atau chat room terbuka. Kirimkan secara pribadi (direct message) atau berikan langsung secara tatap muka saat sesi orientasi anggota baru.
 
 ---
 
-## Catatan Penting
+## 🔍 Solusi Pemecahan Masalah (Troubleshooting)
 
-- Login menggunakan **Email + Password** (bukan Member ID)
-- Member ID hanya dipakai **sekali** saat registrasi untuk verifikasi identitas
-- Setelah berhasil daftar, simpan email dan password dengan baik
-- Gunakan **Google Login** untuk login lebih cepat tanpa perlu ingat password
-- Jika akun **suspended**, hubungi admin — login akan otomatis ditolak
-
----
-
-*Dokumen ini dikelola oleh Tim Admin NEWGAME Universitas Andalas*
+| Masalah / Pesan Error | Kemungkinan Penyebab | Langkah Solusi |
+|---|---|---|
+| `Member ID tidak ditemukan` | 1. Ada typo penulisan.<br>2. Admin belum menginput data Anda. | Pastikan huruf kapital benar (misal: `NEWGAME-001` bukan `newgame-001`). Hubungi admin jika masih gagal. |
+| `Kode akses salah` | Kode akses sementara tidak cocok. | Mintalah kode akses baru secara personal kepada admin divisi Anda. |
+| `Member ID sudah terdaftar` | Akun Anda sudah terdaftar sebelumnya. | Beralihlah ke tab **"Masuk"** dan coba login dengan Google atau gunakan fitur Lupa Password. |
+| Email verifikasi tidak diterima | Email masuk folder spam atau ada kesalahan penulisan alamat email. | Cek folder **Spam/Junk**. Jika terdapat kesalahan penulisan email saat registrasi, minta admin untuk me-reset data pendaftaran Anda. |
+| Login Google ditolak | Akun Google Anda tidak diotorisasi atau belum terdaftar di redirect URI. | Pastikan Anda masuk menggunakan email yang sesuai dengan data keanggotaan. Jika dalam localhost, pastikan file `.env` API terisi dengan Google OAuth Client ID yang valid. |

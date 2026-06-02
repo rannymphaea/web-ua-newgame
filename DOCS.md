@@ -1,309 +1,205 @@
-# NEWGAME — Auth & User Management Documentation
+# NEWGAME V2 — Auth & Database Architecture Documentation
 
-> Stack: Next.js 14 · NestJS · Firebase Auth · Firestore  
-> Base URL API: `https://<your-domain>/api`
-
----
-
-## Role & Permission Matrix
-
-| Role | Register Admin | Set Role | Lihat Users | Absensi | Dashboard |
-|------|:---:|:---:|:---:|:---:|:---:|
-| `superadmin` | ✅ | ✅ (semua) | ✅ | ✅ | ✅ |
-| `admin` | ❌ | ✅ (→member only) | ✅ | ✅ | ✅ |
-| `member` | ❌ | ❌ | ❌ | ✅ | ✅ (terbatas) |
-
-> Role disimpan di **Firebase Auth Custom Claims** (`{ role: "admin" }`) dan di dokumen **Firestore `users/{uid}.role`**.  
-> Guard `RolesGuard` membaca dari token JWT yang sudah di-decode.
+Dokumen ini mendokumentasikan sistem autentikasi, manajemen pengguna, dan arsitektur database relasional modern terpadu pada platform **NEWGAME V2**.
 
 ---
 
-## Alur 1: Register Member/User
+## 🛡️ Matriks Peran & Izin Akses (Role & Permissions)
 
-```
-[Client]
-  1. GET /api/auth/verify-member  ← cek memberId + tempPassword
-  2. createUserWithEmailAndPassword (Firebase Auth SDK — client side)
-  3. POST /api/auth/register       ← kirim token + data profil
-  4. Redirect → /dashboard
+Platform ini mengadopsi 6 tingkatan role pengguna berbasis struktur organisasi UKM Game Development Universitas Andalas:
 
-[Server]
-  verify-member → cek Firestore collection `members`
-  register      → buat doc `users/{uid}` + update `members.isRegistered = true`
-```
-
-### Payload `POST /api/auth/verify-member`
-```json
-{
-  "memberId": "NGL-2024-001",
-  "tempPassword": "abc123"
-}
-```
-**Response 200:**
-```json
-{
-  "valid": true,
-  "memberId": "NGL-2024-001",
-  "name": "Budi Santoso",
-  "division": "gamedev",
-  "team": "A",
-  "status": "active"
-}
-```
-
-### Payload `POST /api/auth/register`
-> Header: `Authorization: Bearer <firebase-id-token>`
-```json
-{
-  "memberId": "NGL-2024-001",
-  "displayName": "Budi Santoso",
-  "division": "gamedev",
-  "team": "A"
-}
-```
-**Response 200:**
-```json
-{ "success": true }
-```
+| Peran (Role) | Kemampuan Utama | Tingkat Akses |
+|---|---|---|
+| `OWNER` | Pemilik sistem, kendali penuh infrastruktur dan billing. | Level 5 (Maksimal) |
+| `ADMIN` | Pengaturan role user, melihat log forensik, & AI analytics dashboard. | Level 4 |
+| `TRAINER` | Manajemen modul belajar, pembuatan event, input absensi manual. | Level 3 |
+| `SOLDAT` | Pengurus inti, membuat artikel berita, mengelola media galeri. | Level 2 |
+| `ASSOCIATE` | Anggota tingkat lanjut, dapat mengakses modul proyek khusus. | Level 1 |
+| `TRAINEE` | Anggota baru/magang. Akses absensi, leaderboard, & riwayat XP. | Level 0 |
 
 ---
 
-## Alur 2: Register Admin
+## 🔀 Standarisasi API & Interceptor
 
-> ⚠️ Hanya bisa dilakukan oleh **superadmin** yang sudah login.  
-> UI tersedia di `/admin/register-admin`.
+Untuk memastikan keandalan komunikasi data frontend dan backend, semua HTTP Response diproses secara terpusat melalui `ResponseInterceptor` NestJS:
 
-```
-[Superadmin Client]
-  1. Login dengan akun superadmin → dapat ID token
-  2. Buka /admin/register-admin
-  3. Isi form → POST /api/auth/register-admin
-
-[Server]
-  - Validasi input (email, password ≥8, displayName ≥2)
-  - createUser via Firebase Admin SDK (password di-hash oleh Firebase)
-  - setCustomUserClaims(uid, { role: 'admin' })
-  - Tulis Firestore doc users/{uid} dengan role: 'admin'
-  - Tulis log ke collection `logs`
-```
-
-### Endpoint
-```
-POST /api/auth/register-admin
-Authorization: Bearer <superadmin-id-token>
-Content-Type: application/json
-```
-
-### Payload
-```json
-{
-  "email": "admin@newgame.ac.id",
-  "password": "SecurePass123!",
-  "displayName": "Reza Admin",
-  "division": "general"
-}
-```
-
-### Response 201
+### Struktur Response Sukses (`ApiResponse<T>`)
+Semua endpoint REST API yang sukses akan mengembalikan struktur JSON terpadu berikut:
 ```json
 {
   "success": true,
-  "uid": "abc123xyz",
-  "email": "admin@newgame.ac.id",
-  "displayName": "Reza Admin",
-  "role": "admin"
+  "data": {
+    "id": "cuid-user-123",
+    "email": "trainee@newgame.ac.id",
+    "displayName": "Budi Santoso"
+  },
+  "timestamp": "2026-06-02T09:30:00.000Z"
 }
 ```
 
-### Error Responses
-| Status | Kondisi |
-|--------|---------|
-| `400` | Email/password/displayName tidak valid |
-| `400` | Email sudah terdaftar (`auth/email-already-exists`) |
-| `401` | Token tidak valid / expired |
-| `403` | Role caller bukan `superadmin` |
-
----
-
-## Alur 3: Login
-
-```
-[Client]
-  1. signInWithEmailAndPassword (Firebase Auth SDK)
-  2. getIdToken() → kirim ke semua request API sebagai Bearer token
-  3. GET /api/auth/me → ambil profil + role dari Firestore
-
-[Server]
-  FirebaseAuthGuard → verifyIdToken → inject user ke request
-  RolesGuard        → cek user.role dari custom claims
-```
-
-### `GET /api/auth/me`
-> Header: `Authorization: Bearer <id-token>`
-
-**Response 200:**
+### Struktur Response Error (`AllExceptionsFilter`)
+Jika terjadi error (misalnya validasi gagal atau unauthorized), global filter akan menyusun error response:
 ```json
 {
-  "id": "uid123",
-  "email": "budi@example.com",
-  "displayName": "Budi Santoso",
-  "role": "member",
-  "division": "gamedev",
-  "memberId": "NGL-2024-001",
-  "xpCache": 420,
-  "attendanceCount": 12,
-  "streak": 3,
-  "status": "active"
+  "success": false,
+  "error": {
+    "statusCode": 400,
+    "message": "Member ID tidak valid atau sudah terdaftar.",
+    "path": "/api/auth/register",
+    "timestamp": "2026-06-02T09:30:05.000Z"
+  }
 }
 ```
 
 ---
 
-## Alur 4: Set Role (Admin Management)
+## 💾 Skema Database Relasional (Prisma PostgreSQL)
 
-```
-POST /api/auth/set-role
-Authorization: Bearer <superadmin-token>
-```
-```json
-{
-  "userId": "target-uid-123",
-  "role": "admin"
-}
-```
-- `superadmin` → bisa set ke `member | admin | superadmin`
-- `admin` → hanya bisa set ke `member`
+Berikut adalah cetak biru model data relasional pada PostgreSQL (`apps/api/prisma/schema.prisma`):
 
----
-
-## Validasi Server (auth.service.ts)
-
-| Field | Rule |
-|-------|------|
-| `email` | Wajib, mengandung `@`, lowercase auto |
-| `password` | Minimal 8 karakter |
-| `displayName` | Minimal 2 karakter setelah `.trim()` |
-| `division` | Opsional, default `"general"` |
-| `memberId` | Harus ada di Firestore `members`, belum `isRegistered` |
-| `tempPassword` | Harus cocok dengan `members.tempPassword` |
-
----
-
-## Struktur Firestore
-
-### `users/{uid}`
-```ts
-{
-  email:          string;
-  displayName:    string;
-  memberId:       string | null;   // null untuk admin
-  division:       string;
-  team:           string;
-  role:           'member' | 'admin' | 'superadmin';
-  status:         'active' | 'inactive';
-  xpCache:        number;
-  attendanceCount:number;
-  streak:         number;
-  createdAt:      Timestamp;
-}
-```
-
-### `members/{memberId}`
-```ts
-{
-  memberId:         string;
-  name:             string;
-  division:         string;
-  team:             string;
-  status:           'active' | 'inactive';
-  tempPassword:     string;       // dibuat admin, diberikan saat orientasi
-  isRegistered:     boolean;
-  registeredUserId: string | null;
-  registeredAt:     Timestamp | null;
-}
-```
-
-### `logs/{auto-id}`
-```ts
-{
-  userId:    string;
-  action:    'register' | 'register-admin' | 'set-role' | ...;
-  result:    'success' | 'failed';
-  timestamp: Timestamp;
-  // + field tambahan sesuai action
-}
-```
-
----
-
-## Setup Awal: Buat Superadmin Pertama
-
-> Superadmin pertama HARUS dibuat manual via Firebase Console atau script.
-
-```ts
-// scripts/create-superadmin.ts
-import * as admin from 'firebase-admin';
-admin.initializeApp();
-
-async function createSuperadmin() {
-  const user = await admin.auth().createUser({
-    email: 'superadmin@newgame.ac.id',
-    password: 'GantiIni!Sekarang123',
-    displayName: 'Super Admin',
-  });
-
-  // Set custom claim
-  await admin.auth().setCustomUserClaims(user.uid, { role: 'superadmin' });
-
-  // Tulis Firestore
-  await admin.firestore().collection('users').doc(user.uid).set({
-    email: 'superadmin@newgame.ac.id',
-    displayName: 'Super Admin',
-    role: 'superadmin',
-    division: 'general',
-    status: 'active',
-    memberId: null,
-    xpCache: 0,
-    attendanceCount: 0,
-    streak: 0,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-
-  console.log('Superadmin created:', user.uid);
+```prisma
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-createSuperadmin();
-```
+generator client {
+  provider = "prisma-client-client"
+}
 
-Jalankan:
-```bash
-cd apps/api
-npx ts-node scripts/create-superadmin.ts
+// 1. Akun Pengguna Utama
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  displayName String?
+  role        Role     @default(TRAINEE)
+  nim         String?
+  photoUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relasi
+  profile     UserProfile?
+  sessions    Session[]
+  activities  Activity[]
+  
+  @@map("users")
+}
+
+enum Role {
+  TRAINEE
+  ASSOCIATE
+  TRAINER
+  SOLDAT
+  ADMIN
+  OWNER
+}
+
+// 2. Profil Detil Anggota (Gamifikasi)
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  bio         String?
+  github      String?
+  linkedin    String?
+  skills      String[] // Tag keahlian
+  exp         Int      @default(0)
+  level       Int      @default(1)
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_profiles")
+}
+
+// 3. Sesi Login (Better Auth)
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("sessions")
+}
+
+// 4. Modul Berita & Tutorial
+model NewsArticle {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  excerpt     String?
+  coverUrl    String?
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("news_articles")
+}
+
+// 5. Log Aktivitas & Kehadiran Anggota
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'weekly_study' | 'event' | 'project' | 'competition'
+  title       String
+  description String?
+  expGained   Int      @default(0)
+  date        DateTime
+  
+  user        User     @relation(fields: [userId], references: [id])
+  @@map("activities")
+}
 ```
 
 ---
 
-## Frontend Routes
+## ⚡ Strategi Caching & Rate Limiting (Upstash Redis)
 
-| Path | Role Required | Keterangan |
-|------|:---:|------------|
-| `/landing` | — | Public landing page |
-| `/login` | — | Firebase Auth login |
-| `/register` | — | Registrasi member (butuh memberId) |
-| `/dashboard` | `member+` | Dashboard utama |
-| `/admin/register-admin` | `superadmin` | Buat akun admin baru |
-| `/admin/news` | `admin+` | Kelola berita/tutorial |
-| `/admin/members` | `admin+` | Kelola data member |
+Untuk meminimalkan beban query langsung ke PostgreSQL, NEWGAME V2 menerapkan caching pintar:
+
+```
+                  [ API Request ]
+                         │
+               RateLimitGuard? (100 req/min)
+                         │
+                 💡 Ada di Redis?
+                  /             \
+             (Ya)               (Tidak)
+             /                     \
+   [ Balas Instan ]         [ Query PostgreSQL ]
+                                     │
+                             Tulis ke Redis Cache
+                                     │
+                               [ Balas User ]
+```
+
+### Konfigurasi Kunci Cache & TTL (Time To Live)
+- `leaderboard:all` — Menyimpan data leaderboard global. TTL: **60 detik**.
+- `news:published` — Menyimpan daftar artikel berita publik. TTL: **300 detik**.
+- `user:{id}:profile` — Profil detil individu. TTL: **60 detik** (otomatis dihapus / di-invalidate jika user melakukan update data).
+- `ip:{address}:count` — Counter in-memory rate limiter untuk memitigasi serangan brute force.
 
 ---
 
-## Quick Reference API
+## 🛡️ Alur Autentikasi (Better Auth Integration)
+
+Modul `Better Auth` di NestJS bertindak sebagai server otentikasi mandiri.
 
 ```
-POST /api/auth/verify-member      → Cek memberId + tempPassword
-POST /api/auth/register           → Buat profil member (butuh Firebase token)
-GET  /api/auth/me                 → Profil user login
-POST /api/auth/set-role           → Ubah role user (admin/superadmin)
-GET  /api/auth/users              → List semua user (superadmin)
-POST /api/auth/register-admin     → Buat akun admin baru (superadmin)
+[ Frontend Next.js ]                     [ Backend NestJS ]
+         │                                      │
+   Kirim Kredensial  ─── POST /api/auth/me ───>  │
+         │                                      │  Verifikasi & Validasi
+         │  <─────── Cookie / Session Token ───  │  Sesi di PostgreSQL
+         │                                      │
+  Akses Dashboard (Zustand)
 ```
+
+1. **Email & Password**: Enkripsi password menggunakan `bcrypt` bawaan adapter Prisma Better Auth sebelum ditulis ke PostgreSQL.
+2. **Google OAuth**: Integrasi REST API yang secara aman melakukan redirect callback URL ke:
+   `http://localhost:3000/api/auth/callback/google` (Development)
+   `https://unandnewgame-tan.vercel.app/api/auth/callback/google` (Production)
+3. **Guard Sesi**: `FirebaseAuthGuard` (Legacy) dan `BetterAuthGuard` bertugas mengamankan route API sensitif dengan memeriksa token session.

@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 // Simple in-memory rate limiter (no extra dependency needed)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -48,6 +49,9 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Global response interceptor
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   const port = process.env.PORT || 3001;
   await app.listen(port);

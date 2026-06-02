@@ -1,64 +1,57 @@
-# UI Components: ProfileCard & ToggleDarkMode
+# Komponen UI Modular: ProfileCard & ToggleDarkMode
 
-This folder contains two small, modular React components implemented with Tailwind CSS:
+Direktori ini menampung komponen-komponen UI dasar yang modular, re-usable, dan kompatibel dengan Tailwind CSS dan sistem Token globals.css.
 
-- `ProfileCard` — a compact user profile card (avatar left, text right) designed to be modern, clean, and responsive.
-- `ToggleDarkMode` — a small toggle that switches the site theme by adding/removing the `dark` class on `document.documentElement` and persists the preference in `localStorage`.
+---
 
-## Files changed / added
+## 🎨 Detail Komponen Utama
 
-- `ProfileCard.tsx` — main UI component. Key behaviors:
-  - Props: `name: string`, `role?: string`, `avatarUrl?: string`, `leading?: ReactNode`, `className?: string`.
-  - Layout: `flex` with `gap-1.5` (≈6px) spacing, avatar size `w-10 h-10`.
-  - Accessibility: avatar `alt`, container uses semantic HTML.
-  - Overflow: text containers use `min-w-0` + `truncate` so long usernames/roles do not break layout.
-  - Dark mode: text colors adapt using `dark:` variants; background uses `bg-background` / `dark:bg-midnight/90`.
+### 1. `ProfileCard.tsx`
+Komponen kartu informasi anggota terpadu (Avatar di sebelah kiri, Detail informasi di sebelah kanan) yang dirancang responsif dan fleksibel.
 
-- `ToggleDarkMode.tsx` — toggle button. Key behaviors:
-  - Reads saved preference from `localStorage` in `useEffect` (SSR-safe).
-  - Falls back to `prefers-color-scheme` if no saved preference.
-  - Adds/removes `dark` class on `document.documentElement` and stores `theme` = `dark|light`.
+- **Props**:
+  - `name: string` — Nama lengkap atau nama panggilan anggota.
+  - `role?: string` — Peran/jabatan anggota (misal: "Superadmin", "Trainee").
+  - `avatarUrl?: string` — URL foto profil Cloudinary/Firebase (jika kosong, otomatis memakai inisial atau fallback avatar Yua).
+  - `leading?: ReactNode` — Node opsional di sisi kiri paling luar (misalnya ikon tombol notifikasi bel).
+  - `className?: string` — Kustomisasi style tambahan via kelas CSS Tailwind.
+- **Fitur Pendukung**:
+  - **Integritas Tata Letak**: Menggunakan kelas CSS `min-w-0` dan `truncate` sehingga nama pengguna yang sangat panjang tidak memicu layout-overflow.
+  - **Adaptasi Tema**: Secara reaktif merespons peralihan mode gelap/terang.
 
-## Notes & reasoning
+### 2. `ToggleDarkMode.tsx`
+Tombol visual interaktif untuk mengalihkan tema situs (Gelap/Terang) secara langsung di peramban (browser).
 
-- The Tailwind config was updated to `darkMode: 'class'` so toggling works by class. See `apps/web/tailwind.config.js`.
-- To avoid SSR errors (Next.js), `ToggleDarkMode` no longer reads `localStorage` or `window.matchMedia` during render — both are accessed inside `useEffect`.
-- `ProfileCard` now supports an optional `leading` node so callers can render contextual icons (e.g., bell) outside the avatar area, matching the screenshot layout where an icon appears to the far left.
+- **Fitur Pendukung**:
+  - **SSR Safe (Next.js)**: Untuk menghindari inkonsistensi rendering antara server dan client (Hydration Error), preferensi tema dibaca dari `localStorage` atau preferensi media-query sistem operasi di dalam `useEffect`.
+  - **Zero FOUC**: Bekerja selaras dengan script `THEME_SCRIPT` pada root layout untuk menerapkan kelas `.dark` pada `<html>` sebelum elemen visual pertama digambar.
 
-## How to use
+---
 
-Import components from `apps/web/src/components/ui`:
-
-```tsx
-import ProfileCard from './components/ui/ProfileCard';
-import ToggleDarkMode from './components/ui/ToggleDarkMode';
-
-<div className="p-4 max-w-sm">
-  <div className="flex items-center justify-between mb-3">
-    <div />
-    <ToggleDarkMode />
-  </div>
-
-  <ProfileCard name="ahmadadzanigibran22" role="Superadmin" />
-</div>
-```
-
-To add a leading icon (bell) similar to the screenshot:
+## 🏃 Contoh Penggunaan Komponen
 
 ```tsx
-import { BellIcon } from 'some-icon-library';
+import ProfileCard from '@/components/ui/ProfileCard';
+import ToggleDarkMode from '@/components/ui/ToggleDarkMode';
+import { RiNotification3Line } from 'remixicon-react';
 
-<ProfileCard
-  leading={<BellIcon className="h-5 w-5 text-neutral-300" />}
-  name="ahmadadzanigibran22"
-  role="Superadmin"
-/>
+export default function TopBar() {
+  return (
+    <div className="flex items-center justify-between p-4 bg-background dark:bg-midnight">
+      {/* Tombol Notifikasi & Profil User */}
+      <ProfileCard 
+        leading={
+          <button aria-label="Notifikasi" className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-full">
+            <RiNotification3Line className="h-5 w-5 text-neutral-500" />
+          </button>
+        }
+        name="ahmadadzanigibran22" 
+        role="Superadmin" 
+      />
+      
+      {/* Pengalih Tema */}
+      <ToggleDarkMode />
+    </div>
+  );
+}
 ```
-
-## Testing & manual verification
-
-- No runtime changes required here; the components are self-contained. You can drop `ProfileCardDemo.tsx` into any page to preview.
-
-## Changelog (new)
-
-- 2026-05-25: Added `ProfileCard` and `ToggleDarkMode`, enabled `darkMode: 'class'` in Tailwind, added truncation and SSR-safe theme handling, and created this README.

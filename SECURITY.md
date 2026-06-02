@@ -1,84 +1,65 @@
-# Keamanan NEWGAME
+# Keamanan NEWGAME V2
 
-Dokumen ini menjelaskan bagaimana sistem NEWGAME dirancang dari sisi keamanan, mulai dari lapisan firewall sampai ke aturan database. Ini juga menjadi panduan kalau ada insiden atau perlu audit.
+Dokumen ini menjelaskan rancangan sistem keamanan platform **NEWGAME V2**, mulai dari lapisan pertahanan jaringan, kontrol akses, mitigasi serangan brute force, hingga keamanan integritas data database relasional.
 
 ---
 
-## Gambaran arsitektur
+## 🛡️ Gambaran Arsitektur Keamanan Berlapis (Defense in Depth)
 
-Sistem ini pakai pendekatan *defense in depth* — ada beberapa lapis pertahanan, bukan cuma satu. Kalau satu lapis ditembus, lapis berikutnya masih menghalangi.
+Sistem NEWGAME V2 menerapkan pertahanan berlapis untuk menjamin jika satu lapisan terkompromi, lapisan berikutnya tetap mampu meredam dan memitigasi serangan secara efektif.
 
 ```
-Internet
-   ↓
-WAF (ModSecurity + OWASP CRS v4)
-   ↓
-NGINX (TLS 1.3, rate limiting, security headers)
-   ↓
-NestJS API (FirebaseAuthGuard, RolesGuard, ForensicMiddleware)
-   ↓
-Firestore (Security Rules per koleksi)
+                  Internet
+                     │
+         🔥 Lapisan 1: WAF & NGINX
+   (OWASP CRS v4, TLS 1.3, CSP, HSTS)
+                     │
+    🚨 Lapisan 2: Rate Limiting & Protection
+  (Upstash Redis Guard, In-Memory Rate Limiter)
+                     │
+    🔑 Lapisan 3: Autentikasi & Otorisasi
+     (Better Auth, NestJS RolesGuard)
+                     │
+     💾 Lapisan 4: Keamanan Basis Data
+ (Prisma Parameterized Queries, DB Encryption)
 ```
 
-Di antara NestJS dan Firestore ada juga sistem deteksi anomali berbasis AI dan pencatatan forensik yang tamper-evident (log tidak bisa dimanipulasi tanpa ketahuan).
+---
+
+## 🚦 Caching & Rate Limiting Guard (Upstash Redis)
+
+Pencegahan serangan brute force login dan penyalahgunaan endpoint API (DDoS skala kecil) ditangani di tingkat aplikasi menggunakan `RateLimitGuard` yang terintegrasi dengan Upstash Redis:
+
+- **Auth Endpoints** (`/api/auth/*`): Dibatasi maksimal **10 request per 1 menit** per IP Address.
+- **General API Endpoints** (`/api/*`): Dibatasi maksimal **100 request per 1 menit** per User Token / IP Address.
+- **Upstash Redis Storage**: Menyimpan counter request secara terdistribusi yang aman dari serangan cluster-scale. Jika kuota terlampaui, Guard otomatis mengembalikan HTTP Status `429 Too Many Requests`.
 
 ---
 
-## WAF dan NGINX
+## 🔐 Autentikasi Mandiri Aman (Better Auth & OAuth Security)
 
-Firewall aplikasi web menggunakan ModSecurity v3 dengan ruleset OWASP CRS v4 di Paranoia Level 2. Setiap request dari internet melewati sini sebelum sampai ke backend.
+Dengan migrasi ke **Better Auth**, keamanan manajemen pengguna meningkat secara signifikan:
 
-Beberapa hal yang diawasi WAF:
-- JA3 fingerprint dari koneksi TLS (untuk identifikasi klien mencurigakan)
-- Skor reputasi per IP — kalau skor ancaman di atas 10, IP otomatis diblokir
-- Lebih dari 15 path honeypot tersembunyi — siapa pun yang mengaksesnya langsung dapat +5 skor ancaman
-- Geo-IP dan ASN dari database MaxMind GeoLite2
-
-NGINX dikonfigurasi hanya menerima TLS 1.3, HSTS aktif selama 2 tahun, dan CSP yang cukup ketat. Request ID dalam format UUIDv4 disisipkan ke setiap request untuk memudahkan tracing di log.
+1. **Session Rotation**: Setiap kali pengguna masuk atau melakukan perubahan penting, token sesi (Session ID) dirotasi untuk mencegah eksploitasi Session Fixation.
+2. **CSRF & XSS Protection**: Better Auth menyertakan perlindungan CSRF bawaan melalui validasi double-submit cookie. Data masukan (input data) disanitasi menggunakan `DOMPurify` pada client-side dan disaring via NestJS `ValidationPipe` (menggunakan `class-validator`) di server-side.
+3. **Penyimpanan Password**: Kata sandi di-hash menggunakan algoritma **bcrypt** berkekuatan tinggi (work factor/rounds = 10) langsung di dalam database PostgreSQL, menghindari penyimpanan plaintext atau enkripsi dua arah yang lemah.
+4. **Google OAuth Security**: Validasi ketat terhadap state parameter saat login untuk memitigasi serangan OAuth Replay.
 
 ---
 
-## Sistem skor ancaman
+## 💾 Proteksi Data Relasional (Prisma PostgreSQL Security)
 
-Backend menghitung skor ancaman untuk setiap request berdasarkan beberapa faktor:
+Migrasi ke database PostgreSQL melalui Prisma ORM memberikan keuntungan keamanan data:
 
-| Kondisi | Tambah skor |
-|---|---|
-| IP dari daftar blokir | +20 |
-| User-Agent dikenali sebagai scanner | +15 |
-| Akses ke path honeypot | +15 |
-| Lebih dari 120 request/menit | +20 |
-| Lebih dari 60 request/menit | +10 |
-| URL dengan entropi tinggi (indikasi fuzzing) | +10 |
-| Banyak route berbeda dari satu IP | +10 |
-| Tidak ada User-Agent | +5 |
-| Tidak ada JA3 fingerprint | +3 |
-
-Kalau skor di atas 80, request diblokir otomatis. Skor 50-79 mendapat challenge. Di bawah 50 diizinkan masuk.
+- **Pencegahan SQL Injection**: Prisma secara otomatis memparameterisasi (parameterize) semua query SQL. Input dari pengguna tidak pernah digabungkan secara langsung sebagai string mentah (raw query string), sehingga memitigasi celah SQL Injection secara absolut.
+- **Graceful Fallback & DB Check**: File `prisma.service.ts` memuat penanganan toleransi kegagalan (fault tolerance) yang mendeteksi jika server PostgreSQL offline dan memberikan respons fallback yang aman, tanpa membocorkan stack trace database ke pengguna umum.
+- **Graceful DB Disconnect**: NestJS mendaftarkan hook siklus hidup (`beforeApplicationShutdown`) untuk memutus koneksi database PostgreSQL secara aman ketika server dimatikan, mencegah kebocoran resource port (port resource leak).
 
 ---
 
-## Deteksi anomali AI
+## 🖼️ Aturan Keamanan Dokumen (Legacy Firestore Security Rules)
 
-Di belakang layar ada Isolation Forest yang berjalan setiap 15 menit, dilatih dengan 2000 sampel terakhir. Model ini mendeteksi pola lalu lintas yang tidak wajar secara statistik — bukan berdasarkan rule statis, jadi lebih susah dihindari.
-
-Skor anomali di atas 0.7 menyebabkan blokir otomatis. Di atas 0.5 masuk kategori HIGH. Di atas 0.3 dicatat dan dipantau.
-
-Satu prinsip yang dipegang: sistem tidak pernah melakukan serangan balik. Semua keputusan hanya berupa blokir pasif, pencatatan, dan alert — bisa diaudit sepenuhnya.
-
----
-
-## Log forensik
-
-Setiap request dicatat dalam format JSON dengan field seperti IP, JA3, URL, method, payload hash, skor ancaman, country, ASN, dan response time. Log ini membentuk rantai hash (hash chain) — setiap entri menyimpan hash dari entri sebelumnya, sehingga kalau ada yang mengedit log lama, rantainya langsung rusak dan bisa terdeteksi.
-
-Setiap 100 entri juga dibuatkan Merkle Tree untuk membuktikan keberadaan entri tertentu tanpa harus membuka seluruh log.
-
----
-
-## Aturan keamanan Firestore
-
-Terapkan rules ini melalui Firebase Console (Firestore > Rules):
+Jika Anda masih menggunakan basis data dokumen Firestore sebagai dual-write fallback, pastikan ruleset berikut tetap terpasang pada Firebase Console:
 
 ```javascript
 rules_version = '2';
@@ -91,7 +72,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'OWNER'];
     }
 
     function isOwner(userId) {
@@ -116,74 +97,6 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    match /tokens/{tokenId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /members/{memberId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /news/{newsId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /media/{mediaId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /logs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
-    }
-
-    match /anomalies/{anomalyId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated();
-      allow update: if isAdmin();
-      allow delete: if false;
-    }
-
-    match /leave/{leaveId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-
-    match /xp_history/{xpId} {
-      allow read: if isAuthenticated();
-      allow create: if isAdmin();
-      allow update, delete: if false;
-    }
-
-    match /user_badges/{badgeId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /user_pillar_levels/{levelId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /announcements/{announcementId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /profile_history/{historyId} {
-      allow read: if isAuthenticated() &&
-        (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
-    }
-
-    // Tolak semua akses yang tidak tercantum di atas
     match /{document=**} {
       allow read, write: if false;
     }
@@ -193,31 +106,8 @@ service cloud.firestore {
 
 ---
 
-## Checklist sebelum deployment
+## 📞 Melaporkan Kerentanan Keamanan (Vulnerability Reporting)
 
-Kalau mau deploy ke server sendiri (bukan Vercel), pastikan hal-hal ini sudah dilakukan:
+Keamanan platform NEWGAME adalah prioritas utama kami. Jika Anda menemukan celah keamanan atau bug sensitif, mohon **JANGAN membuat public issue di GitHub**.
 
-- UFW hanya buka port 22, 80, dan 443
-- TLS 1.3 aktif dengan cipher yang kuat
-- ModSecurity WAF aktif dengan OWASP CRS v4
-- `serviceAccountKey.json` di-chmod 600 dan tidak ada di Git
-- Header keamanan NGINX sudah terpasang (CSP, HSTS, X-Frame-Options)
-- Endpoint sensitif di backend sudah pakai `RequestReplayGuard`
-
-Pemantauan rutin: setiap hari cek log anomali HIGH/CRITICAL. Setiap minggu perbarui daftar blokir IP dari feed threat intelligence. Setiap bulan rotasi API key dan perbarui database GeoLite2.
-
----
-
-## Kalau ada insiden
-
-**Menit 0-5:** Cek notifikasi Telegram/Discord. Identifikasi IP, jenis serangan, dan tingkat keparahan.
-
-**Menit 5-15:** Masukkan IP ke `/etc/modsecurity/bad-ips.txt` atau blokir langsung pakai UFW. Kalau ada indikasi token bocor, revoke token Firebase terkait.
-
-**Menit 15-30:** Ekspor log rantai bukti, simpan Merkle Tree, dan screenshot semua alert. Dokumentasi ini penting kalau perlu dilaporkan ke pihak berwenang.
-
-**Setelah insiden:** Kirim laporan abuse ke ISP penyerang. Kalau berdampak luas, laporan bisa dikirim ke ID-CERT di id-cert@cert.or.id. Identifikasi penyebabnya dan perbaiki sistemnya.
-
----
-
-Untuk melaporkan kerentanan keamanan, kirim email ke **unandnewgame@gmail.com**. Jangan buat GitHub Issue publik untuk masalah keamanan.
+Kirimkan laporan rinci beserta langkah eksploitasinya (Proof of Concept) melalui email ke: **unandnewgame@gmail.com**. Kami berkomitmen untuk merespons dan memperbaikinya dalam waktu kurang dari 24 jam.

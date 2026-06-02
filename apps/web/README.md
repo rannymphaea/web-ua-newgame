@@ -1,192 +1,96 @@
-# NEWGAME — Frontend Codebase
+# NEWGAME V2 — Frontend Application
 
-> **Next.js 14 · TypeScript · Vanilla CSS · Firebase**
-
----
-
-## Overview
-
-NEWGAME is a community platform for game developers at Universitas Andalas. This monorepo contains the frontend application at `apps/web/`.
+Platform frontend Next.js 14 UKM Game Development Universitas Andalas. Dokumentasi ini merinci modul-modul frontend, spec performa, observabilitas, serta petunjuk pengerjaan di direktori `apps/web/`.
 
 ---
 
-## Setup
+## 🚀 Fitur Baru & Pembaruan V2
 
-```bash
-# Install dependencies (from repo root)
-npm install
+Dalam rilis V2, frontend telah ditingkatkan dengan standar kualitas tinggi:
 
-# Start dev server
-cd apps/web
-npm run dev
-
-# Build production bundle
-npm run build
-```
-
-Default dev port: `http://localhost:3000`
+1. **Space Grotesk Typography**: Mengimigrasi font brand "NEWGAME" ke Space Grotesk untuk nuansa tech yang modern, konsisten di semua platform, dan diintegrasikan langsung menggunakan `next/font/google` untuk optimasi CLS (Cumulative Layout Shift) nol.
+2. **Interactive PirateMap**: Rekayasa ulang total visualisasi PirateMap menggunakan pure interactive SVG tree diagram, animasi stroke konektor staggered, dan reactive preview panel saat node di-hover.
+3. **Web Mobile Simulator**: Halaman simulator mobile instan khusus internal pengembang pada route `/dev-tools` untuk mempreview visual Next.js langsung di iframe dengan 8 preset preset ponsel cerdas terpopuler.
+4. **PostHog Observability**: Terintegrasi penuh dengan `PostHogProvider` untuk menangani perekaman pageview manual secara async dan pelacakan event CTA tanpa memperlambat First Contentful Paint (FCP).
+5. **ErrorBoundary Resilience**: Komponen pembungkus React Error Boundary di tingkat layout utama untuk menangkap error crash runtime client-side secara aman, mengirim log incident ke PostHog, dan menyediakan tombol instant-retry tanpa crash halaman total.
 
 ---
 
-## Dark Mode Spec
+## 🎨 Token Desain (Theme Engine & CSS Specs)
 
-**Engine**: `src/lib/theme-engine.ts`
-- `useTheme()` — React hook. Returns `{ isDark, toggleTheme, theme }`.
-- `THEME_SCRIPT` — Anti-FOUC inline script injected into `<head>` before first paint.
-- Reads `localStorage.theme` → falls back to `prefers-color-scheme`.
-- Applies `.dark` class to `<html>`. All tokens respond automatically.
+### Dark Mode Specs
+- **Lokasi file**: `src/lib/theme-engine.ts`
+- **Method**: Menggunakan script in-line anti-FOUC (Flash of Unstyled Content) yang disisipkan ke `<head>` sebelum rendering awal halaman untuk membaca `localStorage.theme` atau preferensi browser, dan menerapkan kelas `.dark` pada elemen `<html>`.
+- **CSS Variables**: Semua nilai warna diatur melalui variabel CSS global pada `src/styles/globals.css`. **Dilarang menggunakan kode warna hex/rgb keras (hardcoded hex/rgb)** di dalam komponen. Gunakan `var(--clr-*)`.
 
-**Token Architecture**: `src/styles/globals.css`
-- All colors are CSS custom properties under `:root` and `:root.dark`.
-- Canonical prefix: `--clr-*`
-- Legacy aliases preserved: `--novel-*` maps to `--clr-*` for landing page compatibility.
-- **Zero hardcoded hex values in components.** All components use `var(--clr-*)`.
+### Motion Specs (Akselerasi GPU)
+Animasi diatur menggunakan pure CSS keyframes pada file global dengan properti `will-change` untuk akselerasi perangkat keras GPU:
 
-**Theme Morph**: `transition: background 350ms ease, color 350ms ease, border-color 350ms ease` applied globally via `*` selector. GPU composited. Zero layout shift.
-
----
-
-## Sidebar Spec
-
-**File**: `src/components/layout/Sidebar.tsx`
-
-| Feature          | Implementation                                |
-|------------------|-----------------------------------------------|
-| Stagger entrance | `animation-delay: ${idx * 55}ms` per nav item |
-| Elastic hover    | `transform: translateX(4px) scale(1.01)`       |
-| Active indicator | `.nav-indicator` — neon bar, glow pulse        |
-| Collapse         | `.collapsed` class — 64px width, icon-only     |
-| Mobile           | `position:fixed`, blur backdrop overlay        |
-| Roles            | Nav items filtered by `userData.role`          |
-
-Mobile breakpoint: `≤768px`. Slide-in via `translateX(-100%)` → `translateX(0)`.
+| Klas Animasi | Deskripsi Animasi | Durasi | Easing |
+|---|---|---|---|
+| `.animate-fade-in` | Transisi opacity masuk halus | 0.5s | `ease` |
+| `.animate-slide-up` | Efek slide dari bawah ke atas | 0.4s | `cubic-bezier(0.16, 1, 0.3, 1)` |
+| `.animate-float` | Animasi mengambang melingkar untuk ilustrasi | 4.0s | `ease-in-out infinite` |
+| `.skeleton` | Efek shimmer gradien berkilau untuk data loading | 1.5s | `ease-in-out infinite` |
 
 ---
 
-## Motion Spec
-
-**System**: Defined in `globals.css` under `@keyframes`.
-
-| Animation         | Class / Keyframe         | Duration | Easing                     |
-|-------------------|--------------------------|----------|-----------------------------|
-| Fade in           | `.animate-fade-in`       | 0.5s     | ease                        |
-| Slide up          | `.animate-slide-up`      | 0.4s     | cubic-bezier(0.16,1,0.3,1) |
-| Float (loop)      | `.animate-float`         | 4s       | ease-in-out infinite        |
-| Card float        | `.card-hover:hover`      | 0.3s     | cubic-bezier(0.4,0,0.2,1)  |
-| Spring modal      | `.animate-spring-modal`  | 0.45s    | cubic-bezier(0.16,1,0.3,1) |
-| Button depth      | `.btn-depth:active`      | 0.1s     | ease                        |
-| Reveal (scroll)   | `.reveal → .visible`     | 0.6s     | cubic-bezier(0.16,1,0.3,1) |
-| Nav stagger       | `.nav-stagger`           | 0.4s     | staggered delay             |
-| Skeleton shimmer  | `.skeleton`              | 1.5s     | ease-in-out infinite        |
-| Orb float         | `@keyframes floatOrb`    | 18-22s   | ease-in-out infinite        |
-| Heading shimmer   | `@keyframes shimmer`     | 3s       | ease-in-out infinite        |
-| XP glow pulse     | `@keyframes glowPulse`   | 2s       | ease-in-out infinite        |
-
-All animations use `will-change: transform, opacity` for GPU compositing.
-
----
-
-## Code Standards
-
-```
-✅ All colors via CSS variables (var(--clr-*))
-✅ No hardcoded hex/rgb in components
-✅ No <style jsx> blocks (moved to globals.css or inline <style>)
-✅ TypeScript: no `any` types — use unknown + type narrowing
-✅ Error handling: catch (err: unknown) { err instanceof Error ? err.message : 'Error' }
-✅ All interactive elements have aria-label or visible text
-✅ All form inputs have htmlFor + id
-✅ Import order: React → Next → External → Internal → Types
-```
-
----
-
-## Folder Map
+## 📂 Peta Folder Frontend (Directory Map)
 
 ```
 apps/web/src/
 ├── app/
-│   ├── layout.tsx              # Root layout — fonts, anti-FOUC script
-│   ├── page.tsx                # Auth redirect gate
-│   ├── login/page.tsx
-│   ├── landing/                # Public landing page + components
-│   └── (dashboard)/
-│       ├── layout.tsx          # Auth guard + sidebar + topbar wrapper
-│       ├── dashboard/page.tsx
-│       ├── scan/page.tsx
-│       ├── news/page.tsx
-│       ├── leaderboard/page.tsx
-│       ├── members/page.tsx
-│       ├── logs/page.tsx
-│       ├── profile/page.tsx
-│       ├── badges/page.tsx
-│       ├── calendar/page.tsx
-│       ├── change-password/page.tsx
-│       └── admin/
-│           ├── page.tsx
-│           ├── news/page.tsx
-│           └── media/page.tsx
+│   ├── layout.tsx             # Entry layout utama, Space Grotesk & PostHog init
+│   ├── dev-tools/             # [NEW] Web Mobile Simulator
+│   ├── landing/               # Landing page publik (Interactive PirateMap)
+│   └── (dashboard)/           # Portal dashboard terproteksi (Zustand store)
+│
 ├── components/
-│   ├── layout/
-│   │   ├── Sidebar.tsx         # Full sidebar with stagger + mobile
-│   │   └── TopBar.tsx          # Header with profile cluster + dark toggle
-│   ├── news/
-│   │   └── NewsSlider.tsx
-│   └── ui/
-│       ├── Toast.tsx           # Global toast system (ARIA live)
-│       ├── NovelCursor.tsx
-│       ├── AnnouncementBanner.tsx
-│       ├── ErrorBoundary.tsx
-│       ├── ProfileCard.tsx
-│       └── ToggleDarkMode.tsx
+│   ├── providers/
+│   │   └── PostHogProvider.tsx # [NEW] Perekam otomatis navigasi pageview
+│   ├── ui/
+│   │   ├── ErrorBoundary.tsx  # [NEW] Penahan crash runtime client
+│   │   ├── Toast.tsx          # Sistem notifikasi pop-up ARIA live
+│   │   └── ToggleDarkMode.tsx # Tombol toggle mode gelap instan
+│   └── layout/
+│       ├── Sidebar.tsx        # Sidebar dinamis elastis hover & mobile responsive
+│       └── TopBar.tsx         # Top header & visual XP wave liquid bar
+│
 ├── lib/
-│   ├── theme-engine.ts         # useTheme hook + THEME_SCRIPT
-│   ├── auth-store.ts           # Zustand auth store
-│   ├── api.ts
-│   └── firebase.ts
-└── styles/
-    └── globals.css             # Single source of truth: tokens, components, animations
+│   ├── posthog.ts             # [NEW] Helper tracker event kustom PostHog
+│   ├── api.ts                 # Klien HTTP fetchApi terpadu
+│   └── theme-engine.ts        # Script pengendali FOUC & Hook useTheme
+│
+└── types/
+    └── api.types.ts           # [NEW] Shared TypeScript types dengan backend
 ```
 
 ---
 
-## Changelog
+## 📏 Konfigurasi Variabel Lingkungan (Environment Variables)
 
-### 2026-05-27 — Major Refactor
+Buat berkas `apps/web/.env.local` untuk konfigurasi lokal:
 
-**Dark Mode**
-- Created `lib/theme-engine.ts`: `useTheme`, `THEME_SCRIPT` (anti-FOUC)
-- Rebuilt `globals.css`: full dual token map (`:root` + `:root.dark`)
-- 350ms morph transition on all elements
+```env
+# Alamat REST API Backend (NestJS)
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
-**Sidebar**
-- Full rebuild from scratch
-- Stagger entrance, elastic hover, neon active bar with glow pulse
-- Mobile: fixed slide-in with blur backdrop overlay
-- Role-based nav item filtering
+# === POSTHOG ANALYTICS ===
+NEXT_PUBLIC_POSTHOG_KEY=phc_xxxxxxxxxxxxxxxx
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 
-**TopBar**
-- Profile cluster surgical fix: flex alignment, no overflow, vertical center
-- Dark mode toggle integrated (replaces standalone component usage)
-- XP badge + level display
+# === FALLBACK / LEGACY ACCESS ===
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+```
 
-**Components**
-- Toast: ARIA live region, Remix icons, CSS var colors
-- AnnouncementBanner: CSS vars, Remix icons
-- NewsSlider: canonical var names, TypeScript purged
-- ToggleDarkMode: rewritten to use `useTheme()`
+---
 
-**Pages (all)**
-- `<style jsx>` → inline `<style>` or globals.css
-- All hardcoded colors → CSS variables
-- `err: any` → `err: unknown` with `instanceof Error` narrowing
-- Dead imports removed
-- `any[]` → typed interfaces throughout
-- `htmlFor` + `id` on all form elements
-- `aria-label` on all icon-only buttons
+## 🏃 Cara Menjalankan Development Server
 
-**Auth Store**
-- Fixed `setInterval` memory leak: stored in `globalThis` and cleared on every auth state change + logout
-
-**Calendar**
-- Fixed hardcoded `MEI / 14` → dynamic date derivation from event data
+1. Pastikan Anda berada di direktori `apps/web/` atau jalankan workspace dari root:
+   ```bash
+   npm run dev --workspace=apps/web
+   ```
+2. Aplikasi akan berjalan di alamat default: [http://localhost:3000](http://localhost:3000).
