@@ -1,10 +1,11 @@
 'use client';
-// DO NOT EDIT - Auth state manager (Zustand). Mengatur login, logout, token refresh, dan proteksi rute.
+// Auth state manager (Zustand). Login, logout, token refresh, proteksi rute + session cache.
 import { create } from 'zustand';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { api } from './api';
+import { SessionCache } from './session-cache';
 
 interface UserData {
   name: string;
@@ -45,11 +46,17 @@ const getOptimisticUser = () => {
   try { return auth.currentUser; } catch { return null; }
 };
 
+// FIX: Sync user from Firebase cache immediately to prevent redirect flash.
+// If auth.currentUser exists and is verified → set user synchronously so
+// the dashboard layout never sees (loading=false, user=null) at the same time.
+const _optimistic = getOptimisticUser();
+const _optimisticUser = (_optimistic?.emailVerified) ? _optimistic : null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user:        null,
+  user:        _optimisticUser,   // ← sync init — prevents redirect race
   userData:    null,
-  // Start non-loading if Firebase already has a cached user
-  loading:     getOptimisticUser() === null,
+  // Start non-loading if Firebase already has a verified cached user
+  loading:     _optimisticUser === null,
   initialized: false,
 
   init: () => {
@@ -98,6 +105,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           level:           Math.floor((data.xpCache || 0) / 100) + 1,
         };
 
+        // Cache ke sessionStorage — mengurangi Firestore reads pada revisit
+        SessionCache.set(user.uid, userData as unknown as Record<string, unknown>);
         set({ user, userData, loading: false });
 
         (globalThis as Record<string, unknown>).__ngTokenInterval = setInterval(async () => {
@@ -119,6 +128,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     await signOut(auth);
     api.setToken(null);
+    SessionCache.clear();  // Bersihkan session cache saat logout
     set({ user: null, userData: null });
   },
 }));

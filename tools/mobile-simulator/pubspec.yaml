@@ -1,5 +1,5 @@
 name: newgame_mobile_simulator
-description: NEWGAME Mobile Simulator — Preview web app di berbagai ukuran device secara real-time
+description: NEWGAME Mobile Simulator — Preview web app dalam frame HP, jalankan di Chrome via VS Code.
 version: 1.0.0+1
 publish_to: 'none'
 
@@ -10,12 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # WebView untuk load localhost
-  webview_flutter: ^4.7.0
-  # Window management (desktop)
-  window_manager: ^0.3.8
-  # URL utils
-  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -24,3 +18,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Web platform is used — run: flutter run -d chrome
