@@ -85,6 +85,7 @@ const List<(String label, String path, String emoji)> kNavLinks = [
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
+  // await windowManager.ensureInitialized();
 
   const opts = WindowOptions(
     size: Size(1340, 860),
