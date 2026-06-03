@@ -1,0 +1,189 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var UsersService_1;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UsersService = void 0;
+const common_1 = require("@nestjs/common");
+const firebase_service_1 = require("../../firebase/firebase.service");
+const user_history_service_1 = require("../user-history/user-history.service");
+const user_vault_service_1 = require("../user-vault/user-vault.service");
+const hash_util_1 = require("../../common/utils/hash.util");
+let UsersService = UsersService_1 = class UsersService {
+    constructor(firebaseService, history, vault) {
+        this.firebaseService = firebaseService;
+        this.history = history;
+        this.vault = vault;
+        this.logger = new common_1.Logger(UsersService_1.name);
+    }
+    async getUserById(userId) {
+        try {
+            const snap = await this.firebaseService.firestore.collection('users').doc(userId).get();
+            if (!snap.exists)
+                throw new common_1.NotFoundException('User not found');
+            return { uid: snap.id, ...snap.data() };
+        }
+        catch (err) {
+            if (err instanceof common_1.NotFoundException)
+                throw err;
+            return { ok: false, error: String(err) };
+        }
+    }
+    async updateProfile(userId, dto) {
+        if (!userId)
+            throw new common_1.BadRequestException('userId required');
+        const db = this.firebaseService.firestore;
+        const ref = db.collection('users').doc(userId);
+        try {
+            const snap = await ref.get();
+            if (!snap.exists)
+                throw new common_1.NotFoundException('User not found');
+            const before = snap.data();
+            const patch = {};
+            if (dto.displayName !== undefined)
+                patch.name = String(dto.displayName).trim().slice(0, 80);
+            if (dto.username !== undefined)
+                patch.username = String(dto.username).trim().toLowerCase().slice(0, 40);
+            if (dto.photoURL !== undefined) {
+                const url = String(dto.photoURL).trim();
+                if (url && !url.startsWith('http'))
+                    throw new common_1.BadRequestException('photoURL must be a valid URL');
+                patch.photoURL = url;
+            }
+            if (!Object.keys(patch).length)
+                return { ok: true, message: 'No changes' };
+            patch.updatedAt = new Date().toISOString();
+            await ref.update({ ...patch, serverTs: this.firebaseService.timestamp });
+            const after = { ...before, ...patch };
+            delete after['serverTs'];
+            try {
+                await Promise.all([
+                    this.history.write({ userId, changedBy: userId, action: 'update_profile', before, after, changedFields: (0, hash_util_1.diffKeys)(before, after) }),
+                    this.vault.saveVersion(userId, after, userId),
+                ]);
+            }
+            catch (historyErr) {
+                this.logger.warn('History/vault write failed, but profile updated', historyErr);
+            }
+            return { ok: true };
+        }
+        catch (err) {
+            if (err instanceof common_1.NotFoundException || err instanceof common_1.BadRequestException)
+                throw err;
+            this.logger.error(`updateProfile uid=${userId}`, err);
+            throw new common_1.BadRequestException(`Profile update failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    }
+    async getAllUsers(role) {
+        try {
+            const db = this.firebaseService.firestore;
+            let q = db.collection('users').orderBy('name', 'asc');
+            if (role)
+                q = q.where('role', '==', role);
+            const snapshot = await q.get();
+            return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+        }
+        catch (err) {
+            return { ok: false, error: String(err) };
+        }
+    }
+    async updateUserRole(targetUserId, newRole, updatedBy) {
+        const allowed = ['member', 'admin', 'superadmin', 'moderator'];
+        if (!allowed.includes(newRole))
+            throw new common_1.BadRequestException(`Invalid role. Allowed: ${allowed.join(', ')}`);
+        try {
+            const db = this.firebaseService.firestore;
+            const ref = db.collection('users').doc(targetUserId);
+            const snap = await ref.get();
+            if (!snap.exists)
+                throw new common_1.NotFoundException('User not found');
+            const before = snap.data();
+            const oldRole = before.role;
+            await ref.update({ role: newRole, updatedAt: new Date().toISOString(), serverTs: this.firebaseService.timestamp });
+            await this.firebaseService.auth.setCustomUserClaims(targetUserId, { role: newRole });
+            await Promise.all([
+                db.collection('logs').add({ userId: updatedBy, targetUserId, action: 'update_role', oldRole, newRole, timestamp: this.firebaseService.timestamp }),
+                this.history.write({ userId: targetUserId, changedBy: updatedBy, action: 'update_role', before, after: { ...before, role: newRole }, changedFields: ['role'] }),
+            ]);
+            return { ok: true, oldRole, newRole };
+        }
+        catch (err) {
+            if (err instanceof common_1.NotFoundException || err instanceof common_1.BadRequestException)
+                throw err;
+            return { ok: false, error: String(err) };
+        }
+    }
+    async updateUserStatus(targetUserId, status, updatedBy) {
+        const allowed = ['active', 'suspended', 'inactive'];
+        if (!allowed.includes(status))
+            throw new common_1.BadRequestException(`Status harus: ${allowed.join(', ')}`);
+        try {
+            const db = this.firebaseService.firestore;
+            await db.collection('users').doc(targetUserId).update({ status, updatedAt: new Date().toISOString(), serverTs: this.firebaseService.timestamp });
+            await db.collection('logs').add({ userId: updatedBy, targetUserId, action: 'update_status', newStatus: status, timestamp: this.firebaseService.timestamp });
+            return { ok: true };
+        }
+        catch (err) {
+            return { ok: false, error: String(err) };
+        }
+    }
+    async getLeaderboard(limit = 50) {
+        try {
+            const db = this.firebaseService.firestore;
+            const snap = await db.collection('users')
+                .where('status', 'in', ['active', 'npc'])
+                .orderBy('xpCache', 'desc')
+                .limit(Math.min(limit, 100))
+                .get();
+            return snap.docs.map((doc, i) => ({
+                rank: i + 1, uid: doc.id, id: doc.id,
+                name: doc.data().name || doc.data().displayName || 'Unknown',
+                displayName: doc.data().name || doc.data().displayName || 'Unknown',
+                division: doc.data().division, xpCache: doc.data().xpCache || 0,
+                attendanceCount: doc.data().attendanceCount || 0, streak: doc.data().streak || 0,
+                role: doc.data().role, level: Math.floor((doc.data().xpCache || 0) / 100) + 1,
+            }));
+        }
+        catch (err) {
+            return { ok: false, error: String(err) };
+        }
+    }
+    async getDashboardStats(userId) {
+        try {
+            const db = this.firebaseService.firestore;
+            const snap = await db.collection('users').doc(userId).get();
+            if (!snap.exists)
+                throw new common_1.NotFoundException('User not found');
+            const user = snap.data() || {};
+            const xp = user.xpCache || 0;
+            const recentAttendance = await db.collection('attendance')
+                .where('userId', '==', userId).orderBy('attendedAt', 'desc').limit(10).get();
+            const recentPresent = recentAttendance.docs.filter(d => d.data().status === 'present').length;
+            return {
+                user: { displayName: user.name || user.displayName, email: user.email, division: user.division, role: user.role, memberId: user.memberId },
+                stats: { xp, level: Math.floor(xp / 100) + 1, xpInLevel: xp % 100, xpToNextLevel: 100 - (xp % 100), attendanceCount: user.attendanceCount || 0, streak: user.streak || 0, badgesCount: user.badgesCount || 0, recentPresent },
+                recentAttendance: recentAttendance.docs.map(d => ({ id: d.id, ...d.data() })),
+            };
+        }
+        catch (err) {
+            if (err instanceof common_1.NotFoundException)
+                throw err;
+            return { ok: false, error: String(err) };
+        }
+    }
+};
+exports.UsersService = UsersService;
+exports.UsersService = UsersService = UsersService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [firebase_service_1.FirebaseService,
+        user_history_service_1.UserHistoryService,
+        user_vault_service_1.UserVaultService])
+], UsersService);
+//# sourceMappingURL=users.service.js.map
