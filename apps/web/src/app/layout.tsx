@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
 import { Lora, Inter, Space_Grotesk } from 'next/font/google';
 import '@/styles/globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -65,7 +66,7 @@ export const viewport: Viewport = {
   userScalable: true,       // H3: never block zoom (accessibility)
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#FAF8F5' },
-    { media: '(prefers-color-scheme: dark)',  color: '#0D1117' },
+    { media: '(prefers-color-scheme: dark)', color: '#0D1117' },
   ],
 };
 
@@ -101,9 +102,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="accent-bar" />
         <NovelCursor />
-        <PostHogProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </PostHogProvider>
+        <Suspense fallback={null}>
+          <PostHogProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </PostHogProvider>
+        </Suspense>
       </body>
     </html>
   );
