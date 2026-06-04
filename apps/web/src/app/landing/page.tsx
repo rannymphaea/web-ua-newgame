@@ -7,7 +7,7 @@ import {
   useParallax,
   AnimatedCounter,
   StaggerText,
-  TypewriterText,
+  HeroTypewriter,
 } from './components/ScrollReveal';
 import {
   MISI_LIST,
@@ -204,12 +204,26 @@ export default function LandingPage() {
             UKM Game Development · Universitas Andalas
           </p>
 
-          {/* H1 — Typewriter Animation */}
+          {/* H1 — Multi-Phrase Hero Typewriter */}
           <h1
             className="hero-title"
-            style={{ minHeight: '1.1em' }}
+            style={{ minHeight: '1.1em', position: 'relative' }}
           >
-            <TypewriterText text="NEWGAME" />
+            {/* Particle burst background */}
+            <span className="hero-particles" aria-hidden="true">
+              {[...Array(8)].map((_, i) => (
+                <span
+                  key={i}
+                  className="hero-particle"
+                  style={{
+                    '--p-angle': `${i * 45}deg`,
+                    '--p-delay': `${i * 0.15}s`,
+                    '--p-color': i % 2 === 0 ? '#FDCF41' : '#B9A6CE',
+                  } as React.CSSProperties}
+                />
+              ))}
+            </span>
+            <HeroTypewriter />
           </h1>
 
           {/* Tagline — Lora italic */}

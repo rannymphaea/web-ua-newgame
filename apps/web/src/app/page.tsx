@@ -17,11 +17,11 @@ export default function RootPage() {
       router.replace(user ? '/dashboard' : '/landing');
       return;
     }
-    // Jika Firebase masih loading tapi tidak ada cached user
-    // → langsung ke /landing setelah 600ms (UX: tidak menunggu terlalu lama)
+    // Jika Firebase masih loading → tunggu lebih lama (Android IndexedDB lambat)
+    // Setelah 1500ms, jika masih tidak ada user → ke /landing
     const timer = setTimeout(() => {
       if (!user) router.replace('/landing');
-    }, 600);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [user, loading, mounted, router]);
 

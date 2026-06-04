@@ -68,6 +68,8 @@ export default function LoginPage() {
         setError('Please verify your email before logging in.');
         setLoading(false); return;
       }
+      // Flag: Firebase session just created — dashboard layout will wait for hydration
+      try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
       router.push('/dashboard');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -125,6 +127,8 @@ export default function LoginPage() {
       const cred = await signInWithPopup(auth, provider);
       const idToken = await cred.user.getIdToken();
       api.setToken(idToken);
+      // Flag: Firebase session just created — dashboard layout will wait for hydration
+      try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
       router.push('/dashboard');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Google login failed');
