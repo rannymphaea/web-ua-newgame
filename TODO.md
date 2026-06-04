@@ -1,6 +1,6 @@
-NEWGAME V1.1 — Project Task List
+NEWGAME V1.2 — Project Task List
 UKM Game Development, Universitas Andalas
-Last updated: June 2026
+Last updated: 5 Juni 2026
 
 This file tracks the development status of all features across the platform.
 Update this file whenever a task is started, completed, or reprioritized.
@@ -20,7 +20,8 @@ INFRASTRUCTURE AND DEVOPS
   [x] GitHub Actions CI/CD pipeline (.github/workflows/ci.yml)
       [x] TypeScript type-check on push
       [x] Security audit (npm audit)
-      [x] Lint check
+      [x] Lint check — ESLint config added (.eslintrc.json)
+      [x] Fixed: npm ci → npm install --legacy-peer-deps (lock drift tolerant)
   [x] Vercel deployment with vercel.json rewrites
   [x] Environment variable structure documented (README.md)
   [x] .gitignore configured — .env, node_modules, .next, serviceAccountKey
@@ -141,8 +142,15 @@ BACKEND — NESTJS API
 FRONTEND — NEXT.JS WEB
 
   Landing Page (apps/web/src/app/landing)
-    [x] Hero section with typewriter animation
-    [x] Pirate Map — interactive SVG tree diagram for member journey
+    [x] Hero section — HeroTypewriter multi-phrase (NEWGAME/LEARN/PLAY/LEVEL UP)
+        [x] Gradient color shift per phrase + glitch chromatic flash on transition
+        [x] Radial particle burst (8 particles, CSS trig + fallback)
+    [x] PirateMap — vertical flowchart dengan Framer Motion animations
+        [x] Spring bounce per stage node (staggered)
+        [x] Draw-stroke animated connector lines + arrowheads
+        [x] Star burst terminal animation (Soldat)
+        [x] Hover tooltip + pulsing glow ring
+        [x] Mobile slide-in step cards
     [x] Vision and mission section
     [x] Pillar introduction cards
     [x] Guidebook section with banner and chips
@@ -156,6 +164,9 @@ FRONTEND — NEXT.JS WEB
     [x] Registration tab with member verification flow
     [x] Google OAuth login button
     [x] Zustand auth store with IndexedDB cache (instant session restore)
+    [x] Fix post-login redirect (ng-just-logged-in sessionStorage flag)
+    [x] Dashboard layout debounced redirect (1.2–2.5s) → /login not /landing
+    [x] Root page Firebase timeout extended 600ms → 1500ms
     [~] Better Auth session fully replacing Firebase on frontend
     [-] Forgot password page
     [-] Email verification resend button
@@ -244,6 +255,10 @@ FRONTEND — NEXT.JS WEB
     [x] PostHog Provider — pageview recording, event tracking
     [x] Design token system in globals.css — colors, spacing, animation
     [x] Skeleton shimmer loading states
+    [x] IdleSessionManager — auto-logout 30min idle, 2min warning countdown dialog
+        [x] SVG countdown ring (gold→red color shift)
+        [x] AbortController cleanup, tab visibility handling
+        [x] Framer Motion animated dialog
     [-] Toast queue system (multiple stacked toasts)
     [-] Global search component (Cmd+K / Ctrl+K)
     [-] Keyboard shortcut system

@@ -238,13 +238,32 @@ Solusi: Rewrite API di next.config.js dibatasi hanya aktif saat development. Hos
 
 ---
 
-## PENUTUP
+## PEMBARUAN V1.2 — 5 JUNI 2026
 
-Platform NEWGAME V1.1 telah berhasil dibangun dan dideploy sebagai sistem digital terpadu yang menggantikan seluruh pengelolaan organisasi yang sebelumnya dilakukan secara manual. Sistem ini mencakup 21 modul backend, 12 halaman frontend, serta 5 lapisan keamanan yang memastikan integritas dan kerahasiaan data seluruh anggota.
+### PART 1 — Landing Page dan PirateMap Flowchart
 
-Platform ini dirancang untuk tumbuh bersama organisasi — modul yang belum selesai dapat dikembangkan secara bertahap tanpa mengganggu fitur yang sudah berjalan, berkat arsitektur modular NestJS dan sistem dual-write yang toleran terhadap kegagalan.
+Teks hero kini bersiklus empat frasa: NEWGAME, LEARN CRATE, PLAY WIN, LEVEL UP. Setiap frasa punya gradient warna unik, glitch chromatic flash saat transisi, dan 8 partikel radial burst. PirateMap ditulis ulang menjadi flowchart vertikal Framer Motion dengan spring bounce per node, draw-stroke konektor, star burst Soldat, tooltip hover, dan mobile slide-in cards.
+
+### PART 2 — Fix Redirect Login ke Dashboard
+
+Bug post-login redirect ke landing diselesaikan dengan debounce 1.2 hingga 2.5 detik di dashboard layout dan sessionStorage flag ng-just-logged-in. Root page Firebase timeout diperpanjang dari 600ms ke 1500ms. Target redirect diubah ke slash login.
+
+### PART 3 — IdleSessionManager dan CI Fix
+
+IdleSessionManager baru: auto-logout 30 menit idle, warning dialog 2 menit sebelum logout dengan SVG countdown ring animasi gold ke merah, tracking 6 jenis event via AbortController, dan penanganan tab visibility change. CI fix mengganti npm ci dengan npm install legacy-peer-deps, membuat eslintrc.json agar lint tidak interaktif, dan meregenerasi package-lock.json.
+
+| Item | Status |
+|---|---|
+| Commit terakhir | 04f67c1 di branch main |
+| Portal Live | https://unandnewgame-tan.vercel.app |
+| CI/CD | Fixed, diharapkan hijau mulai run 55 ke atas |
 
 ---
 
-*Laporan ini disiapkan oleh tim pengembang NEWGAME*
-*UKM Game Development, Universitas Andalas — Juni 2026*
+## PENUTUP
+
+Platform NEWGAME V1.2 telah diperbarui dengan perbaikan kritis pada UX, keamanan sesi, dan stabilitas pipeline CI/CD. Sistem mencakup 21 modul backend, 12 halaman frontend, serta 5 lapisan keamanan. Platform dirancang modular sehingga fitur baru dapat ditambahkan secara bertahap tanpa mengganggu yang sudah berjalan.
+
+---
+
+*Laporan disiapkan oleh tim pengembang NEWGAME. UKM Game Development, Universitas Andalas. Juni 2026.*

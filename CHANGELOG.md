@@ -4,6 +4,30 @@ Catatan lengkap perjalanan pengembangan platform NEWGAME UKM Game Development Un
 
 ---
 
+### V1.2 — 5 Juni 2026
+
+Rilis ini berfokus pada perbaikan UX landing page, keamanan sesi, dan stabilitas pipeline CI/CD. Dibagi dalam 3 bagian utama.
+
+#### PART 1 — Landing Page: Hero Multi-Phrase Typewriter
+
+Teks hero kini menggunakan `HeroTypewriter` yang bersiklus di empat frasa: **NEWGAME** → **LEARN · CREATE** → **PLAY · WIN** → **LEVEL UP**. Setiap frasa memiliki gradient warna berbeda (gold, lavender, hijau, biru) + animasi shimmer. Transisi antar frasa disertai efek glitch chromatic aberration (RGB split, 280ms) dan 8 partikel radial burst.
+
+PirateMap ditulis ulang total menjadi flowchart **vertikal** menggunakan Framer Motion. Animasi unik per elemen: spring bounce untuk stage nodes, draw-stroke untuk connector lines, star burst pada Soldat terminal, tooltip hover per tahap, dan slide-in dari kiri untuk versi mobile.
+
+#### PART 2 — Fix Redirect Login → Dashboard
+
+Bug: setelah login, pengguna kembali ke `/landing` karena dashboard layout mendeteksi `user = null` sebelum Firebase resolve session.
+
+Fix: debounce redirect 1.2–2.5 detik + `sessionStorage` flag `ng-just-logged-in` yang di-set setelah login berhasil. Root page timeout diperpanjang 600ms → 1500ms. Redirect diubah ke `/login` bukan `/landing`.
+
+#### PART 3 — IdleSessionManager + CI/CD Fix
+
+`IdleSessionManager` baru: auto-logout setelah 30 menit idle, warning dialog 2 menit sebelum logout dengan SVG countdown ring animasi, tracking 6 event types via `AbortController`, dan penanganan tab visibility change.
+
+CI fix: `npm ci --prefer-offline` → `npm install --legacy-peer-deps` di semua step. Root `package-lock.json` diregenerasi. `apps/web/.eslintrc.json` dibuat agar lint tidak interaktif di CI.
+
+---
+
 ### V1.1 — Juni 2026
 
 Rilis ini merupakan perombakan total arsitektur data, pengerasan keamanan sistem, optimasi performa backend dan frontend secara menyeluruh, serta penambahan alat simulator untuk kenyamanan developer.
