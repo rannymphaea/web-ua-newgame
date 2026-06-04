@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
+import IdleSessionManager from '@/components/ui/IdleSessionManager';
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const { init, loading, user } = useAuthStore();
@@ -66,6 +67,8 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', paddingTop: 'var(--accent-bar-height)', background: 'var(--clr-bg)' }}>
+      {/* Idle session auto-logout: 30min inactive → 2min warning → logout */}
+      <IdleSessionManager />
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative' }}>
         <TopBar />
