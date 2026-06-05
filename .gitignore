@@ -1,56 +1,101 @@
-# Dependencies
+# ════════════════════════════════════════════════════════
+#  .gitignore — NEWGAME Monorepo
+#  Update: 5 Juni 2026 — perkuat proteksi credential
+# ════════════════════════════════════════════════════════
+
+# ── Dependencies ──────────────────────────────────────
 node_modules/
 .pnp
 .pnp.js
+.yarn/
+.yarn-integrity
 
-# Build output (kecuali API dist yang dibutuhkan Vercel)
+# ── Build output ──────────────────────────────────────
 dist/
-!apps/api/dist/
 .next/
 out/
 build/
+*.tsbuildinfo
+.turbo/
 
-# Environment — jangan pernah commit file ini
+# ── Environment & SECRETS — JANGAN PERNAH COMMIT ──────
 .env
+.env.*
+*.local
 .env.local
 .env.production
 .env.development
-.env*.local
-*.local
+.env.staging
+.env.test
+!.env.example        # .env.example boleh — berisi placeholder saja
 
-# Firebase — jangan commit service account key
+# ── Firebase — service account key adalah rahasia ─────
 .firebase/
 serviceAccountKey.json
 serviceAccountKey*.json
+**/serviceAccountKey*.json
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
 
-# Cloudinary / storage
+# ── Cloudinary / Storage ──────────────────────────────
 .uploads/
 
-# IDE
+# ── Credential & sensitive docs ───────────────────────
+MEMBER_CREDENTIALS.md
+
+# ── IDE ───────────────────────────────────────────────
 .vscode/
 .idea/
+.vs/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
-# OS
+# ── OS ────────────────────────────────────────────────
 .DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
 desktop.ini
+ehthumbs.db
 
-# Logs
+# ── Logs ──────────────────────────────────────────────
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
 
-# Backup / sementara
+# ── Runtime ───────────────────────────────────────────
+pids/
+*.pid
+*.seed
+*.pid.lock
+.nyc_output/
+coverage/
+*.lcov
+.grunt/
+lib-cov/
+jspm_packages/
+
+# ── Vercel ────────────────────────────────────────────
+.vercel/
+
+# ── Prisma ────────────────────────────────────────────
+# generated client — jangan commit
+apps/api/src/generated/
+
+# ── Asset besar ───────────────────────────────────────
+/assets/
+*.optimized.png
+*.optimized.webp
+
+# ── Backup / temp dev ─────────────────────────────────
 backup-*/
 trae-test/
-
-# Vercel
-.vercel
-
-# Internal (bukan bagian dari source code)
 claude.md
 workflow.md
 afbof.md
@@ -58,13 +103,9 @@ full_project.txt
 index.html
 storage.rules
 
-# G4 FIX: Raw/source asset files — terlalu besar untuk Git (logo.png 15.8MB)
-# Simpan di Git LFS atau cloud storage jika perlu track
-/assets/
+# ── Flutter submodule (tracked as embedded repo) ──────
+# Gunakan: git submodule add jika ingin track dengan benar
+flutter/
 
-# Temp conversion outputs
-*.optimized.png
-*.optimized.webp
-
-# Credentials — JANGAN COMMIT (berisi kode akses semua anggota)
-MEMBER_CREDENTIALS.md
+# ── Misc internal ─────────────────────────────────────
+security/internal/
