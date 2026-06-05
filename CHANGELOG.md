@@ -8,6 +8,16 @@ Catatan lengkap perjalanan pengembangan platform NEWGAME UKM Game Development Un
 
 Rilis ini berfokus pada perbaikan UX landing page, keamanan sesi, dan stabilitas pipeline CI/CD. Dibagi dalam 3 bagian utama.
 
+#### 🔒 Security Hotfix — 5 Juni 2026 (Commit 6c63c87)
+
+**KRITIS: Hapus Firebase credentials yang hardcoded di source code.**
+
+File `apps/web/src/lib/firebase.ts` sebelumnya memiliki nilai fallback hardcoded untuk semua Firebase config (API key, project ID, appId, messagingSenderId). Meskipun Firebase Web API key bersifat semi-publik, keberadaannya di source code dianggap buruk secara praktik. Semua fallback dihapus — nilai sekarang wajib berasal dari environment variables.
+
+`.vercelignore` dibuat untuk membatasi upload Vercel CLI dari 18.119 file menjadi di bawah 15.000 (batas Vercel). File yang dikecualikan: `node_modules`, `apps/api`, `tools`, `flutter`, `assets`, dokumen internal.
+
+`.gitignore` diperkuat: tambah pattern `**/serviceAccountKey*.json`, semua varian `.env.*`, Prisma generated client, dan coverage output.
+
 #### PART 1 — Landing Page: Hero Multi-Phrase Typewriter
 
 Teks hero kini menggunakan `HeroTypewriter` yang bersiklus di empat frasa: **NEWGAME** → **LEARN · CREATE** → **PLAY · WIN** → **LEVEL UP**. Setiap frasa memiliki gradient warna berbeda (gold, lavender, hijau, biru) + animasi shimmer. Transisi antar frasa disertai efek glitch chromatic aberration (RGB split, 280ms) dan 8 partikel radial burst.
