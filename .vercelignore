@@ -13,15 +13,14 @@ node_modules/
 .yarn/
 
 # ── Build outputs ─────────────────────────────────────
-# .next hanya dibutuhkan oleh Vercel build — tidak perlu upload
 .next/
 out/
 build/
 dist/
+apps/web/.next/
 
-# ── Backend API — tidak di-deploy ke Vercel ───────────
+# ── Backend API — deploy terpisah, BUKAN di Vercel ────
 apps/api/
-# (Backend NestJS deploy terpisah / Railway / Render)
 
 # ── Tools developer ───────────────────────────────────
 tools/
