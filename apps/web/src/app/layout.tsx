@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import { Lora, Inter, Space_Grotesk } from 'next/font/google';
+import 'remixicon/fonts/remixicon.css';
 import '@/styles/globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
 import { NovelCursor } from '@/components/ui/NovelCursor';
@@ -47,7 +48,6 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: { icon: '/logo.png', apple: '/logo.png' },
   appleWebApp: {
-    capable: true,
     statusBarStyle: 'black-translucent',
     title: 'NEWGAME',
   },
@@ -80,24 +80,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Anti-FOUC: set theme before first paint */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
 
-        {/* Preconnect ke CDN dan Firebase — percepat resolusi DNS */}
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossOrigin="anonymous" />
+        {/* Preconnect ke Firebase — percepat resolusi DNS */}
         <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://securetoken.googleapis.com" crossOrigin="anonymous" />
         {/* PostHog — analytics preconnect */}
         <link rel="preconnect" href="https://app.posthog.com" crossOrigin="anonymous" />
 
-        {/* Remix Icon — preload agar browser mulai download lebih awal */}
-        <link
-          rel="preload"
-          as="style"
-          href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
-        />
+        {/* Remix Icon loaded locally from npm — no CDN tracking */}
       </head>
       <body>
         <div className="accent-bar" />
