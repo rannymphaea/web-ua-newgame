@@ -61,6 +61,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   init: () => {
     if (get().initialized) return;
+    // Guard: auth is null during SSR/build when Firebase env vars are not set
+    if (!auth) { set({ loading: false }); return; }
     set({ initialized: true });
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -82,6 +84,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const token = await user.getIdToken();
         api.setToken(token);
 
+        if (!db) { set({ user: null, userData: null, loading: false }); return; }
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (!userDoc.exists() || userDoc.data().status === 'suspended') {
           await signOut(auth);
