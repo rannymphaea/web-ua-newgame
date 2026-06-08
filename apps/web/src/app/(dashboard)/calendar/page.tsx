@@ -49,7 +49,7 @@ export default function CalendarPage() {
           <p className="cal-sub">Jangan lewatkan event terbaru dan raih XP tambahan!</p>
         </div>
         <div className="cal-oc-wrap">
-          <img src="/oc-cmd.png" alt="Instructor OC" className="cal-oc-img animate-float" />
+          <img src="/oc-cmd.svg" alt="Instructor OC" className="cal-oc-img animate-float" />
         </div>
       </div>
 

@@ -254,7 +254,7 @@ export default function ProfilePage() {
             {photoURL
               ? <img src={photoURL} alt="Avatar" className="avatar-img" />
               : currentAvatarOption.key === 'yua'
-                ? <img src="/yua.png" alt="Yua Avatar" className="avatar-img" style={{ objectFit: 'contain', background: '#12121a' }} />
+                ? <img src="/yua.svg" alt="Yua Avatar" className="avatar-img" style={{ objectFit: 'contain', background: '#12121a' }} />
                 : (
                 <div
                   className="avatar-placeholder"
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                     title={option.label}
                   >
                     {option.key === 'yua' ? (
-                      <img src="/yua.png" alt="Yua" style={{ height: 32, objectFit: 'contain' }} />
+                      <img src="/yua.svg" alt="Yua" style={{ height: 32, objectFit: 'contain' }} />
                     ) : (
                       <span className="avatar-choice-initial" style={{ color: option.color }}>
                         {option.symbol || option.label.charAt(0)}

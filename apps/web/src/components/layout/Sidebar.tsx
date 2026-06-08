@@ -73,7 +73,7 @@ export function Sidebar() {
           {!collapsed ? (
             <>
               <div className="logo-img-wrap">
-                <img src="/logo.png" alt="NEWGAME" className="sidebar-logo-img" />
+                <img src="/logo.svg" alt="NEWGAME" className="sidebar-logo-img" />
               </div>
               <div className="sidebar-logo-text">
                 <h1>NEWGAME</h1>

@@ -46,7 +46,7 @@ export default function LeaderboardPage() {
           <p className="lb-sub">Para pejuang XP terbaik di NEWGAME Unand</p>
         </div>
         <div className="lb-oc-wrap">
-          <img src="/oc-hero.png" alt="Champion OC" className="lb-oc-img animate-float" />
+          <img src="/oc-hero.svg" alt="Champion OC" className="lb-oc-img animate-float" />
         </div>
       </div>
 

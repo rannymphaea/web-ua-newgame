@@ -116,7 +116,7 @@ export default function ScanPage() {
             <h2 className="scan-title">Belum Ada Event</h2>
             <p className="scan-desc mb-lg">Saat ini tidak ada event aktif yang memerlukan absensi.</p>
             <div style={{display:'flex',justifyContent:'center',marginBottom:24}}>
-              <img src="/oc-cmd.png" alt="OC" style={{height:100,opacity:0.8,filter:'drop-shadow(0 4px 12px var(--clr-border))'}} />
+              <img src="/oc-cmd.svg" alt="OC" style={{height:100,opacity:0.8,filter:'drop-shadow(0 4px 12px var(--clr-border))'}} />
             </div>
             <button onClick={checkActiveEvent} className="btn btn-secondary w-full btn-depth" style={{padding:'12px'}}>
               <i className="ri-refresh-line" aria-hidden="true" /> Muat Ulang

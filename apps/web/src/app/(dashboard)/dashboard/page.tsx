@@ -183,7 +183,7 @@ export default function DashboardPage() {
               className={`yua-btn${yuaBouncing ? ' yua-bounce' : ''}`}
             >
               <img
-                src="/yua.png"
+                src="/yua.svg"
                 alt="Yua"
                 width={180}
                 height={200}

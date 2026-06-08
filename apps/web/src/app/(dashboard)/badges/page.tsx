@@ -95,7 +95,7 @@ export default function BadgesPage() {
           </p>
         </div>
         <div className="badges-oc-wrap">
-          <img src="/oc-gold.png" alt="Gold Guardian OC" className="badges-oc-img animate-float" />
+          <img src="/oc-gold.svg" alt="Gold Guardian OC" className="badges-oc-img animate-float" />
         </div>
       </div>
 

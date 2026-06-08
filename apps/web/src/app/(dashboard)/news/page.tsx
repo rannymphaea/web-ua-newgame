@@ -87,7 +87,7 @@ export default function NewsPage() {
           <p className="news-sub">Update terbaru dan panduan belajar dari NEWGAME Unand</p>
         </div>
         <div className="news-oc-wrap">
-          <img src="/oc-read.png" alt="OC Reading" className="news-oc-img animate-float" />
+          <img src="/oc-read.svg" alt="OC Reading" className="news-oc-img animate-float" />
         </div>
       </div>
 

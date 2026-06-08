@@ -2,9 +2,6 @@
   "name": "newgame-attendance",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/web"
-  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "npm run dev --workspace=apps/api",
