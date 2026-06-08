@@ -182,3 +182,60 @@ Langkah 5 — Push branch dan buat Pull Request di GitHub. Pipeline GitHub Actio
 | `npx prisma migrate dev` | Membuat dan menjalankan migrasi baru |
 | `npx prisma generate` | Regenerasi Prisma Client dari schema |
 | `npm run build` | Build production untuk API dan Web |
+
+---
+
+### Matriks Peran dan Izin Akses
+
+Platform mengadopsi 6 tingkatan role berbasis hierarki organisasi:
+
+| Peran | Kemampuan Utama | Level Akses |
+|---|---|---|
+| OWNER | Kendali penuh infrastruktur, billing, dan semua pengaturan sistem | Level 5 |
+| ADMIN | Manajemen role user, log forensik, dasbor AI analytics | Level 4 |
+| TRAINER | Manajemen modul belajar, pembuatan event, input absensi manual | Level 3 |
+| SOLDAT | Membuat artikel berita, mengelola galeri media | Level 2 |
+| ASSOCIATE | Anggota tingkat lanjut, akses modul proyek khusus | Level 1 |
+| TRAINEE | Anggota baru. Akses absensi, leaderboard, dan riwayat XP | Level 0 |
+
+---
+
+### Standar Respons API
+
+Semua endpoint REST API diproses melalui `ResponseInterceptor` global di `main.ts`.
+
+#### Respons Sukses
+```json
+{ "success": true, "data": { "id": "cuid-user-123", "email": "trainee@newgame.ac.id" }, "timestamp": "2026-06-02T09:30:00.000Z" }
+```
+
+#### Endpoint Utama
+
+| Method | Endpoint | Akses | Deskripsi |
+|---|---|---|---|
+| POST | `/api/auth/verify-member` | Publik | Verifikasi Member ID dan kode akses |
+| POST | `/api/auth/register` | Authenticated | Buat profil setelah Firebase Auth |
+| GET | `/api/auth/me` | Authenticated | Ambil profil user yang login |
+| POST | `/api/auth/set-role` | Admin/Owner | Ubah role user |
+| GET | `/api/members` | Admin/Owner | Daftar semua anggota |
+| PATCH | `/api/members/:uid` | Admin/Owner | Perbarui data anggota |
+
+---
+
+### Strategi Caching (Upstash Redis)
+
+| Kunci Cache | Data | TTL |
+|---|---|---|
+| `leaderboard:all` | Data leaderboard global | 60 detik |
+| `news:published` | Daftar artikel berita publik | 300 detik |
+| `user:{id}:profile` | Profil detail per pengguna | 60 detik |
+| `ip:{address}:count` | Counter rate limiter per IP | 60 detik |
+
+---
+
+### Alur Autentikasi Firebase
+
+1. **Email/Password** — Setelah login, `auth.currentUser` tersedia via Firebase Auth.
+2. **Google OAuth** — Callback URL production: `https://unandnewgame-tan.vercel.app`
+3. **Auth Guard** — `useAuthStore` (Zustand) menjaga semua route dashboard.
+4. **Token Refresh** — Token Firebase di-refresh otomatis setiap 10 menit via interval di `auth-store.ts`.
