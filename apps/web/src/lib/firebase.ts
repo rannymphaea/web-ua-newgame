@@ -6,13 +6,22 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
+console.log("FIREBASE ENV CHECK", {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? "OK" : "MISSING",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? "OK" : "MISSING",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? "OK" : "MISSING",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ? "OK" : "MISSING",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ? "OK" : "MISSING",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ? "OK" : "MISSING",
+});
+
 const firebaseConfig = {
-  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY            || '',
-  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN        || '',
-  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID         || '',
-  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET     || '',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             || '',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -29,7 +38,7 @@ let db: Firestore = null as any;
 
 try {
   auth = getAuth(app);
-  db   = getFirestore(app);
+  db = getFirestore(app);
 } catch {
   // Expected during SSR prerender when NEXT_PUBLIC_FIREBASE_* env vars are not set.
   // Firebase initializes properly in the browser where env vars are embedded.
