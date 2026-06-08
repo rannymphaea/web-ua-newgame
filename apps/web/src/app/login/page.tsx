@@ -169,7 +169,7 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
             <Image
-              src="/logo.svg" alt="NEWGAME" width={72} height={72}
+              src="/logo.png" alt="NEWGAME" width={72} height={72}
               style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block', filter: 'drop-shadow(0 4px 20px var(--clr-gold-glow))' }}
             />
           </motion.div>

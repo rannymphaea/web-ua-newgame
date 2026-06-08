@@ -184,12 +184,7 @@ export function TypewriterText({ text, className = '' }: { text: string; classNa
    · glitch flash on phrase switch
    · gradient color shift per phrase
    ───────────────────────────────────────────────────────────────── */
-const PHRASE_COLORS = [
-  'linear-gradient(135deg,#FDCF41 0%,#f0c030 50%,#fff8dc 100%)',
-  'linear-gradient(135deg,#B9A6CE 0%,#a08cc0 50%,#d0c0e8 100%)',
-  'linear-gradient(135deg,#4ade80 0%,#22c55e 50%,#bbf7d0 100%)',
-  'linear-gradient(135deg,#60a5fa 0%,#3b82f6 50%,#bfdbfe 100%)',
-];
+const PHRASE_COLORS = ['#FDCF41', '#B9A6CE', '#4ade80', '#60a5fa'];
 
 export function HeroTypewriter({ className = '' }: { className?: string }) {
   const [displayed,   setDisplayed]   = useState('');
@@ -254,15 +249,12 @@ export function HeroTypewriter({ className = '' }: { className?: string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
-  const gradient = PHRASE_COLORS[phraseIdx];
+  const color = PHRASE_COLORS[phraseIdx];
 
-  // During SSR / before hydration: render plain text to avoid gradient-block flash
+  // During SSR / before hydration: render plain gold text (no gradient flash)
   if (!mounted) {
     return (
-      <span
-        className={`hero-typewriter-v2 ${className}`}
-        style={{ color: '#FDCF41', display: 'inline-block' }}
-      >
+      <span className={`hero-typewriter-v2 ${className}`} style={{ color: '#FDCF41', display: 'inline-block' }}>
         NEWGAME
       </span>
     );
@@ -272,15 +264,11 @@ export function HeroTypewriter({ className = '' }: { className?: string }) {
     <span
       className={`hero-typewriter-v2 ${isGlitching ? 'glitching' : ''} ${className}`}
       style={{
-        background: gradient,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
-        backgroundSize: '200% auto',
-        animation: 'heroGradientShift 4s ease infinite',
+        color,
         display: 'inline-block',
         minWidth: '4ch',
-        transition: 'background 0.3s ease',
+        transition: 'color 0.35s ease',
+        textShadow: `0 0 24px ${color}60`,
       }}
     >
       {displayed || '\u00A0'}
@@ -289,12 +277,11 @@ export function HeroTypewriter({ className = '' }: { className?: string }) {
           display: 'inline-block',
           width: '3px',
           height: '0.85em',
-          background: PHRASE_COLORS[phraseIdx].includes('FDCF41') ? '#FDCF41' : '#B9A6CE',
+          background: color,
           marginLeft: 4,
           verticalAlign: 'middle',
           borderRadius: 2,
           animation: 'heroCursorBlink 0.9s step-end infinite',
-          WebkitTextFillColor: 'initial',
         }}
         aria-hidden="true"
       />

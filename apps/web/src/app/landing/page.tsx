@@ -191,7 +191,7 @@ export default function LandingPage() {
         <div className="hero-text-col">
           {/* Logo */}
           <Image
-            src="/logo.svg"
+            src="/logo.png"
             alt="NEWGAME"
             width={72}
             height={72}

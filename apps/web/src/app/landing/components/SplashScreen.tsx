@@ -87,7 +87,7 @@ export default function SplashScreen() {
             }} />
           </div>
           <Image
-            src="/logo.svg"
+            src="/logo.png"
             alt="NEWGAME"
             width={96}
             height={96}
