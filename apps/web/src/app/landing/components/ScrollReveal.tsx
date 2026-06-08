@@ -195,11 +195,15 @@ export function HeroTypewriter({ className = '' }: { className?: string }) {
   const [displayed,   setDisplayed]   = useState('');
   const [phraseIdx,   setPhraseIdx]   = useState(0);
   const [isGlitching, setIsGlitching] = useState(false);
+  const [mounted,     setMounted]     = useState(false);
   const phaseRef   = useRef<'typing' | 'pause' | 'deleting'>('typing');
   const timerRef   = useRef<ReturnType<typeof setTimeout>>();
   const idxRef     = useRef(0);
 
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
+    if (!mounted) return;
     const runPhrase = (idx: number) => {
       const phrase = HERO_PHRASES[idx];
       phaseRef.current = 'typing';
@@ -212,7 +216,6 @@ export function HeroTypewriter({ className = '' }: { className?: string }) {
             const next = phrase.substring(0, prev.length + 1);
             if (next === phrase) {
               phaseRef.current = 'pause';
-              // Pause — hold for 2s, then delete
               timerRef.current = setTimeout(() => {
                 phaseRef.current = 'deleting';
                 tick();
@@ -226,7 +229,6 @@ export function HeroTypewriter({ className = '' }: { className?: string }) {
           if (phase === 'deleting') {
             const next = prev.substring(0, prev.length - 1);
             if (next === '') {
-              // Glitch flash then switch phrase
               setIsGlitching(true);
               timerRef.current = setTimeout(() => {
                 setIsGlitching(false);
@@ -250,9 +252,21 @@ export function HeroTypewriter({ className = '' }: { className?: string }) {
     runPhrase(0);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mounted]);
 
   const gradient = PHRASE_COLORS[phraseIdx];
+
+  // During SSR / before hydration: render plain text to avoid gradient-block flash
+  if (!mounted) {
+    return (
+      <span
+        className={`hero-typewriter-v2 ${className}`}
+        style={{ color: '#FDCF41', display: 'inline-block' }}
+      >
+        NEWGAME
+      </span>
+    );
+  }
 
   return (
     <span

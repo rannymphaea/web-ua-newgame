@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/leaderboard',     label: 'Leaderboard',      icon: 'ri-trophy-line',         roles: ['member', 'admin', 'superadmin'] },
   { href: '/badges',          label: 'Badges',           icon: 'ri-medal-line',          roles: ['member', 'admin', 'superadmin'] },
   { href: '/calendar',        label: 'Kalender',         icon: 'ri-calendar-event-line', roles: ['member', 'admin', 'superadmin'] },
+  { href: '/pirate-map',      label: 'Pirate Map',       icon: 'ri-map-2-line',          roles: ['member', 'admin', 'superadmin'] },
   { href: '/profile',         label: 'Profil',           icon: 'ri-user-3-line',         roles: ['member', 'admin', 'superadmin'] },
   { href: '/admin',           label: 'Admin Panel',      icon: 'ri-shield-star-line',    roles: ['admin', 'superadmin'] },
   { href: '/admin/analytics', label: 'Analytics',        icon: 'ri-bar-chart-2-line',    roles: ['admin', 'superadmin'] },

@@ -61,6 +61,7 @@ export default function LoginPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -78,6 +79,7 @@ export default function LoginPage() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
+    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
     try {
       // Step 1: Verifikasi Member ID + Kode Akses ke backend
@@ -121,6 +123,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogleLogin() {
+    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
     try {
       const provider = new GoogleAuthProvider();
