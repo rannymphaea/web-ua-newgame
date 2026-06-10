@@ -56,11 +56,18 @@ export class AttendanceService {
           throw new Error('USER_NOT_ACTIVE');
         }
 
-        // Validasi double absen
+        // Validasi double absen — IDEMPOTENT: kembalikan sukses jika sudah pernah hadir
         const attendanceId = `${token.eventId}_${userId}`;
         const attendanceRef = db.collection('attendance').doc(attendanceId);
         const attendanceSnap = await transaction.get(attendanceRef);
-        if (attendanceSnap.exists) throw new Error('ALREADY_ATTENDED');
+        if (attendanceSnap.exists) {
+          return {
+            success: true,
+            alreadyRecorded: true,
+            message: 'Kamu sudah absen di event ini',
+            eventName: event.name,
+          };
+        }
 
         const xpReward = event.xpReward || 10;
         const currentXP = user.xpCache || 0;

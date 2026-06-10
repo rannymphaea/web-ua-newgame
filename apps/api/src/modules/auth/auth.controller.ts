@@ -4,6 +4,7 @@ import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RateLimitGuard, RateLimit } from '../../common/guards/rate-limit.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -13,6 +14,19 @@ export class AuthController {
   @Post('verify-member')
   async verifyMember(@Body() body: { memberId: string; tempPassword: string }) {
     return this.authService.verifyMember(body.memberId, body.tempPassword);
+  }
+
+  /**
+   * POST /api/auth/lookup-id — resolve NEWGAME Member ID ke email untuk login.
+   * Public endpoint, rate-limited ketat untuk mencegah enumerasi.
+   * Input: { newgameId: "NG11020125SF" }
+   * Output: { found, email, maskedEmail, displayName }
+   */
+  @Post('lookup-id')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 5, windowSeconds: 900, keyPrefix: 'lookup-id' })
+  async lookupByNewgameId(@Body() body: { newgameId: string }) {
+    return this.authService.lookupByNewgameId(body.newgameId);
   }
 
   /** POST /api/auth/register — buat profil Firestore setelah Firebase Auth registration */
@@ -45,7 +59,7 @@ export class AuthController {
    */
   @Post('set-role')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
-  @Roles('admin', 'superadmin')
+  @Roles('admin')
   async setRole(
     @CurrentUser() caller: any,
     @Body() body: { userId: string; role: string },
@@ -53,22 +67,22 @@ export class AuthController {
     return this.authService.setUserRole(body.userId, body.role, caller.role);
   }
 
-  /** GET /api/auth/users — list semua user (superadmin only) */
+  /** GET /api/auth/users — list semua user (code commander / pixel presiden only) */
   @Get('users')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
-  @Roles('superadmin')
+  @Roles('code commander')
   async getAllUsers() {
     return this.authService.getAllUsers();
   }
 
   /**
    * POST /api/auth/register-admin
-   * Buat akun admin baru. Hanya bisa dipanggil oleh superadmin.
+   * Buat akun admin baru. Hanya bisa dipanggil oleh code commander atau pixel presiden.
    * Body: { email, password, displayName, division? }
    */
   @Post('register-admin')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
-  @Roles('superadmin')
+  @Roles('code commander')
   async registerAdmin(
     @Body() body: { email: string; password: string; displayName: string; division?: string },
   ) {

@@ -45,6 +45,78 @@ export class AuthService {
   }
 
   /**
+   * Lookup email dari NEWGAME Member ID (e.g. "NG11020125SF").
+   * Digunakan untuk login via Member ID — client akan pakai email
+   * yang dikembalikan untuk Firebase signInWithEmailAndPassword().
+   */
+  async lookupByNewgameId(newgameId: string) {
+    if (!newgameId || !newgameId.startsWith('NG')) {
+      throw new BadRequestException('Format Member ID tidak valid. Contoh: NG11020125SF');
+    }
+
+    const normalizedId = newgameId.trim().toUpperCase();
+    const db = this.firebaseService.firestore;
+
+    // Cari di collection members berdasarkan memberId
+    const membersSnap = await db
+      .collection('members')
+      .where('memberId', '==', normalizedId)
+      .limit(1)
+      .get();
+
+    if (membersSnap.empty) {
+      throw new NotFoundException('ID anggota tidak ditemukan');
+    }
+
+    const member = membersSnap.docs[0].data();
+
+    // Cek apakah member sudah registrasi
+    if (!member.isRegistered || !member.registeredUserId) {
+      throw new BadRequestException(
+        'Akun belum terdaftar. Silakan daftar terlebih dahulu menggunakan Member ID dan Kode Akses.',
+      );
+    }
+
+    // Ambil user dari Firestore untuk mendapatkan email
+    const userSnap = await db
+      .collection('users')
+      .doc(member.registeredUserId)
+      .get();
+
+    if (!userSnap.exists) {
+      throw new NotFoundException('ID anggota tidak ditemukan');
+    }
+
+    const user = userSnap.data();
+
+    // Cek status akun
+    if (user.status === 'suspended') {
+      throw new UnauthorizedException('Akun kamu telah dinonaktifkan. Hubungi admin.');
+    }
+
+    if (user.status === 'inactive') {
+      throw new UnauthorizedException('Akun kamu belum diaktifkan oleh admin');
+    }
+
+    // Mask email untuk keamanan: "raditya@email.com" → "r*****a@email.com"
+    const email = user.email;
+    const [localPart, domain] = email.split('@');
+    const maskedLocal =
+      localPart.length <= 2
+        ? localPart[0] + '*'
+        : localPart[0] + '*'.repeat(localPart.length - 2) + localPart[localPart.length - 1];
+    const maskedEmail = `${maskedLocal}@${domain}`;
+
+    return {
+      found: true,
+      email,           // Email asli — dikirim ke client untuk signIn
+      maskedEmail,     // Email yang di-mask — ditampilkan ke user
+      displayName: user.displayName || user.name || '',
+      role: user.role || 'member',
+    };
+  }
+
+  /**
    * Setelah user berhasil register di Firebase Auth (client-side),
    * buat dokumen user di Firestore.
    */
@@ -115,11 +187,11 @@ export class AuthService {
 
   /**
    * Set custom claims (role) di Firebase Auth.
-   * superadmin → bisa set role apapun
-   * admin      → hanya bisa set role 'member'
+   * pixel presiden → bisa set role apapun
+   * admin          → hanya bisa set role 'member'
    */
   async setUserRole(uid: string, role: string, callerRole?: string) {
-    const allowedRoles = ['member', 'admin', 'superadmin'];
+    const allowedRoles = ['member', 'admin', 'inventori', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'];
     if (!allowedRoles.includes(role)) {
       throw new BadRequestException(`Role '${role}' tidak valid`);
     }
@@ -135,7 +207,7 @@ export class AuthService {
   }
 
   /**
-   * Ambil semua user — untuk halaman manajemen role (superadmin only)
+   * Ambil semua user — untuk halaman manajemen role (pixel presiden only)
    */
   async getAllUsers(limit = 100) {
     const snapshot = await this.firebaseService.firestore
@@ -156,7 +228,7 @@ export class AuthService {
   }
 
   /**
-   * Daftarkan Admin baru (hanya bisa dipanggil oleh superadmin).
+   * Daftarkan Admin baru (hanya bisa dipanggil oleh pixel presiden).
    * Flow: buat Firebase Auth user → set custom claim role=admin → tulis Firestore doc → log.
    */
   async registerAdmin(data: {
