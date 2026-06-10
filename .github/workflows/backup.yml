@@ -1,0 +1,49 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Setiap hari jam 02.00 WIB (19.00 UTC hari sebelumnya)
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+    # Bisa dijalankan manual dari GitHub Actions UI
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run backup script
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/backup.mjs
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: backups/
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Backup summary
+        run: |
+          echo "### ✅ Database Backup Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          for f in backups/*.sql; do
+            size=$(du -h "$f" | cut -f1)
+            echo "| $(basename $f) | $size |" >> $GITHUB_STEP_SUMMARY
+          done

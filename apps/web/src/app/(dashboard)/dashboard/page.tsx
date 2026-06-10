@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -6,13 +6,13 @@ import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
 import { AnnouncementBanner } from '@/components/ui/AnnouncementBanner';
 
-/* Lazy-load berat — tidak block first paint */
+/* Lazy-load berat â€” tidak block first paint */
 const NewsSlider = dynamic(
   () => import('@/components/news/NewsSlider').then(m => ({ default: m.NewsSlider })),
   { ssr: false, loading: () => <div className="skeleton" style={{ height: 220, borderRadius: 16 }} /> }
 );
 
-/* ─── Types ──────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 interface DashStats { attendanceCount?: number; streak?: number; badgesCount?: number; }
 interface EventDoc  { id: string; title: string; date?: { seconds?: number } | string; status: string; type?: string; }
 interface NewsItem  {
@@ -23,7 +23,7 @@ interface NewsItem  {
   youtubeEmbedId?: string; tutorialCategory?: string;
 }
 
-/* ─── Scroll reveal ───────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Scroll reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function useReveal() {
   useEffect(() => {
     const els = document.querySelectorAll<Element>('.reveal');
@@ -37,15 +37,15 @@ function useReveal() {
   }, []);
 }
 
-/* SFX cooldown — 600 ms, sama dengan profile page */
+/* SFX cooldown â€” 600 ms, sama dengan profile page */
 const SFX_COOLDOWN_MS = 600;
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export default function DashboardPage() {
   const { userData, user } = useAuthStore();
   useReveal();
 
-  /* ── Yua click: SFX + bounce ─────────────────────────────────────────────── */
+  /* â”€â”€ Yua click: SFX + bounce â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const sfxCooldownRef  = useRef<boolean>(false);
   const audioRef        = useRef<HTMLAudioElement | null>(null);
   const [yuaBouncing, setYuaBouncing] = useState(false);
@@ -70,7 +70,7 @@ export default function DashboardPage() {
     } catch { /* ignore */ }
   }, []);
 
-  /* ── Phase 1: instantly from store ──────────────────────────────────────── */
+  /* â”€â”€ Phase 1: instantly from store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const level   = userData?.level    || 1;
   const xpCache = userData?.xpCache  || 0;
   const xpInLv  = xpCache % 100;
@@ -79,17 +79,17 @@ export default function DashboardPage() {
     ? (userData.name && !userData.name.includes('@') ? userData.name : (userData.username || 'Kamu'))
     : 'Kamu';
 
-  /* ── Phase 2: fast — dashboard stats only ───────────────────────────────── */
+  /* â”€â”€ Phase 2: fast â€” dashboard stats only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const [stats,        setStats]        = useState<DashStats>({});
   const [statsLoading, setStatsLoading] = useState(true);
 
-  /* ── Phase 3: deferred — news / rank / events ───────────────────────────── */
+  /* â”€â”€ Phase 3: deferred â€” news / rank / events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const [events,       setEvents]       = useState<EventDoc[]>([]);
   const [news,         setNews]         = useState<NewsItem[]>([]);
   const [rank,         setRank]         = useState(0);
   const [secondLoaded, setSecondLoaded] = useState(false);
 
-  /* Phase 2: load only stats first — fast */
+  /* Phase 2: load only stats first â€” fast */
   useEffect(() => {
     api.get('/users/dashboard')
       .then(r => setStats(r as DashStats))
@@ -137,7 +137,7 @@ export default function DashboardPage() {
 
       <AnnouncementBanner />
 
-      {/* ── Welcome Hero — rendered IMMEDIATELY from store ─────────────── */}
+      {/* â”€â”€ Welcome Hero â€” rendered IMMEDIATELY from store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="card reveal" style={{
         position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(135deg, var(--clr-bg-secondary) 0%, var(--clr-bg-muted) 100%)',
@@ -173,7 +173,7 @@ export default function DashboardPage() {
               </Link>
             </div>
           </div>
-          {/* Yua character — clickable, plays SFX + bounce */}
+          {/* Yua character â€” clickable, plays SFX + bounce */}
           <div style={{ flexShrink: 0, lineHeight: 0 }}>
             <button
               type="button"
@@ -183,7 +183,7 @@ export default function DashboardPage() {
               className={`yua-btn${yuaBouncing ? ' yua-bounce' : ''}`}
             >
               <img
-                src="/yua.svg"
+                src="/images/characters/yua.svg"
                 alt="Yua"
                 width={180}
                 height={200}
@@ -224,10 +224,10 @@ export default function DashboardPage() {
           `}</style>
         </div>
 
-        {/* XP bar inside hero — no extra API needed, from store */}
+        {/* XP bar inside hero â€” no extra API needed, from store */}
         <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--clr-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.75rem', color: 'var(--clr-text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-            <span>Level {level} → {level + 1}</span>
+            <span>Level {level} â†’ {level + 1}</span>
             <span>{xpInLv} / 100 XP</span>
           </div>
           <div className="glow-progress-track">
@@ -243,7 +243,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Stat Cards — skeleton while phase-2 loads ─────────────────── */}
+      {/* â”€â”€ Stat Cards â€” skeleton while phase-2 loads â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 'var(--space-md)' }}
            className="reveal stat-cards-grid">
         {STAT_CARDS.map((s, i) =>
@@ -267,7 +267,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Guidebook Banner ─────────────────────────────────────────── */}
+      {/* â”€â”€ Guidebook Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <a
         href="https://2b-eternity.github.io/test/"
         target="_blank"
@@ -322,7 +322,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Chips — hidden on small mobile to prevent overflow */}
+          {/* Chips â€” hidden on small mobile to prevent overflow */}
           <div className="guidebook-chips" style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {['Struktur', 'EXP', 'Quest', 'Pillar'].map(tag => (
               <span key={tag} style={{
@@ -340,7 +340,7 @@ export default function DashboardPage() {
         </div>
       </a>
 
-      {/* ── News Slider — deferred, lazy-loaded ───────────────────────── */}
+      {/* â”€â”€ News Slider â€” deferred, lazy-loaded â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="reveal">
         <NewsSlider
           items={news.map(p => ({
@@ -357,11 +357,11 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ── Quick Actions + Events — deferred ─────────────────────────── */}
+      {/* â”€â”€ Quick Actions + Events â€” deferred â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}
            className="reveal quick-events-grid">
 
-        {/* Quick actions — static, no API needed */}
+        {/* Quick actions â€” static, no API needed */}
         <div className="card">
           <h3 style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--clr-text-secondary)', marginBottom: 'var(--space-md)', fontFamily: 'var(--font-display)' }}>
             Aksi Cepat
@@ -387,7 +387,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Events — deferred */}
+        {/* Events â€” deferred */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
             <h3 style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--clr-text-secondary)', fontFamily: 'var(--font-display)' }}>
@@ -431,3 +431,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

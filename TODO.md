@@ -1,6 +1,6 @@
 NEWGAME V1.2 — Project Task List
 UKM Game Development, Universitas Andalas
-Last updated: 5 Juni 2026
+Last updated: 10 Juni 2026
 
 This file tracks the development status of all features across the platform.
 Update this file whenever a task is started, completed, or reprioritized.
@@ -36,12 +36,14 @@ BACKEND — NESTJS API
     [x] POST /api/auth/verify-member — verify memberId + tempPassword against Firestore
     [x] POST /api/auth/register — create user profile in PostgreSQL after Firebase auth
     [x] GET /api/auth/me — fetch current authenticated user profile
-    [x] POST /api/auth/set-role — change user role (ADMIN/OWNER only)
-    [x] GET /api/auth/users — list all users (OWNER only)
-    [x] POST /api/auth/register-admin — create admin account (OWNER only)
+    [x] POST /api/auth/set-role — change user role (admin and above)
+    [x] GET /api/auth/users — list all users (code commander / pixel presiden only)
+    [x] POST /api/auth/register-admin — create admin account (code commander / pixel presiden only)
+    [x] POST /api/auth/lookup-id — resolve NEWGAME Member ID to email (NEW)
     [x] Better Auth integration with Prisma adapter
     [x] Google OAuth login support
-    [~] Better Auth session management fully replacing Firebase Auth
+    [x] Login via NEWGAME Member ID (tab 3 in login page) (NEW)
+    [~] Better Auth session fully replacing Firebase Auth
     [-] Password reset via email flow
     [-] Two-factor authentication (2FA) for admin accounts
 
@@ -66,7 +68,7 @@ BACKEND — NESTJS API
     [-] Bonus XP for event attendance streaks
 
   Attendance (apps/api/src/modules/attendance)
-    [x] QR code scan endpoint
+    [x] QR code scan endpoint (idempotent — safe for retry) (UPDATED)
     [x] Attendance record creation
     [x] Attendance history per member
     [-] Attendance report export (PDF or CSV)
@@ -113,9 +115,11 @@ BACKEND — NESTJS API
   Security and Monitoring
     [x] Global ResponseInterceptor — unified { success, data, meta, timestamp }
     [x] Global AllExceptionsFilter — forensic logging + safe error responses
-    [x] RateLimitGuard — Upstash Redis, 10 req/min auth, 100 req/min general
+    [x] RateLimitGuard — Upstash Redis, 5 req/15min lookup-id, 100 req/min general
     [x] In-memory rate limiter fallback in main.ts
-    [x] RolesGuard + @Roles decorator for role-based access
+    [x] RolesGuard + @Roles decorator — 8-level hierarchy (NEW)
+    [x] Role constants — centralized in constants/roles.ts (NEW)
+    [x] Role permission matrix — npc→pixel presiden (NEW)
     [x] CORS configured with frontend URL whitelist
     [x] Helmet security headers
     [~] Anomaly detection engine (isolation forest, evidence chain, Merkle tree)
@@ -126,6 +130,7 @@ BACKEND — NESTJS API
 
   Export and Import (apps/api/src/modules/export, import)
     [x] Import members from JSON payload
+    [x] Firestore → PostgreSQL migration script (NEW)
     [-] Export attendance report as CSV
     [-] Export XP history as spreadsheet
 
@@ -161,6 +166,8 @@ FRONTEND — NEXT.JS WEB
 
   Authentication (apps/web/src/app/login)
     [x] Login page with Firebase Auth
+    [x] Login via NEWGAME Member ID (NEW)
+    [x] 3-tab login: Email / Member ID / Daftar (NEW)
     [x] Registration tab with member verification flow
     [x] Google OAuth login button
     [x] Zustand auth store with IndexedDB cache (instant session restore)
@@ -197,7 +204,9 @@ FRONTEND — NEXT.JS WEB
     [x] QR code scanner component
     [x] Attendance confirmation screen
     [x] Scan history list
-    [-] Offline scan with sync-on-reconnect
+    [x] Offline scan queue with sync-on-reconnect (NEW)
+    [x] Pending sync indicator badge (NEW)
+    [x] Indonesian error messages for scan failures (NEW)
 
   News (apps/web/src/app/(dashboard)/news)
     [x] Article list with cover image
@@ -248,7 +257,8 @@ FRONTEND — NEXT.JS WEB
     [x] Dark mode toggle with FOUC prevention (theme-engine.ts)
     [x] ErrorBoundary — crash handler with retry button + PostHog reporting
     [x] ProfileCard — avatar, name, role, leading slot
-    [x] Toast notifications — ARIA live region
+    [x] Toast notifications — ARIA live region + showError() auto-mapping (UPDATED)
+    [x] ErrorBanner — persistent dismissible error component (NEW)
     [x] Sidebar — elastic hover, mobile responsive
     [x] TopBar — XP liquid bar, dark mode toggle, notification slot
     [x] NovelCursor — canvas trail cursor effect
@@ -267,16 +277,14 @@ FRONTEND — NEXT.JS WEB
 
 DOCUMENTATION
 
-  [x] README.md — platform overview, setup, structure
+  [x] README.md — platform overview, setup, structure, role table (UPDATED)
   [x] DEVELOPER_GUIDE.md — coding standards, Git workflow, dual-write pattern
-  [x] DOCS.md — API endpoints, database schema, auth flow, caching diagram
   [x] SECURITY.md — layered security architecture, rate limits, Firestore rules
-  [x] CHANGELOG.md — version history from session 1 to V1.1
-  [x] ACCOUNT_GUIDE.md — member registration walkthrough
   [x] MEMBER_REGISTRATION.md — admin guide for adding and managing members
   [x] MEMBER_CREDENTIALS.md — all 125 members with Member IDs and access codes
-  [x] ANNOUNCEMENT.md — V1.1 update announcement for distribution
+  [x] CHANGELOG.md — version history including V1.2 gap fixes (UPDATED)
   [x] TODO.md — this file
+  [x] MIGRATION.md — Firestore → PostgreSQL cutover guide (NEW)
   [-] API Postman / Insomnia collection export
   [-] Deployment runbook for Vercel + Neon + Upstash
 
@@ -301,10 +309,17 @@ PENDING FROM PREVIOUS SESSIONS
   [!] Prisma migration must be run on production database (Neon or Supabase)
       Command: npx prisma migrate deploy
 
+  [!] DATABASE_URL must be added as a GitHub Repository Secret to activate
+      automated daily backup via .github/workflows/backup.yml
+
+  [!] Role names in Firestore user documents must be updated to new names:
+      superadmin → code commander, presiden → pixel presiden, pengurus → member
+      Use: node scripts/migrate-firestore.mjs --collection users --dry-run first
+
   [~] Flutter submodule was added as an embedded git repo (warning in git add)
       Consider: git rm --cached flutter
       Then add properly as a git submodule if needed
 
 ---
 
-NEWGAME V1.1 — UKM Game Development, Universitas Andalas
+NEWGAME V1.2 — UKM Game Development, Universitas Andalas

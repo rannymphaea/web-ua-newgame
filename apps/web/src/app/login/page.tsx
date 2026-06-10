@@ -41,24 +41,42 @@ const PARTICLES: ParticleProps[] = [
   { x: 90, y: 30, delay: 1.5, color: 'var(--clr-gold)' },
 ];
 
+type LoginMode = 'login' | 'newgame-id' | 'register';
+
+const MODE_LABELS: Record<LoginMode, string> = {
+  'login':      'Email',
+  'newgame-id': 'Member ID',
+  'register':   'Daftar',
+};
+
 /* ════════════════════════════════════════════════════════════════
    LOGIN PAGE
    ════════════════════════════════════════════════════════════════ */
 export default function LoginPage() {
   const router = useRouter();
-  const [mode,    setMode]    = useState<'login' | 'register'>('login');
+  const [mode,    setMode]    = useState<LoginMode>('login');
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
 
+  // Email login
   const [email,           setEmail]           = useState('');
   const [password,        setPassword]        = useState('');
+
+  // NEWGAME ID login
+  const [ngId,         setNgId]         = useState('');
+  const [ngPassword,   setNgPassword]   = useState('');
+  const [ngLookupDone, setNgLookupDone] = useState(false);
+  const [ngMaskedEmail, setNgMaskedEmail] = useState('');
+
+  // Register
   const [regName,         setRegName]         = useState('');
   const [regMemberId,     setRegMemberId]     = useState('');
   const [regTempPassword, setRegTempPassword] = useState('');
   const [regEmail,        setRegEmail]        = useState('');
   const [regPassword,     setRegPassword]     = useState('');
 
+  /* ── Login via Email ───────────────────────────────────────── */
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
@@ -66,17 +84,84 @@ export default function LoginPage() {
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       if (!cred.user.emailVerified) {
-        setError('Please verify your email before logging in.');
+        setError('Verifikasi email kamu terlebih dahulu sebelum login.');
         setLoading(false); return;
       }
-      // Flag: Firebase session just created — dashboard layout will wait for hydration
       try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
       router.push('/dashboard');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const msg = err instanceof Error ? err.message : 'Login gagal';
+      if (msg.includes('wrong-password') || msg.includes('invalid-credential')) {
+        setError('Password salah');
+      } else if (msg.includes('user-not-found')) {
+        setError('Email tidak ditemukan');
+      } else if (msg.includes('too-many-requests')) {
+        setError('Terlalu banyak percobaan, coba lagi dalam beberapa menit');
+      } else {
+        setError(msg);
+      }
     } finally { setLoading(false); }
   }
 
+  /* ── Login via NEWGAME Member ID ───────────────────────────── */
+  async function handleNewgameIdLogin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
+    setLoading(true); setError('');
+    try {
+      // Step 1: Lookup Member ID → get email
+      const lookupRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/lookup-id`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newgameId: ngId.trim().toUpperCase() }),
+        },
+      );
+
+      if (!lookupRes.ok) {
+        const err = await lookupRes.json().catch(() => ({}));
+        const status = lookupRes.status;
+        if (status === 404) {
+          throw new Error('ID anggota tidak ditemukan');
+        } else if (status === 400) {
+          throw new Error(err.message || 'Format Member ID tidak valid');
+        } else if (status === 401) {
+          throw new Error(err.message || 'Akun kamu belum diaktifkan oleh admin');
+        } else if (status === 429) {
+          throw new Error('Terlalu banyak percobaan, coba lagi dalam beberapa menit');
+        } else {
+          throw new Error(err.message || 'Gagal mencari Member ID');
+        }
+      }
+
+      const lookupData = await lookupRes.json();
+      setNgMaskedEmail(lookupData.maskedEmail);
+      setNgLookupDone(true);
+
+      // Step 2: Sign in with Firebase using the resolved email
+      const cred = await signInWithEmailAndPassword(auth, lookupData.email, ngPassword);
+      if (!cred.user.emailVerified) {
+        setError('Verifikasi email kamu terlebih dahulu sebelum login.');
+        setLoading(false); return;
+      }
+
+      try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
+      router.push('/dashboard');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Login gagal';
+      if (msg.includes('wrong-password') || msg.includes('invalid-credential')) {
+        setError('Password salah');
+      } else if (msg.includes('too-many-requests')) {
+        setError('Terlalu banyak percobaan, coba lagi dalam beberapa menit');
+      } else {
+        setError(msg);
+      }
+      setNgLookupDone(false);
+    } finally { setLoading(false); }
+  }
+
+  /* ── Register ──────────────────────────────────────────────── */
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
@@ -99,7 +184,6 @@ export default function LoginPage() {
         throw new Error(err.message || 'Verifikasi gagal — cek Member ID dan Kode Akses');
       }
       const verified = await verifyRes.json();
-      // verified = { valid, memberId, name, division, team, status }
 
       // Step 2: Buat akun Firebase Auth
       const cred = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
@@ -122,6 +206,7 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   }
 
+  /* ── Google Login ──────────────────────────────────────────── */
   async function handleGoogleLogin() {
     if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
@@ -130,11 +215,10 @@ export default function LoginPage() {
       const cred = await signInWithPopup(auth, provider);
       const idToken = await cred.user.getIdToken();
       api.setToken(idToken);
-      // Flag: Firebase session just created — dashboard layout will wait for hydration
       try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
       router.push('/dashboard');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Google login failed');
+      setError(err instanceof Error ? err.message : 'Google login gagal');
     } finally { setLoading(false); }
   }
 
@@ -188,24 +272,24 @@ export default function LoginPage() {
           {/* Top accent line */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, var(--clr-gold), var(--clr-lavender), transparent)' }} aria-hidden="true" />
 
-          {/* Tabs */}
+          {/* Tabs — 3 modes */}
           <div style={{ display: 'flex', gap: 4, background: 'var(--clr-bg-muted)', borderRadius: 10, padding: 4, marginBottom: 24 }}>
-            {(['login', 'register'] as const).map(m => (
+            {(['login', 'newgame-id', 'register'] as const).map(m => (
               <motion.button
                 key={m}
-                onClick={() => { setMode(m); setError(''); }}
+                onClick={() => { setMode(m); setError(''); setNgLookupDone(false); }}
                 whileTap={{ scale: 0.97 }}
                 style={{
-                  flex: 1, padding: '9px 12px', border: 'none',
+                  flex: 1, padding: '9px 8px', border: 'none',
                   borderRadius: 7,
                   background: mode === m ? 'var(--clr-gold)' : 'transparent',
                   color: mode === m ? 'var(--clr-ink)' : 'var(--clr-text-secondary)',
-                  fontFamily: 'var(--font-inter)', fontWeight: 600, fontSize: 14,
+                  fontFamily: 'var(--font-inter)', fontWeight: 600, fontSize: 13,
                   cursor: 'pointer',
                   boxShadow: mode === m ? '0 2px 12px var(--clr-gold-glow)' : 'none',
                 }}
               >
-                {m === 'login' ? 'Masuk' : 'Daftar'}
+                {MODE_LABELS[m]}
               </motion.button>
             ))}
           </div>
@@ -234,7 +318,8 @@ export default function LoginPage() {
 
           {/* Forms */}
           <AnimatePresence mode="wait">
-            {mode === 'login' ? (
+            {/* ── Email Login ──────────────────────────────────── */}
+            {mode === 'login' && (
               <motion.form
                 key="login"
                 initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }}
@@ -253,7 +338,64 @@ export default function LoginPage() {
                   {loading ? <><span className="spinner spinner-sm" /> Masuk...</> : <><i className="ri-login-circle-line" style={{ fontSize: 17 }} aria-hidden="true" /> Masuk</>}
                 </motion.button>
               </motion.form>
-            ) : (
+            )}
+
+            {/* ── NEWGAME ID Login ─────────────────────────────── */}
+            {mode === 'newgame-id' && (
+              <motion.form
+                key="newgame-id"
+                initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }}
+                transition={{ duration: 0.3 }}
+                onSubmit={handleNewgameIdLogin}
+              >
+                {/* Info box */}
+                <div style={{ padding: '10px 14px', borderRadius: 8, background: 'var(--clr-info-bg)', border: '1px solid var(--clr-info-border)', marginBottom: 16 }}>
+                  <p style={{ fontFamily: 'var(--font-inter)', fontSize: 12, color: 'var(--clr-info)', lineHeight: 1.6, display: 'flex', gap: 8 }}>
+                    <i className="ri-gamepad-line" style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }} />
+                    Login menggunakan <strong>Member ID</strong> NEWGAME kamu. Contoh: NG11020125SF
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <label className="label" htmlFor="ng-id"><i className="ri-id-card-line" style={{ marginRight: 6 }} aria-hidden="true" />Member ID</label>
+                  <input
+                    id="ng-id"
+                    type="text"
+                    className="input"
+                    value={ngId}
+                    onChange={e => setNgId(e.target.value.toUpperCase())}
+                    placeholder="NG11020125SF"
+                    required
+                    autoComplete="username"
+                    style={{ fontFamily: 'var(--font-grotesk)', letterSpacing: '1px', fontWeight: 600 }}
+                  />
+                </div>
+
+                {/* Show masked email after lookup */}
+                {ngLookupDone && ngMaskedEmail && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--clr-success-bg)', border: '1px solid var(--clr-success-border)', marginBottom: 12, fontSize: 12, color: 'var(--clr-success)', fontFamily: 'var(--font-inter)' }}
+                  >
+                    <i className="ri-checkbox-circle-line" style={{ marginRight: 6 }} />
+                    Akun ditemukan: {ngMaskedEmail}
+                  </motion.div>
+                )}
+
+                <div style={{ marginBottom: 24 }}>
+                  <label className="label" htmlFor="ng-password"><i className="ri-lock-line" style={{ marginRight: 6 }} aria-hidden="true" />Password</label>
+                  <input id="ng-password" type="password" className="input" value={ngPassword} onChange={e => setNgPassword(e.target.value)} placeholder="Password akun kamu" required autoComplete="current-password" />
+                </div>
+
+                <motion.button type="submit" className="btn btn-primary btn-depth w-full" disabled={loading} whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.97 }}>
+                  {loading ? <><span className="spinner spinner-sm" /> Masuk...</> : <><i className="ri-gamepad-line" style={{ fontSize: 17 }} aria-hidden="true" /> Masuk via Member ID</>}
+                </motion.button>
+              </motion.form>
+            )}
+
+            {/* ── Register ─────────────────────────────────────── */}
+            {mode === 'register' && (
               <motion.form
                 key="register"
                 initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
@@ -270,7 +412,7 @@ export default function LoginPage() {
 
                 {[
                   { label: 'Nama Lengkap',  icon: 'ri-user-line',    type: 'text',     id: 'reg-name',         val: regName,         set: setRegName,         ph: 'Nama kamu' },
-                  { label: 'Member ID',     icon: 'ri-id-card-line', type: 'text',     id: 'reg-memberid',     val: regMemberId,     set: setRegMemberId,     ph: 'Contoh: NEWGAME-001' },
+                  { label: 'Member ID',     icon: 'ri-id-card-line', type: 'text',     id: 'reg-memberid',     val: regMemberId,     set: setRegMemberId,     ph: 'Contoh: NG11020125SF' },
                   { label: 'Kode Akses',    icon: 'ri-key-2-line',   type: 'password', id: 'reg-temppassword', val: regTempPassword, set: setRegTempPassword, ph: 'Dari admin' },
                   { label: 'Email',         icon: 'ri-mail-line',    type: 'email',    id: 'reg-email',        val: regEmail,        set: setRegEmail,        ph: 'nama@email.com' },
                   { label: 'Password Baru', icon: 'ri-lock-line',    type: 'password', id: 'reg-password',     val: regPassword,     set: setRegPassword,     ph: 'Min 6 karakter', min: 6 },

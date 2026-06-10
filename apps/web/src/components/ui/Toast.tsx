@@ -1,10 +1,21 @@
 'use client';
-import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import { useState, createContext, useContext, useCallback } from 'react';
+import { parseError } from '@/lib/errors';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
-interface Toast { id: number; message: string; type: ToastType; }
+interface Toast { id: number; message: string; type: ToastType; duration: number; }
 
-const ToastContext = createContext<{ show: (message: string, type?: ToastType) => void }>({ show: () => {} });
+interface ToastContextValue {
+  show: (message: string, type?: ToastType, duration?: number) => void;
+  showError: (error: unknown) => void;
+  showSuccess: (message: string) => void;
+}
+
+const ToastContext = createContext<ToastContextValue>({
+  show: () => {},
+  showError: () => {},
+  showSuccess: () => {},
+});
 
 export function useToast() { return useContext(ToastContext); }
 
@@ -27,14 +38,25 @@ const TOAST_COLORS: Record<ToastType, { text: string; border: string; bg: string
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const show = useCallback((message: string, type: ToastType = 'info') => {
+  const show = useCallback((message: string, type: ToastType = 'info', duration = 4200) => {
     const id = ++toastId;
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4200);
+    setToasts(prev => [...prev, { id, message, type, duration }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }, []);
 
+  /** Show error toast with auto-mapped Indonesian message */
+  const showError = useCallback((error: unknown) => {
+    const message = parseError(error);
+    show(message, 'error', 5000);
+  }, [show]);
+
+  /** Show success toast */
+  const showSuccess = useCallback((message: string) => {
+    show(message, 'success');
+  }, [show]);
+
   return (
-    <ToastContext.Provider value={{ show }}>
+    <ToastContext.Provider value={{ show, showError, showSuccess }}>
       {children}
       <div
         role="region"

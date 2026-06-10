@@ -4,7 +4,78 @@ Catatan lengkap perjalanan pengembangan platform NEWGAME UKM Game Development Un
 
 ---
 
-### V1.2 — 5 Juni 2026
+### V1.2 — 10 Juni 2026
+
+Rilis ini menutup 6 gap kritis yang diidentifikasi dari audit platform V1.1. Fokus utama: stabilitas autentikasi, ketahanan presensi QR offline, penguatan sistem role, dan fondasi operasional jangka panjang.
+
+#### 🔐 Login via NEWGAME Member ID
+
+Anggota kini dapat login menggunakan **Member ID** mereka (format `NG11020125SF`) tanpa perlu mengingat alamat email. Halaman login memiliki 3 tab: **Email**, **Member ID**, dan **Daftar**.
+
+Implementasi: endpoint `POST /api/auth/lookup-id` menerima Member ID, mencari email terdaftar di Firestore (rate-limited 5 req/15 menit untuk mencegah enumerasi), lalu mengembalikan email ter-mask (`r*****a@email.com`) ke frontend. Frontend menggunakan email asli tersebut untuk `signInWithEmailAndPassword` Firebase.
+
+File yang diubah: `auth.service.ts`, `auth.controller.ts`, `apps/web/src/app/login/page.tsx`
+
+#### 🌐 Error Handling Bahasa Indonesia
+
+Semua error dari API kini dipetakan ke pesan ramah pengguna dalam Bahasa Indonesia. Library `errors.ts` mendefinisikan 40+ mapping untuk HTTP status code dan domain-specific error code (QR expired, akun suspended, rate limited, dsb).
+
+API client (`api.ts`) kini melempar `ApiError` (bukan `Error` biasa) yang sudah memiliki `friendlyMessage` siap tampil. `Toast.tsx` mendapat method baru `showError(error)` yang menerima error apapun dan menampilkan pesan yang tepat secara otomatis. Komponen `ErrorBanner.tsx` baru untuk error persisten yang perlu perhatian user.
+
+File baru: `lib/errors.ts`, `components/ui/ErrorBanner.tsx`
+File diperbarui: `lib/api.ts`, `components/ui/Toast.tsx`
+
+#### 📶 Presensi QR Offline (Resiliensi Jaringan)
+
+Scan QR saat jaringan tidak stabil kini tidak langsung gagal. `AttendanceSyncService` menyimpan scan yang gagal ke localStorage dan mencoba kirim ulang otomatis saat koneksi pulih. Max retry 3x, expire setelah 1 jam.
+
+Halaman scan menampilkan badge "X absensi menunggu sinkronisasi" dan state baru `queued` dengan pesan "Absen Disimpan — akan dikirim saat koneksi pulih". Endpoint `/attendance/process` dibuat idempotent: duplicate scan mengembalikan `{ alreadyRecorded: true }` alih-alih error, aman untuk retry.
+
+File baru: `lib/attendance-sync.ts`
+File diperbarui: `attendance.service.ts`, `(dashboard)/scan/page.tsx`
+
+#### 👑 Sistem Role Diperbarui
+
+Role system sebelumnya (`npc, member, pengurus, inventori, admin, superadmin, presiden`) diganti dengan terminologi resmi NEWGAME:
+
+| Baru | Level | Sebelumnya |
+|---|---|---|
+| `npc` | 0 | `npc` |
+| `member` | 1 | `member` |
+| `inventori` | 2 | `inventori` |
+| `admin` | 3 | `admin` |
+| `quest keeper` | 4 | — |
+| `gold guardian` | 5 | — |
+| `code commander` | 6 | `superadmin` |
+| `pixel presiden` | 7 | `presiden` |
+
+Permission matrix lengkap didefinisikan di `constants/roles.ts`. `RolesGuard` diperbarui untuk import dari sana. NPC kini mendapat pesan error eksplisit dalam Bahasa Indonesia. Prisma schema Role enum diperbarui.
+
+File baru: `common/constants/roles.ts`
+File diperbarui: `common/guards/roles.guard.ts`, `prisma/schema.prisma`, `auth.service.ts`, `auth.controller.ts`
+
+#### 💾 Backup Database Otomatis
+
+Script `scripts/backup.mjs` mengekspor PostgreSQL ke file SQL dengan nama `backup-YYYY-MM-DD-HH.sql`. GitHub Actions workflow `backup.yml` menjalankan backup setiap hari jam **02.00 WIB** dan menyimpan hasilnya sebagai artifact dengan retensi 30 hari. Backup juga bisa dipicu manual dari GitHub Actions UI.
+
+File baru: `scripts/backup.mjs`, `.github/workflows/backup.yml`
+
+#### 🔄 Script Migrasi Firestore → PostgreSQL
+
+`scripts/migrate-firestore.mjs` membaca koleksi `users`, `events`, dan `attendance` dari Firestore lalu meng-upsert ke PostgreSQL via Prisma. Mendukung `--dry-run` (preview tanpa write) dan `--collection` untuk migrasi per-koleksi. Mapping role lama ke role baru dilakukan otomatis. Panduan cutover lengkap di `MIGRATION.md`.
+
+File baru: `scripts/migrate-firestore.mjs`, `MIGRATION.md`
+
+#### 🧹 Pembersihan Arsitektur
+
+- Dihapus: `scripts/setup-laravel.ps1` (tidak relevan), `trae-test/` directory, `desktop.ini`
+- Dihapus: `LAPORAN.md` (konten digabung ke README dan CHANGELOG)
+- README diperbarui total: role table, Member ID format, struktur proyek terkini, backup docs
+
+---
+
+
+### V1.1.5 — 5 Juni 2026
 
 Rilis ini berfokus pada perbaikan UX landing page, keamanan sesi, dan stabilitas pipeline CI/CD. Dibagi dalam 3 bagian utama.
 

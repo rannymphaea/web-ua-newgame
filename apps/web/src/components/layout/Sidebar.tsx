@@ -4,19 +4,29 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 
+/**
+ * NAV_ITEMS — daftar menu sidebar.
+ *
+ * roles: array role yang boleh melihat item ini.
+ * Gunakan nama role dari constants/roles.ts.
+ *
+ * Pirate Map: item menu yang dapat diubah oleh pengurus ke depannya.
+ * Bisa digunakan untuk roadmap, panduan anggota, atau halaman khusus.
+ */
 const NAV_ITEMS = [
-  { href: '/dashboard',       label: 'Dashboard',        icon: 'ri-dashboard-3-line',    roles: ['member', 'admin', 'superadmin'] },
-  { href: '/scan',            label: 'Scan QR',          icon: 'ri-qr-code-line',        roles: ['member', 'admin', 'superadmin'] },
-  { href: '/news',            label: 'Berita & Tutorial', icon: 'ri-newspaper-line',     roles: ['member', 'admin', 'superadmin'] },
-  { href: '/leaderboard',     label: 'Leaderboard',      icon: 'ri-trophy-line',         roles: ['member', 'admin', 'superadmin'] },
-  { href: '/badges',          label: 'Badges',           icon: 'ri-medal-line',          roles: ['member', 'admin', 'superadmin'] },
-  { href: '/calendar',        label: 'Kalender',         icon: 'ri-calendar-event-line', roles: ['member', 'admin', 'superadmin'] },
-  { href: '/pirate-map',      label: 'Pirate Map',       icon: 'ri-map-2-line',          roles: ['member', 'admin', 'superadmin'] },
-  { href: '/profile',         label: 'Profil',           icon: 'ri-user-3-line',         roles: ['member', 'admin', 'superadmin'] },
-  { href: '/admin',           label: 'Admin Panel',      icon: 'ri-shield-star-line',    roles: ['admin', 'superadmin'] },
-  { href: '/admin/analytics', label: 'Analytics',        icon: 'ri-bar-chart-2-line',    roles: ['admin', 'superadmin'] },
-  { href: '/members',         label: 'Members',          icon: 'ri-team-line',           roles: ['admin', 'superadmin'] },
-  { href: '/logs',            label: 'System Logs',      icon: 'ri-file-list-3-line',    roles: ['admin', 'superadmin'] },
+  { href: '/dashboard',       label: 'Dashboard',        icon: 'ri-dashboard-3-line',    roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/scan',            label: 'Scan QR',          icon: 'ri-qr-code-line',        roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/news',            label: 'Berita & Tutorial', icon: 'ri-newspaper-line',     roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/leaderboard',     label: 'Leaderboard',      icon: 'ri-trophy-line',         roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/badges',          label: 'Badges',           icon: 'ri-medal-line',          roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/calendar',        label: 'Kalender',         icon: 'ri-calendar-event-line', roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  // Pirate Map: bisa diubah kedepannya oleh pengurus (route, label, icon)
+  { href: '/pirate-map',      label: 'Pirate Map',       icon: 'ri-map-2-line',          roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/profile',         label: 'Profil',           icon: 'ri-user-3-line',         roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/admin',           label: 'Admin Panel',      icon: 'ri-shield-star-line',    roles: ['admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/admin/analytics', label: 'Analytics',        icon: 'ri-bar-chart-2-line',    roles: ['admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/members',         label: 'Members',          icon: 'ri-team-line',           roles: ['admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
+  { href: '/logs',            label: 'System Logs',      icon: 'ri-file-list-3-line',    roles: ['code commander', 'pixel presiden'] },
 ];
 
 const SECTION_DIVIDERS: Record<string, string> = {
@@ -74,7 +84,7 @@ export function Sidebar() {
           {!collapsed ? (
             <>
               <div className="logo-img-wrap">
-                <img src="/logo.svg" alt="NEWGAME" className="sidebar-logo-img" />
+                <img src="/images/logo.svg" alt="NEWGAME" className="sidebar-logo-img" />
               </div>
               <div className="sidebar-logo-text">
                 <h1>NEWGAME</h1>

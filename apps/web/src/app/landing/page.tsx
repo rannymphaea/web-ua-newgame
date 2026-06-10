@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,11 +30,11 @@ const AssessmentAccordion = dynamic(() => import('./components/AssessmentAccordi
 const VideoModal          = dynamic(() => import('./components/VideoModal'),           { ssr: false });
 const SplashScreen        = dynamic(() => import('./components/SplashScreen'),        { ssr: false });
 
-/* ── Sound toggle ───────────────────────────────── */
+/* â”€â”€ Sound toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function SoundToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   /**
    * MOBILE SOUND FIX: AudioContext must be resumed INSIDE a synchronous
-   * user gesture. onPointerDown fires before onClick — perfect for iOS.
+   * user gesture. onPointerDown fires before onClick â€” perfect for iOS.
    * We attempt resume here so the audio system is unlocked before toggle.
    */
   const handlePointerDown = useCallback(() => {
@@ -54,7 +54,7 @@ function SoundToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => 
     <button
       id="sound-toggle"
       className={`sound-toggle-btn${enabled ? '' : ' muted'}`}
-      onPointerDown={handlePointerDown}  /* gesture unlock — fires before onClick */
+      onPointerDown={handlePointerDown}  /* gesture unlock â€” fires before onClick */
       onClick={onToggle}
       aria-label={enabled ? 'Matikan suara' : 'Aktifkan suara'}
       title={enabled ? 'Sound ON' : 'Sound OFF'}
@@ -69,7 +69,7 @@ function SoundToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => 
   );
 }
 
-/* ── Scroll To Top ─────────────────────────────────────────── */
+/* â”€â”€ Scroll To Top â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ScrollToTop() {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -92,7 +92,7 @@ function ScrollToTop() {
   );
 }
 
-/* ── Theme toggle ──────────────────────────────────────────────── */
+/* â”€â”€ Theme toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ThemeToggle() {
   const { isDark, toggleTheme } = useTheme();
   return (
@@ -113,7 +113,7 @@ function ThemeToggle() {
   );
 }
 
-/* ── Framer Motion variants ───────────────────────────────────── */
+/* â”€â”€ Framer Motion variants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const fadeUp = {
   hidden:  { opacity: 0, y: 32 },
   visible: (delay = 0) => ({
@@ -136,9 +136,9 @@ const scaleIn = {
   }),
 };
 
-/* ════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN PAGE
-   ════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export default function LandingPage() {
   const scrollRef = useScrollReveal();
   useParallax();
@@ -156,29 +156,29 @@ export default function LandingPage() {
       ref={scrollRef}
       style={{ minHeight: '100vh', background: 'var(--novel-bg)', color: 'var(--novel-ink)', overflowX: 'hidden', position: 'relative' }}
     >
-      {/* ── Splash Screen Entrance ─ */}
+      {/* â”€â”€ Splash Screen Entrance â”€ */}
       <SplashScreen />
 
-      {/* ── Paper Texture ─── */}
+      {/* â”€â”€ Paper Texture â”€â”€â”€ */}
       <PaperCanvas />
 
-      {/* ── Warm Ink Orbs (fixed bg) ─ */}
+      {/* â”€â”€ Warm Ink Orbs (fixed bg) â”€ */}
       <div className="bg-orbs" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
         <div className="bg-orb bg-orb-1 parallax-slow" />
         <div className="bg-orb bg-orb-2 parallax-slow" />
         <div className="bg-orb bg-orb-3 parallax-fast" />
       </div>
 
-      {/* ── Sound Toggle ─ */}
+      {/* â”€â”€ Sound Toggle â”€ */}
       <SoundToggle enabled={soundOn} onToggle={toggleSound} />
 
-      {/* ── Theme Toggle ─ */}
+      {/* â”€â”€ Theme Toggle â”€ */}
       <ThemeToggle />
 
-      {/* M2: Scroll To Top ─ */}
+      {/* M2: Scroll To Top â”€ */}
       <ScrollToTop />
 
-      {/* ════ HERO (Asymmetric Split) ═══════════════════════════ */}
+      {/* â•â•â•â• HERO (Asymmetric Split) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section
         className="hero-section"
         aria-label="Hero section"
@@ -187,7 +187,7 @@ export default function LandingPage() {
         <div className="hero-parallax-bg parallax-slow" />
         <div className="hero-glow" />
 
-        {/* Left — Text column */}
+        {/* Left â€” Text column */}
         <div className="hero-text-col">
           {/* Logo */}
           <Image
@@ -201,10 +201,10 @@ export default function LandingPage() {
 
           {/* Eyebrow */}
           <p className="hero-eyebrow">
-            UKM Game Development · Universitas Andalas
+            UKM Game Development Â· Universitas Andalas
           </p>
 
-          {/* H1 — Multi-Phrase Hero Typewriter */}
+          {/* H1 â€” Multi-Phrase Hero Typewriter */}
           <h1
             className="hero-title"
             style={{ minHeight: '1.1em', position: 'relative' }}
@@ -226,12 +226,12 @@ export default function LandingPage() {
             <HeroTypewriter />
           </h1>
 
-          {/* Tagline — Lora italic */}
+          {/* Tagline â€” Lora italic */}
           <p className="hero-subtitle">
             Wadah bagi para game developer muda untuk belajar, berkarya, dan berprestasi bersama.
           </p>
 
-          <p className="hero-tagline">Learn · Create · Play</p>
+          <p className="hero-tagline">Learn Â· Create Â· Play</p>
 
           {/* CTA Buttons */}
           <div className="hero-cta">
@@ -266,7 +266,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Right — OC Image column */}
+        {/* Right â€” OC Image column */}
         <motion.div
           className="hero-image-col"
           initial={{ opacity: 0, x: 40 }}
@@ -277,7 +277,7 @@ export default function LandingPage() {
             <div className="hero-oc-blob" />
             <div className="hero-oc-ring" />
             <Image
-              src="/yua.svg"
+              src="/images/characters/yua.svg"
               alt="NEWGAME Character"
               width={480}
               height={560}
@@ -295,7 +295,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════ VISI & MISI ════════════════════════════════════════ */}
+      {/* â•â•â•â• VISI & MISI â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section id="about" className="landing-section">
         <div className="section-inner" style={{ maxWidth: 1000 }}>
           <div className="reveal">
@@ -345,7 +345,7 @@ export default function LandingPage() {
 
       <div className="divider-glow" style={{ maxWidth: 600, margin: '0 auto' }} />
 
-      {/* ════ MAIN CORE ══════════════════════════════════════════ */}
+      {/* â•â•â•â• MAIN CORE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="landing-section">
         <div className="section-inner" style={{ maxWidth: 900 }}>
           <div className="reveal">
@@ -354,7 +354,7 @@ export default function LandingPage() {
             </p>
             <h2 className="section-title">Main Core</h2>
             <p className="section-desc">
-              Main Core adalah rumpun organisasi pertama — presidium inti dari NewGame.
+              Main Core adalah rumpun organisasi pertama â€” presidium inti dari NewGame.
             </p>
           </div>
           <div className="org-tree">
@@ -386,7 +386,7 @@ export default function LandingPage() {
 
       <div className="divider-glow" style={{ maxWidth: 600, margin: '0 auto' }} />
 
-      {/* ════ 3 PILLAR ═══════════════════════════════════════════ */}
+      {/* â•â•â•â• 3 PILLAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="landing-section">
         <div className="section-inner" style={{ maxWidth: 950 }}>
           <div className="reveal">
@@ -414,7 +414,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════ QUEST — 3D CARD STACK ══════════════════════════════ */}
+      {/* â•â•â•â• QUEST â€” 3D CARD STACK â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section id="quest" className="landing-section">
         <div className="section-inner" style={{ maxWidth: 800 }}>
           <div className="reveal">
@@ -432,7 +432,7 @@ export default function LandingPage() {
 
       <div className="divider-glow" style={{ maxWidth: 600, margin: '0 auto' }} />
 
-      {/* ════ SISTEM PENILAIAN ═══════════════════════════════════ */}
+      {/* â•â•â•â• SISTEM PENILAIAN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section id="sistem-penilaian" className="landing-section">
         <div className="section-inner" style={{ maxWidth: 900 }}>
           <div className="reveal">
@@ -448,7 +448,7 @@ export default function LandingPage() {
             {[
               { icon: 'ri-flashlight-line', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', title: 'Poin EXP', desc: 'Setiap task yang dikerjakan mendapat EXP. Skor menentukan jabatan Core & Quest, Penghargaan Anggota Terbaik, dan kesempatan lomba GameJam!' },
               { icon: 'ri-trophy-line', color: 'var(--novel-lavender)', bg: 'rgba(185,166,206,0.1)', title: 'Tingkatan Rank', desc: 'Naik rank berdasarkan EXP yang dikumpulkan. Semua rank tetap boleh ikut study weekly!', ranks: true },
-              { icon: 'ri-award-line', color: '#FDCF41', bg: 'rgba(253,207,65,0.08)', title: 'Eligible Lomba', desc: 'Yang paling seru — siapa yang berangkat lomba GameJam ke Pulau Jawa atau Luar Negeri ditentukan dari EXP!' },
+              { icon: 'ri-award-line', color: '#FDCF41', bg: 'rgba(253,207,65,0.08)', title: 'Eligible Lomba', desc: 'Yang paling seru â€” siapa yang berangkat lomba GameJam ke Pulau Jawa atau Luar Negeri ditentukan dari EXP!' },
             ].map((card, i) => (
               <motion.div
                 key={i}
@@ -479,7 +479,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════ PROJECT ════════════════════════════════════════════ */}
+      {/* â•â•â•â• PROJECT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="landing-section">
         <div className="section-inner" style={{ maxWidth: 900 }}>
           <div className="reveal">
@@ -496,7 +496,7 @@ export default function LandingPage() {
                 whileHover={{ y: -6 }}
               >
                 <span className="project-level" style={{ color: 'var(--novel-ink)' }}>{p.level}</span>
-                {/* Project icon — SVG inline agar tidak jadi kotak hitam di Android */}
+                {/* Project icon â€” SVG inline agar tidak jadi kotak hitam di Android */}
                 <div className="project-icon" style={{
                   background: `${p.color}15`,
                   border: `1.5px solid ${p.color}30`,
@@ -523,12 +523,12 @@ export default function LandingPage() {
 
       <div className="divider-glow" style={{ maxWidth: 600, margin: '0 auto' }} />
 
-      {/* ════ PIRATE MAP ═════════════════════════════════════════ */}
+      {/* â•â•â•â• PIRATE MAP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <PirateMap />
 
       <div className="divider-glow" style={{ maxWidth: 600, margin: '0 auto' }} />
 
-      {/* ════ STATS ══════════════════════════════════════════════ */}
+      {/* â•â•â•â• STATS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="landing-section stats-section">
         <div className="section-inner">
           <div className="stats-grid">
@@ -542,7 +542,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════ FAQ ════════════════════════════════════════════════ */}
+      {/* â•â•â•â• FAQ â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="landing-section">
         <div className="section-inner" style={{ maxWidth: 700 }}>
           <div className="reveal">
@@ -567,7 +567,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════ GUIDEBOOK ══════════════════════════════════════════ */}
+      {/* â•â•â•â• GUIDEBOOK â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section id="guidebook" className="landing-section">
         <div className="section-inner" style={{ maxWidth: 800 }}>
           <div className="reveal">
@@ -578,12 +578,12 @@ export default function LandingPage() {
             </p>
             <h2 className="section-title">Guidebook NEWGAME</h2>
             <p className="section-desc">
-              Semua yang perlu kamu tahu — struktur organisasi, sistem EXP, divisi (quest),
+              Semua yang perlu kamu tahu â€” struktur organisasi, sistem EXP, divisi (quest),
               pillar, hingga FAQ kegiatan NEWGAME secara lengkap dan interaktif.
             </p>
           </div>
 
-          {/* GUIDEBOOK CARD — mobile responsive */}
+          {/* GUIDEBOOK CARD â€” mobile responsive */}
           <motion.a
             href="https://2b-eternity.github.io/test/"
             target="_blank"
@@ -599,7 +599,7 @@ export default function LandingPage() {
             whileHover={{ y: -5 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            {/* Book icon — SVG inline, tidak bergantung Remix Icon CDN */}
+            {/* Book icon â€” SVG inline, tidak bergantung Remix Icon CDN */}
             <div style={{
               flexShrink: 0, width: 72, height: 72, borderRadius: 18,
               background: 'rgba(253,207,65,0.12)',
@@ -612,13 +612,13 @@ export default function LandingPage() {
               </svg>
             </div>
 
-            {/* Text + chips — flex:1 dengan min-width:0 agar wrap benar */}
+            {/* Text + chips â€” flex:1 dengan min-width:0 agar wrap benar */}
             <div style={{ flex: 1, minWidth: 200 }}>
               <p style={{
                 fontFamily: 'var(--font-inter)', fontSize: '0.72rem',
                 letterSpacing: '0.18em', textTransform: 'uppercase',
                 color: 'var(--novel-cloud)', marginBottom: 6,
-              }}>Dokumen Resmi · NEWGAME</p>
+              }}>Dokumen Resmi Â· NEWGAME</p>
               <h3 style={{
                 fontFamily: 'var(--font-lora)', fontSize: 20, fontWeight: 700,
                 color: 'var(--novel-ink)', marginBottom: 8,
@@ -626,7 +626,7 @@ export default function LandingPage() {
               <p style={{
                 fontFamily: 'var(--font-cormorant)', fontSize: 15,
                 color: 'var(--novel-cloud)', lineHeight: 1.7, marginBottom: 14,
-              }}>Panduan interaktif bergaya handwritten dengan animasi — cocok dibaca sebelum bergabung atau sebagai referensi anggota aktif.</p>
+              }}>Panduan interaktif bergaya handwritten dengan animasi â€” cocok dibaca sebelum bergabung atau sebagai referensi anggota aktif.</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[
                   { label: 'Struktur Org', color: '#335C67', bg: '#e8f0f2' },
@@ -646,7 +646,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* CTA — full width on mobile via flexWrap */}
+            {/* CTA â€” full width on mobile via flexWrap */}
             <div style={{ flexShrink: 0, width: '100%', maxWidth: 160 }}>
               <div style={{
                 padding: '11px 20px', borderRadius: 12,
@@ -666,7 +666,7 @@ export default function LandingPage() {
 
       <div className="divider-glow" style={{ maxWidth: 600, margin: '0 auto' }} />
 
-      {/* ════ CTA ════════════════════════════════════════════════ */}
+      {/* â•â•â•â• CTA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="landing-section">
         <motion.div
           className="reveal"
@@ -697,7 +697,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ════ CONTACT ════════════════════════════════════════════ */}
+      {/* â•â•â•â• CONTACT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="landing-section" style={{ paddingBottom: 40 }}>
         <div className="section-inner reveal" style={{ maxWidth: 600, textAlign: 'center' }}>
           <h2 className="section-title" style={{ fontSize: 24 }}>Kontak</h2>
@@ -714,20 +714,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════ FOOTER ════════════════════════════════════════════ */}
+      {/* â•â•â•â• FOOTER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <footer className="landing-footer">
         <div className="divider-glow" style={{ margin: '0 auto 24px', maxWidth: 400 }} />
         <p style={{ fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--novel-cloud)' }}>
-          NEWGAME — Universitas Andalas
+          NEWGAME â€” Universitas Andalas
         </p>
         <p style={{ fontFamily: 'var(--font-inter)', fontSize: 12, color: 'var(--novel-cloud)', marginTop: 6, opacity: 0.7 }}>
-          Learn&nbsp;·&nbsp;Create&nbsp;·&nbsp;
+          Learn&nbsp;Â·&nbsp;Create&nbsp;Â·&nbsp;
           <button id="play-btn" className="footer-play-btn" onClick={openVideo}>Play</button>
         </p>
       </footer>
 
-      {/* ════ VIDEO MODAL ════════════════════════════════════════ */}
+      {/* â•â•â•â• VIDEO MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <VideoModal isOpen={videoOpen} onClose={closeVideo} youtubeId="dQw4w9WgXcQ" />
     </div>
   );
 }
+

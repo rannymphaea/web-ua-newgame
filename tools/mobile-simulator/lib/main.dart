@@ -132,7 +132,7 @@ class _SimulatorPageState extends State<SimulatorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final sidebarW = 260.0;
+    const sidebarW = 260.0;
     return Scaffold(
       backgroundColor: kBg,
       body: Row(children: [
@@ -203,12 +203,12 @@ class _SimulatorPageState extends State<SimulatorPage> {
         child: const Center(child: Text('📱', style: TextStyle(fontSize: 17))),
       ),
       const SizedBox(width: 10),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('NEWGAME', style: TextStyle(
+      const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('NEWGAME', style: TextStyle(
           fontSize: 12, fontWeight: FontWeight.w800,
           color: kGold, letterSpacing: 1.5,
         )),
-        const Text('Mobile Simulator', style: TextStyle(fontSize: 9.5, color: kMuted)),
+        Text('Mobile Simulator', style: TextStyle(fontSize: 9.5, color: kMuted)),
       ]),
     ]),
   );

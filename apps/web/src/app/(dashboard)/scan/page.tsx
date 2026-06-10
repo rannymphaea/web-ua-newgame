@@ -1,24 +1,33 @@
-'use client';
+﻿'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
+import { attendanceSync } from '@/lib/attendance-sync';
+import { parseError } from '@/lib/errors';
 
 export default function ScanPage() {
   const { activeEvent: _ae } = { activeEvent: null };
   void _ae;
   const { user: _u } = useAuthStore();
   void _u;
-  const [state, setState] = useState<'loading'|'no-event'|'scanner'|'processing'|'success'|'error'|'already'>('loading');
+  const [state, setState] = useState<'loading'|'no-event'|'scanner'|'processing'|'success'|'error'|'already'|'queued'>('loading');
   const [activeEvent, setActiveEvent] = useState<{id:string;name:string;xpReward?:number}|null>(null);
-  const [result, setResult]   = useState<{eventName?:string;xpGained?:number;xpChange?:number;streakBonus?:number;totalXP?:number;level?:number;newStreak?:number}|null>(null);
+  const [result, setResult]   = useState<{eventName?:string;xpGained?:number;xpChange?:number;streakBonus?:number;totalXP?:number;level?:number;newStreak?:number;alreadyRecorded?:boolean}|null>(null);
   const [error, setError]     = useState('');
   const [manualToken, setManualToken] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
   const scannerRef = useRef<{stop:()=>void}|null>(null);
   const readerRef  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Init sync service â€” processes pending scans from previous offline sessions
+    attendanceSync.init();
+    setPendingCount(attendanceSync.getPendingCount());
     checkActiveEvent();
-    return () => { stopScanner(); };
+    return () => {
+      stopScanner();
+      attendanceSync.destroy();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -75,14 +84,34 @@ export default function ScanPage() {
         const url = new URL(text);
         tokenId = url.searchParams.get('token') || text;
       }
-      if (!tokenId) throw new Error('Invalid QR code');
+      if (!tokenId) throw new Error('QR code tidak valid');
       const res = await api.post('/attendance/process', { tokenId, eventId: activeEvent?.id });
-      setResult(res as typeof result);
+      const data = res as typeof result;
+
+      // Backend returns alreadyRecorded=true for idempotent duplicate scans
+      if (data?.alreadyRecorded) { setState('already'); return; }
+
+      setResult(data);
       setState('success');
+      setPendingCount(attendanceSync.getPendingCount());
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed';
-      if (msg.includes('already')) { setState('already'); }
-      else { setError(msg); setState('error'); }
+      const msg = parseError(err);
+      if (msg.includes('sudah absen') || msg.includes('already')) {
+        setState('already');
+      } else if (!navigator.onLine || msg.includes('internet') || msg.includes('jaringan')) {
+        // Offline â€” queue for sync
+        attendanceSync.queueScan({
+          qr_token: text,
+          scanned_at: new Date().toISOString(),
+          event_id: activeEvent?.id || '',
+          device_fingerprint: navigator.userAgent.slice(0, 40),
+        });
+        setPendingCount(attendanceSync.getPendingCount());
+        setState('queued');
+      } else {
+        setError(msg);
+        setState('error');
+      }
     }
   }
 
@@ -101,6 +130,14 @@ export default function ScanPage() {
     <div className="scan-page animate-fade-in">
       <div className="scan-container">
 
+        {/* Pending sync indicator */}
+        {pendingCount > 0 && (
+          <div style={{padding:'8px 14px',borderRadius:8,background:'var(--clr-warning-bg)',border:'1px solid rgba(230,120,74,0.4)',marginBottom:12,display:'flex',alignItems:'center',gap:8,fontFamily:'var(--font-inter)',fontSize:12,color:'var(--clr-warning)'}}>
+            <i className="ri-wifi-off-line" style={{fontSize:14}} aria-hidden="true" />
+            {pendingCount} absensi menunggu sinkronisasi â€” akan dikirim saat koneksi pulih
+          </div>
+        )}
+
         {state === 'loading' && (
           <div className="card text-center scan-state-card">
             <div className="spinner mx-auto mb-md" />
@@ -116,7 +153,7 @@ export default function ScanPage() {
             <h2 className="scan-title">Belum Ada Event</h2>
             <p className="scan-desc mb-lg">Saat ini tidak ada event aktif yang memerlukan absensi.</p>
             <div style={{display:'flex',justifyContent:'center',marginBottom:24}}>
-              <img src="/oc-cmd.svg" alt="OC" style={{height:100,opacity:0.8,filter:'drop-shadow(0 4px 12px var(--clr-border))'}} />
+              <img src="/images/characters/oc-cmd.svg" alt="OC" style={{height:100,opacity:0.8,filter:'drop-shadow(0 4px 12px var(--clr-border))'}} />
             </div>
             <button onClick={checkActiveEvent} className="btn btn-secondary w-full btn-depth" style={{padding:'12px'}}>
               <i className="ri-refresh-line" aria-hidden="true" /> Muat Ulang
@@ -209,6 +246,18 @@ export default function ScanPage() {
           </div>
         )}
 
+        {state === 'queued' && (
+          <div className="card text-center scan-state-card animate-slide-up" style={{border:'1px solid rgba(230,120,74,0.4)'}}>
+            <div className="state-icon mb-md" style={{width:80,height:80,background:'var(--clr-warning-bg)'}}>
+              <i className="ri-wifi-off-line" style={{fontSize:40,color:'var(--clr-warning)'}} aria-hidden="true" />
+            </div>
+            <h2 className="scan-title">Absen Disimpan</h2>
+            <p className="scan-desc mb-md">Tidak ada koneksi internet saat ini.</p>
+            <p className="scan-desc mb-xl" style={{fontSize:12,opacity:0.7}}>Absensi kamu akan dikirim otomatis saat koneksi pulih. Tidak perlu scan ulang.</p>
+            <a href="/dashboard" className="btn btn-secondary w-full btn-depth" style={{padding:12}}>Kembali ke Dashboard</a>
+          </div>
+        )}
+
         {state === 'already' && (
           <div className="card text-center scan-state-card animate-fade-in">
             <div className="state-icon bg-blue mb-md" style={{width:80,height:80}}>
@@ -223,3 +272,4 @@ export default function ScanPage() {
     </div>
   );
 }
+

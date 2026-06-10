@@ -1,4 +1,8 @@
-// DO NOT EDIT - HTTP client inti. Dipakai oleh semua halaman untuk komunikasi ke backend.
+// HTTP client inti — NEWGAME V1.1
+// Dipakai oleh semua halaman untuk komunikasi ke backend.
+// Enhanced: throws ApiError with user-friendly Indonesian messages.
+import { ApiError, getErrorMessage } from './errors';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 class ApiClient {
@@ -31,27 +35,39 @@ class ApiClient {
       clearTimeout(timeout);
 
       if (!res.ok) {
-        let errorMessage = `API Error ${res.status}`;
+        let rawMessage = `API Error ${res.status}`;
+        let errorCode = '';
         try {
           const text = await res.text();
           if (text) {
             const err = JSON.parse(text);
-            errorMessage = err.message || err.error || errorMessage;
+            rawMessage = err.message || err.error || rawMessage;
+            errorCode = err.code || err.error || '';
           } else {
-            errorMessage = res.statusText || errorMessage;
+            rawMessage = res.statusText || rawMessage;
           }
         } catch {
-          errorMessage = res.statusText || errorMessage;
+          rawMessage = res.statusText || rawMessage;
         }
-        throw new Error(errorMessage);
+        throw new ApiError(res.status, rawMessage, errorCode);
       }
 
       const text = await res.text();
       return text ? JSON.parse(text) : null;
     } catch (err: any) {
       clearTimeout(timeout);
+
+      // Re-throw ApiError as-is
+      if (err instanceof ApiError) {
+        throw err;
+      }
+
+      // Network/timeout errors
       if (err.name === 'AbortError') {
-        throw new Error('Request timeout — server tidak merespons');
+        throw new ApiError(408, 'Request timeout', 'TIMEOUT');
+      }
+      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
+        throw new ApiError(0, 'Network error', 'NETWORK_ERROR');
       }
       throw err;
     }
@@ -67,15 +83,17 @@ class ApiClient {
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
     const res = await fetch(`${API_BASE}${path}`, { method: 'POST', headers, body: formData });
     if (!res.ok) {
-      let errorMessage = 'Upload failed';
+      let rawMessage = 'Upload gagal';
+      let errorCode = '';
       try {
         const text = await res.text();
         if (text) {
           const err = JSON.parse(text);
-          errorMessage = err.message || err.error || errorMessage;
+          rawMessage = err.message || err.error || rawMessage;
+          errorCode = err.code || '';
         }
       } catch {}
-      throw new Error(errorMessage);
+      throw new ApiError(res.status, rawMessage, errorCode);
     }
     return res.json();
   }

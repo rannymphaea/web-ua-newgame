@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 
@@ -49,7 +49,7 @@ export default function CalendarPage() {
           <p className="cal-sub">Jangan lewatkan event terbaru dan raih XP tambahan!</p>
         </div>
         <div className="cal-oc-wrap">
-          <img src="/oc-cmd.svg" alt="Instructor OC" className="cal-oc-img animate-float" />
+          <img src="/images/characters/oc-cmd.svg" alt="Instructor OC" className="cal-oc-img animate-float" />
         </div>
       </div>
 
@@ -168,3 +168,4 @@ export default function CalendarPage() {
     </div>
   );
 }
+

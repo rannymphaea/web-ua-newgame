@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface UserData {
   name?: string;
   username?: string;
@@ -29,18 +29,18 @@ interface AvatarOption {
   animation?: string;
 }
 
-// ─── Avatar definitions ───────────────────────────────────────────────────────
+// â”€â”€â”€ Avatar definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const AVATAR_OPTIONS: AvatarOption[] = [
   { key: 'default', label: 'Default',  color: 'var(--clr-lavender)' },
-  { key: 'alpha',   label: 'Alpha',    symbol: 'α', color: '#3b82f6' },
-  { key: 'omega',   label: 'Omega',    symbol: 'Ω', color: '#f472b6' },
+  { key: 'alpha',   label: 'Alpha',    symbol: 'Î±', color: '#3b82f6' },
+  { key: 'omega',   label: 'Omega',    symbol: 'Î©', color: '#f472b6' },
   { key: 'yua',     label: 'Yua',      color: '#3b82f6', animation: 'avatar_pulse' },
 ];
 
-// ─── SFX cooldown (600 ms) ────────────────────────────────────────────────────
+// â”€â”€â”€ SFX cooldown (600 ms) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SFX_COOLDOWN_MS = 600;
 
-// ─── Profile Page ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Profile Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function ProfilePage() {
   const { userData, user } = useAuthStore();
   void user;
@@ -79,13 +79,13 @@ export default function ProfilePage() {
     document.documentElement.classList.toggle('dark', newMode);
   }
 
-  // ─── Avatar pulse animation (220ms, scale 1→1.15→1, ease-out) ─────────────
+  // â”€â”€â”€ Avatar pulse animation (220ms, scale 1â†’1.15â†’1, ease-out) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const triggerPulse = useCallback((avatarKey: AvatarKey) => {
     setPulsingAvatar(avatarKey);
     setTimeout(() => setPulsingAvatar(null), 220);
   }, []);
 
-  // ─── Play SFX with cooldown ───────────────────────────────────────────────
+  // â”€â”€â”€ Play SFX with cooldown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const playSfx = useCallback((sfxPath: string): { sfx: string } | { sfx: 'cooldown_active' } => {
     if (sfxCooldownRef.current) {
       return { sfx: 'cooldown_active' };
@@ -106,7 +106,7 @@ export default function ProfilePage() {
     return { sfx: sfxPath };
   }, []);
 
-  // ─── Handle avatar selection ──────────────────────────────────────────────
+  // â”€â”€â”€ Handle avatar selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleAvatarSelect = useCallback(async (option: AvatarOption) => {
     if (avatarLoading) return;
 
@@ -141,13 +141,13 @@ export default function ProfilePage() {
         profile_upload: res.profile_upload,
       });
     } catch {
-      // Silently fail — local state already updated
+      // Silently fail â€” local state already updated
     } finally {
       setAvatarLoading(false);
     }
   }, [avatarLoading, playSfx, triggerPulse]);
 
-  // ─── Save profile info ────────────────────────────────────────────────────
+  // â”€â”€â”€ Save profile info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleSave() {
     if (!displayName.trim()) {
       setMessage('Nama lengkap wajib diisi.');
@@ -170,7 +170,7 @@ export default function ProfilePage() {
     } finally { setSaving(false); }
   }
 
-  // ─── Upload profile photo ─────────────────────────────────────────────────
+  // â”€â”€â”€ Upload profile photo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -254,7 +254,7 @@ export default function ProfilePage() {
             {photoURL
               ? <img src={photoURL} alt="Avatar" className="avatar-img" />
               : currentAvatarOption.key === 'yua'
-                ? <img src="/yua.svg" alt="Yua Avatar" className="avatar-img" style={{ objectFit: 'contain', background: '#12121a' }} />
+                ? <img src="/images/characters/yua.svg" alt="Yua Avatar" className="avatar-img" style={{ objectFit: 'contain', background: '#12121a' }} />
                 : (
                 <div
                   className="avatar-placeholder"
@@ -313,7 +313,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* ─── Multi Avatar Selector ─────────────────────────────────── */}
+          {/* â”€â”€â”€ Multi Avatar Selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="avatar-selector-section">
             <p className="avatar-selector-label">
               <i className="ri-palette-fill" style={{fontSize:10,marginRight:4}} aria-hidden="true" />
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                     title={option.label}
                   >
                     {option.key === 'yua' ? (
-                      <img src="/yua.svg" alt="Yua" style={{ height: 32, objectFit: 'contain' }} />
+                      <img src="/images/characters/yua.svg" alt="Yua" style={{ height: 32, objectFit: 'contain' }} />
                     ) : (
                       <span className="avatar-choice-initial" style={{ color: option.color }}>
                         {option.symbol || option.label.charAt(0)}
@@ -346,14 +346,14 @@ export default function ProfilePage() {
                     )}
                     <span className="avatar-choice-label">{option.label}</span>
                     {isActive && (
-                      <span className="avatar-choice-check" aria-hidden="true">✓</span>
+                      <span className="avatar-choice-check" aria-hidden="true">âœ“</span>
                     )}
                   </button>
                 );
               })}
             </div>
           </div>
-          {/* ──────────────────────────────────────────────────────────── */}
+          {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
           <p className="avatar-hint">
             <i className="ri-information-line" style={{fontSize:10,marginRight:4}} aria-hidden="true" />
@@ -417,14 +417,14 @@ export default function ProfilePage() {
       </div>
 
       <style>{`
-        /* ── Keyframes ── */
+        /* â”€â”€ Keyframes â”€â”€ */
         @keyframes avatar-pulse {
           0%   { transform: scale(1); }
           50%  { transform: scale(1.15); }
           100% { transform: scale(1); }
         }
 
-        /* ── Layout ── */
+        /* â”€â”€ Layout â”€â”€ */
         .profile-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
         .profile-eyebrow { font-family:var(--font-inter); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--clr-text-secondary); margin-bottom:6px; display:flex; align-items:center; }
         .profile-title { font-family:var(--font-lora); font-size:clamp(22px,3vw,28px); font-weight:700; color:var(--clr-text-primary); margin-bottom:4px; line-height:1.1; }
@@ -433,7 +433,7 @@ export default function ProfilePage() {
         .profile-layout { display:grid; grid-template-columns:280px 1fr; gap:20px; align-items:start; }
         .profile-avatar-card { text-align:center; padding:28px 20px; position:sticky; top:calc(var(--accent-bar-height) + var(--topbar-height) + 16px); }
 
-        /* ── Avatar photo ── */
+        /* â”€â”€ Avatar photo â”€â”€ */
         .avatar-wrap { position:relative; width:90px; margin:0 auto 14px; }
         .avatar-img,.avatar-placeholder { width:90px; height:90px; border-radius:50%; }
         .avatar-img { object-fit:cover; border:3px solid var(--clr-border-gold); box-shadow:0 4px 16px var(--clr-gold-glow); }
@@ -445,7 +445,7 @@ export default function ProfilePage() {
         .avatar-username { font-family:var(--font-inter); font-size:12px; color:var(--clr-text-secondary); margin-bottom:10px; }
         .avatar-division-badge { display:inline-flex; align-items:center; font-family:var(--font-inter); font-size:10px; font-weight:600; color:var(--clr-lavender); background:var(--clr-lavender-subtle); border:1px solid rgba(185,166,206,0.2); padding:3px 10px; border-radius:20px; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.5px; }
 
-        /* ── Stats row ── */
+        /* â”€â”€ Stats row â”€â”€ */
         .avatar-stats { display:flex; align-items:center; gap:0; background:var(--clr-bg-muted); border:1px solid var(--clr-border); border-radius:10px; padding:12px 8px; margin-bottom:16px; }
         .avatar-stat { flex:1; text-align:center; }
         .avatar-stat-val { display:block; font-family:var(--font-lora); font-size:18px; font-weight:700; line-height:1; margin-bottom:3px; }
@@ -453,7 +453,7 @@ export default function ProfilePage() {
         .avatar-stat-divider { width:1px; height:32px; background:var(--clr-border); }
         .avatar-hint { font-family:var(--font-inter); font-size:10px; color:var(--clr-text-secondary); display:flex; align-items:center; justify-content:center; margin-top:10px; }
 
-        /* ── Multi Avatar Selector ── */
+        /* â”€â”€ Multi Avatar Selector â”€â”€ */
         .avatar-selector-section { margin-bottom:12px; text-align:left; }
         .avatar-selector-label { font-family:var(--font-inter); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--clr-text-secondary); display:flex; align-items:center; margin-bottom:8px; }
         .avatar-selector-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
@@ -481,7 +481,7 @@ export default function ProfilePage() {
           color:var(--clr-text-primary);
           box-shadow:0 0 0 3px color-mix(in srgb, var(--avatar-color, var(--clr-lavender)) 25%, transparent);
         }
-        /* avatar_pulse: scale 1→1.15→1, 220ms max, ease-out, no layout shift */
+        /* avatar_pulse: scale 1â†’1.15â†’1, 220ms max, ease-out, no layout shift */
         .avatar-choice-btn.pulse {
           animation:avatar-pulse 220ms ease-out forwards;
           will-change:transform;
@@ -501,7 +501,7 @@ export default function ProfilePage() {
           padding:1px 5px; border-radius:4px; white-space:nowrap;
         }
 
-        /* ── Form ── */
+        /* â”€â”€ Form â”€â”€ */
         .profile-form-card { padding:24px; }
         .form-group { margin-bottom:18px; }
         .form-label { display:flex; align-items:center; margin-bottom:7px; font-family:var(--font-inter); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:var(--clr-text-secondary); }
@@ -521,3 +521,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
