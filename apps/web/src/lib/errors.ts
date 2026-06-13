@@ -1,11 +1,11 @@
-/**
- * Error Mapping Library — NEWGAME V1.1
+﻿/**
+ * Error Mapping Library â€” NEWGAME v0.1.1
  *
  * Memetakan error backend (HTTP status + domain codes) ke pesan
  * Bahasa Indonesia yang ramah pengguna non-teknis.
  */
 
-// ── HTTP Status → Pesan Indonesia ─────────────────────────────
+// â”€â”€ HTTP Status â†’ Pesan Indonesia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const HTTP_ERROR_MESSAGES: Record<number, string> = {
   400: 'Data yang kamu kirim tidak valid',
   401: 'Sesi kamu sudah berakhir, silakan login kembali',
@@ -22,7 +22,7 @@ export const HTTP_ERROR_MESSAGES: Record<number, string> = {
   504: 'Server tidak merespons, coba lagi nanti',
 };
 
-// ── Domain-Specific Error Codes → Pesan Indonesia ─────────────
+// â”€â”€ Domain-Specific Error Codes â†’ Pesan Indonesia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const DOMAIN_ERROR_MESSAGES: Record<string, string> = {
   // QR / Attendance
   QR_EXPIRED:          'QR code sudah kadaluarsa',
@@ -62,7 +62,7 @@ export const DOMAIN_ERROR_MESSAGES: Record<string, string> = {
   TIMEOUT:             'Koneksi ke server terlalu lama, coba lagi',
 };
 
-// ── ApiError class ────────────────────────────────────────────
+// â”€â”€ ApiError class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -78,10 +78,10 @@ export class ApiError extends Error {
   }
 }
 
-// ── Resolver function ─────────────────────────────────────────
+// â”€â”€ Resolver function â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /**
  * Resolves a raw error into a user-friendly Indonesian message.
- * Priority: domain code → raw message match → HTTP status → generic
+ * Priority: domain code â†’ raw message match â†’ HTTP status â†’ generic
  */
 export function getErrorMessage(
   statusCode?: number,
@@ -116,7 +116,7 @@ export function getErrorMessage(
   return rawMessage || 'Terjadi kesalahan yang tidak diketahui';
 }
 
-// ── Helper: parse any error into friendly message ─────────────
+// â”€â”€ Helper: parse any error into friendly message â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function parseError(error: unknown): string {
   if (error instanceof ApiError) {
     return error.friendlyMessage;

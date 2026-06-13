@@ -1,6 +1,6 @@
-# Panduan Registrasi dan Manajemen Anggota — NEWGAME V1.1
+﻿# Panduan Registrasi dan Manajemen Anggota â€” NEWGAME v0.1.1
 
-Dokumen ini adalah referensi operasional untuk pengurus dan admin platform NEWGAME V1.1. Berisi data keanggotaan aktif, format kode akses, dan tutorial lengkap untuk menambahkan anggota baru baik satu per satu maupun secara massal.
+Dokumen ini adalah referensi operasional untuk pengurus dan admin platform NEWGAME v0.1.1. Berisi data keanggotaan aktif, format kode akses, dan tutorial lengkap untuk menambahkan anggota baru baik satu per satu maupun secara massal.
 
 > [!CAUTION]
 > Dokumen ini bersifat INTERNAL. Jangan dibagikan ke grup publik atau platform terbuka. Bagikan kode akses secara pribadi kepada masing-masing anggota.
@@ -66,15 +66,15 @@ Cara mengisi tabel ini: ganti kolom nama dan divisi dengan data nyata setiap ang
 
 #### Melalui Portal Admin
 
-Langkah ini dilakukan melalui antarmuka halaman admin di portal NEWGAME V1.1.
+Langkah ini dilakukan melalui antarmuka halaman admin di portal NEWGAME v0.1.1.
 
-Langkah 1 — Login ke portal sebagai akun dengan role ADMIN atau OWNER.
+Langkah 1 â€” Login ke portal sebagai akun dengan role ADMIN atau OWNER.
 
-Langkah 2 — Buka halaman Admin Panel dan pilih menu "Kelola Anggota" atau navigasikan langsung ke `/dashboard/admin/members`.
+Langkah 2 â€” Buka halaman Admin Panel dan pilih menu "Kelola Anggota" atau navigasikan langsung ke `/dashboard/admin/members`.
 
-Langkah 3 — Klik tombol "Tambah Anggota Baru".
+Langkah 3 â€” Klik tombol "Tambah Anggota Baru".
 
-Langkah 4 — Isi formulir dengan data berikut:
+Langkah 4 â€” Isi formulir dengan data berikut:
 
 | Field | Nilai | Keterangan |
 |---|---|---|
@@ -85,11 +85,11 @@ Langkah 4 — Isi formulir dengan data berikut:
 | Role | TRAINEE | Default untuk anggota baru |
 | Kode Akses | `temp-sec-XXX` | Buat angka acak yang belum digunakan |
 
-Langkah 5 — Klik "Simpan". Sistem akan menulis data ke PostgreSQL dan melakukan dual-write ke Firestore sebagai backup.
+Langkah 5 â€” Klik "Simpan". Sistem akan menulis data ke PostgreSQL dan melakukan dual-write ke Firestore sebagai backup.
 
-Langkah 6 — Catat Member ID dan Kode Akses yang digunakan, lalu perbarui tabel di dokumen ini.
+Langkah 6 â€” Catat Member ID dan Kode Akses yang digunakan, lalu perbarui tabel di dokumen ini.
 
-Langkah 7 — Sampaikan Member ID dan Kode Akses kepada anggota secara pribadi (direct message atau tatap muka langsung). Jangan kirim melalui grup chat yang dapat dilihat orang lain.
+Langkah 7 â€” Sampaikan Member ID dan Kode Akses kepada anggota secara pribadi (direct message atau tatap muka langsung). Jangan kirim melalui grup chat yang dapat dilihat orang lain.
 
 ---
 

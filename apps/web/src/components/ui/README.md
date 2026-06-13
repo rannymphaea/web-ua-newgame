@@ -1,4 +1,4 @@
-# Komponen UI — NEWGAME V1.1
+﻿# Komponen UI â€” NEWGAME v0.1.1
 
 Direktori ini menampung komponen antarmuka yang modular, dapat digunakan ulang, dan kompatibel dengan sistem design token di `src/styles/globals.css`.
 
@@ -17,7 +17,7 @@ Direktori ini menampung komponen antarmuka yang modular, dapat digunakan ulang, 
 
 ### ProfileCard
 
-Komponen kartu informasi anggota terpadu — avatar di sisi kiri, detail nama dan role di sisi kanan — yang dirancang responsif dan fleksibel.
+Komponen kartu informasi anggota terpadu â€” avatar di sisi kiri, detail nama dan role di sisi kanan â€” yang dirancang responsif dan fleksibel.
 
 Props yang tersedia:
 
@@ -42,8 +42,8 @@ Tombol interaktif untuk mengalihkan tema situs antara mode gelap dan terang seca
 
 Catatan implementasi:
 
-- SSR Safe (Next.js) — Preferensi tema dibaca dari `localStorage` atau media-query sistem operasi di dalam `useEffect` untuk menghindari Hydration Error.
-- Zero FOUC — Bekerja selaras dengan script THEME_SCRIPT pada root `layout.tsx` yang menerapkan kelas `.dark` pada elemen html sebelum elemen visual pertama digambar.
+- SSR Safe (Next.js) â€” Preferensi tema dibaca dari `localStorage` atau media-query sistem operasi di dalam `useEffect` untuk menghindari Hydration Error.
+- Zero FOUC â€” Bekerja selaras dengan script THEME_SCRIPT pada root `layout.tsx` yang menerapkan kelas `.dark` pada elemen html sebelum elemen visual pertama digambar.
 
 ---
 

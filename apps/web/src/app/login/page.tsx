@@ -13,6 +13,17 @@ import {
 import { auth } from '@/lib/firebase';
 import { api } from '@/lib/api';
 
+/** Detect HTML response from misconfigured API URL */
+async function safeParseJson(res: Response) {
+  const text = await res.text();
+  if (!text) return {};
+  if (text.trimStart().startsWith('<!') || text.trimStart().startsWith('<html')) {
+    throw new Error('Server API tidak dapat dihubungi. Pastikan backend (port 3001) sudah berjalan.');
+  }
+  try { return JSON.parse(text); }
+  catch { throw new Error('Respons server tidak valid'); }
+}
+
 /* ── Floating ink particle ──────────────────────────────────── */
 interface ParticleProps { x: number; y: number; delay: number; color: string; }
 function InkParticle({ x, y, delay, color }: ParticleProps) {
@@ -120,7 +131,7 @@ export default function LoginPage() {
       );
 
       if (!lookupRes.ok) {
-        const err = await lookupRes.json().catch(() => ({}));
+        const err = await safeParseJson(lookupRes).catch(() => ({}));
         const status = lookupRes.status;
         if (status === 404) {
           throw new Error('ID anggota tidak ditemukan');
@@ -135,7 +146,7 @@ export default function LoginPage() {
         }
       }
 
-      const lookupData = await lookupRes.json();
+      const lookupData = await safeParseJson(lookupRes);
       setNgMaskedEmail(lookupData.maskedEmail);
       setNgLookupDone(true);
 
@@ -180,10 +191,10 @@ export default function LoginPage() {
         },
       );
       if (!verifyRes.ok) {
-        const err = await verifyRes.json();
+        const err = await safeParseJson(verifyRes).catch(() => ({}));
         throw new Error(err.message || 'Verifikasi gagal — cek Member ID dan Kode Akses');
       }
-      const verified = await verifyRes.json();
+      const verified = await safeParseJson(verifyRes);
 
       // Step 2: Buat akun Firebase Auth
       const cred = await createUserWithEmailAndPassword(auth, regEmail, regPassword);

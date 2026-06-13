@@ -1,6 +1,6 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
- * Firestore → PostgreSQL Migration Script — NEWGAME V1.1
+ * Firestore â†’ PostgreSQL Migration Script â€” NEWGAME v0.1.1
  *
  * Membaca data dari Firestore dan menginsert ke PostgreSQL via Prisma.
  * Upsert-based: aman dijalankan ulang tanpa duplikasi.
@@ -11,27 +11,27 @@
  *   node scripts/migrate-firestore.mjs --collection users  # Migrasi satu collection
  *
  * Environment:
- *   DATABASE_URL — PostgreSQL connection string
- *   FIREBASE_CREDENTIALS_JSON — Firebase service account JSON string
+ *   DATABASE_URL â€” PostgreSQL connection string
+ *   FIREBASE_CREDENTIALS_JSON â€” Firebase service account JSON string
  *   (atau) serviceAccountKey.json di root project
  */
 
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
-// ── Parse CLI args ────────────────────────────────────────────
+// â”€â”€ Parse CLI args â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const COLLECTION_FILTER = args.includes('--collection')
   ? args[args.indexOf('--collection') + 1]
   : null;
 
-// ── Firebase Admin Setup ──────────────────────────────────────
+// â”€â”€ Firebase Admin Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let admin;
 try {
   admin = (await import('firebase-admin')).default;
 } catch {
-  console.error('❌ firebase-admin tidak terinstall. Jalankan: npm install firebase-admin');
+  console.error('âŒ firebase-admin tidak terinstall. Jalankan: npm install firebase-admin');
   process.exit(1);
 }
 
@@ -61,24 +61,24 @@ function initFirebase() {
     }
   }
 
-  console.error('❌ Firebase credentials tidak ditemukan.');
+  console.error('âŒ Firebase credentials tidak ditemukan.');
   console.error('   Set FIREBASE_CREDENTIALS_JSON atau letakkan serviceAccountKey.json di root.');
   process.exit(1);
 }
 
-// ── Prisma Setup ──────────────────────────────────────────────
+// â”€â”€ Prisma Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let PrismaClient;
 try {
   const prismaModule = await import('@prisma/client');
   PrismaClient = prismaModule.PrismaClient;
 } catch {
-  console.error('❌ @prisma/client tidak tersedia. Jalankan: cd apps/api && npx prisma generate');
+  console.error('âŒ @prisma/client tidak tersedia. Jalankan: cd apps/api && npx prisma generate');
   process.exit(1);
 }
 
-// ── Initialize ────────────────────────────────────────────────
-console.log(`\n🔄 NEWGAME Firestore → PostgreSQL Migration`);
-console.log(`   Mode: ${DRY_RUN ? '🔍 DRY RUN (tidak ada data yang ditulis)' : '💾 LIVE'}`);
+// â”€â”€ Initialize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+console.log(`\nðŸ”„ NEWGAME Firestore â†’ PostgreSQL Migration`);
+console.log(`   Mode: ${DRY_RUN ? 'ðŸ” DRY RUN (tidak ada data yang ditulis)' : 'ðŸ’¾ LIVE'}`);
 if (COLLECTION_FILTER) console.log(`   Collection: ${COLLECTION_FILTER}`);
 console.log('');
 
@@ -88,16 +88,16 @@ const prisma = DRY_RUN ? null : new PrismaClient();
 
 if (prisma) {
   await prisma.$connect();
-  console.log('✅ PostgreSQL terhubung\n');
+  console.log('âœ… PostgreSQL terhubung\n');
 }
 
-// ── Stats ─────────────────────────────────────────────────────
+// â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const stats = { users: 0, events: 0, attendance: 0, skipped: 0, errors: 0 };
 
-// ── Migrate Users ─────────────────────────────────────────────
+// â”€â”€ Migrate Users â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function migrateUsers() {
   if (COLLECTION_FILTER && COLLECTION_FILTER !== 'users') return;
-  console.log('📋 Migrasi collection: users');
+  console.log('ðŸ“‹ Migrasi collection: users');
 
   const snapshot = await db.collection('users').get();
   console.log(`   Ditemukan: ${snapshot.size} dokumen`);
@@ -135,17 +135,17 @@ async function migrateUsers() {
       }
       stats.users++;
     } catch (err) {
-      console.error(`   ❌ User ${doc.id}: ${err.message}`);
+      console.error(`   âŒ User ${doc.id}: ${err.message}`);
       stats.errors++;
     }
   }
-  console.log(`   ✅ Users migrated: ${stats.users}\n`);
+  console.log(`   âœ… Users migrated: ${stats.users}\n`);
 }
 
-// ── Migrate Events ────────────────────────────────────────────
+// â”€â”€ Migrate Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function migrateEvents() {
   if (COLLECTION_FILTER && COLLECTION_FILTER !== 'events') return;
-  console.log('📋 Migrasi collection: events');
+  console.log('ðŸ“‹ Migrasi collection: events');
 
   const snapshot = await db.collection('events').get();
   console.log(`   Ditemukan: ${snapshot.size} dokumen`);
@@ -181,17 +181,17 @@ async function migrateEvents() {
       }
       stats.events++;
     } catch (err) {
-      console.error(`   ❌ Event ${doc.id}: ${err.message}`);
+      console.error(`   âŒ Event ${doc.id}: ${err.message}`);
       stats.errors++;
     }
   }
-  console.log(`   ✅ Events migrated: ${stats.events}\n`);
+  console.log(`   âœ… Events migrated: ${stats.events}\n`);
 }
 
-// ── Migrate Attendance ────────────────────────────────────────
+// â”€â”€ Migrate Attendance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function migrateAttendance() {
   if (COLLECTION_FILTER && COLLECTION_FILTER !== 'attendance') return;
-  console.log('📋 Migrasi collection: attendance');
+  console.log('ðŸ“‹ Migrasi collection: attendance');
 
   const snapshot = await db.collection('attendance').get();
   console.log(`   Ditemukan: ${snapshot.size} dokumen`);
@@ -232,14 +232,14 @@ async function migrateAttendance() {
       }
       stats.attendance++;
     } catch (err) {
-      console.error(`   ❌ Attendance ${doc.id}: ${err.message}`);
+      console.error(`   âŒ Attendance ${doc.id}: ${err.message}`);
       stats.errors++;
     }
   }
-  console.log(`   ✅ Attendance migrated: ${stats.attendance}\n`);
+  console.log(`   âœ… Attendance migrated: ${stats.attendance}\n`);
 }
 
-// ── Helpers ───────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toDate(val) {
   if (!val) return new Date();
   if (val.toDate) return val.toDate(); // Firestore Timestamp
@@ -288,29 +288,29 @@ function mapAttendanceStatus(status) {
   return statusMap[status?.toLowerCase()] || 'PRESENT';
 }
 
-// ── Execute ───────────────────────────────────────────────────
+// â”€â”€ Execute â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 try {
   await migrateUsers();
   await migrateEvents();
   await migrateAttendance();
 
-  console.log('═══════════════════════════════════════════');
-  console.log(`📊 Migration Summary`);
+  console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+  console.log(`ðŸ“Š Migration Summary`);
   console.log(`   Users:      ${stats.users}`);
   console.log(`   Events:     ${stats.events}`);
   console.log(`   Attendance: ${stats.attendance}`);
   console.log(`   Skipped:    ${stats.skipped}`);
   console.log(`   Errors:     ${stats.errors}`);
   console.log(`   Mode:       ${DRY_RUN ? 'DRY RUN' : 'LIVE'}`);
-  console.log('═══════════════════════════════════════════\n');
+  console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
 
   if (DRY_RUN) {
-    console.log('ℹ️  Jalankan tanpa --dry-run untuk melakukan migrasi aktual.');
+    console.log('â„¹ï¸  Jalankan tanpa --dry-run untuk melakukan migrasi aktual.');
   } else {
-    console.log(`✅ Migrated ${stats.users} users, ${stats.events} events, ${stats.attendance} attendance records`);
+    console.log(`âœ… Migrated ${stats.users} users, ${stats.events} events, ${stats.attendance} attendance records`);
   }
 } catch (err) {
-  console.error(`\n❌ Migration failed: ${err.message}`);
+  console.error(`\nâŒ Migration failed: ${err.message}`);
   process.exit(1);
 } finally {
   if (prisma) await prisma.$disconnect();

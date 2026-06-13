@@ -1,4 +1,4 @@
-// HTTP client inti — NEWGAME V1.1
+﻿// HTTP client inti â€” NEWGAME v0.1.1
 // Dipakai oleh semua halaman untuk komunikasi ke backend.
 // Enhanced: throws ApiError with user-friendly Indonesian messages.
 import { ApiError, getErrorMessage } from './errors';
@@ -40,9 +40,15 @@ class ApiClient {
         try {
           const text = await res.text();
           if (text) {
-            const err = JSON.parse(text);
-            rawMessage = err.message || err.error || rawMessage;
-            errorCode = err.code || err.error || '';
+            // Detect HTML response (API URL misconfigured or backend down)
+            if (text.trimStart().startsWith('<!') || text.trimStart().startsWith('<html')) {
+              rawMessage = 'Server API tidak dapat dihubungi. Pastikan backend sudah berjalan.';
+              errorCode = 'API_UNREACHABLE';
+            } else {
+              const err = JSON.parse(text);
+              rawMessage = err.message || err.error || rawMessage;
+              errorCode = err.code || err.error || '';
+            }
           } else {
             rawMessage = res.statusText || rawMessage;
           }
@@ -53,7 +59,12 @@ class ApiClient {
       }
 
       const text = await res.text();
-      return text ? JSON.parse(text) : null;
+      if (!text) return null;
+      // Detect HTML in success response (should never happen, but safety net)
+      if (text.trimStart().startsWith('<!') || text.trimStart().startsWith('<html')) {
+        throw new ApiError(502, 'Server mengembalikan respons yang tidak valid', 'INVALID_RESPONSE');
+      }
+      return JSON.parse(text);
     } catch (err: any) {
       clearTimeout(timeout);
 

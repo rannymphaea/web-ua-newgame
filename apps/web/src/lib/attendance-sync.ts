@@ -1,5 +1,5 @@
-/**
- * AttendanceSyncService — NEWGAME V1.1
+﻿/**
+ * AttendanceSyncService â€” NEWGAME v0.1.1
  *
  * Resiliensi presensi QR saat jaringan tidak stabil.
  * - Menyimpan scan yang gagal ke localStorage
@@ -24,14 +24,14 @@ export class AttendanceSyncService {
   private isProcessing = false;
   private onlineHandler: (() => void) | null = null;
 
-  /** Initialize — register listeners and process any pending scans */
+  /** Initialize â€” register listeners and process any pending scans */
   init() {
     this.clearExpired();
     this.processPendingScans();
 
     // Re-process when connection is restored
     this.onlineHandler = () => {
-      console.log('[AttendanceSync] Koneksi pulih — mencoba sinkronisasi...');
+      console.log('[AttendanceSync] Koneksi pulih â€” mencoba sinkronisasi...');
       this.processPendingScans();
     };
 
@@ -63,7 +63,7 @@ export class AttendanceSyncService {
     return this.getPending().length;
   }
 
-  /** Process all pending scans — called on app load and online event */
+  /** Process all pending scans â€” called on app load and online event */
   async processPendingScans(): Promise<{ success: number; failed: number; remaining: number }> {
     if (this.isProcessing) return { success: 0, failed: 0, remaining: this.getPendingCount() };
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -95,14 +95,14 @@ export class AttendanceSyncService {
           // 200 OK or 409 Conflict (already recorded) = success
           this.removeScan(scan.qr_token);
           success++;
-          console.log(`[AttendanceSync] ✓ Berhasil sinkronisasi: ${scan.qr_token}`);
+          console.log(`[AttendanceSync] âœ“ Berhasil sinkronisasi: ${scan.qr_token}`);
         } else if (res.status === 403) {
           // Permanent failure (e.g., token expired, already attended)
           const body = await res.json().catch(() => ({}));
           const permanentErrors = ['TOKEN_USED', 'TOKEN_EXPIRED', 'ALREADY_ATTENDED'];
           if (permanentErrors.some(e => body.message?.includes(e))) {
             this.removeScan(scan.qr_token);
-            console.log(`[AttendanceSync] ✗ Scan dihapus (permanent error): ${scan.qr_token}`);
+            console.log(`[AttendanceSync] âœ— Scan dihapus (permanent error): ${scan.qr_token}`);
           } else {
             this.incrementRetry(scan.qr_token);
             failed++;
@@ -121,7 +121,7 @@ export class AttendanceSyncService {
     return { success, failed, remaining: this.getPendingCount() };
   }
 
-  // ── Private helpers ─────────────────────────────────────────
+  // â”€â”€ Private helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private getPending(): PendingScan[] {
     try {
@@ -151,9 +151,9 @@ export class AttendanceSyncService {
     if (scan) {
       scan.retry_count++;
       if (scan.retry_count >= MAX_RETRY) {
-        // Max retries exceeded — remove
+        // Max retries exceeded â€” remove
         this.removeScan(qrToken);
-        console.warn(`[AttendanceSync] Max retry untuk ${qrToken} — dihapus dari queue`);
+        console.warn(`[AttendanceSync] Max retry untuk ${qrToken} â€” dihapus dari queue`);
         return;
       }
     }

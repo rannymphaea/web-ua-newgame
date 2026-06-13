@@ -1,6 +1,6 @@
-# MIGRATION.md — Firestore → PostgreSQL
+﻿# MIGRATION.md â€” Firestore â†’ PostgreSQL
 
-> **NEWGAME V1.1** — Panduan migrasi dari Firebase Firestore ke PostgreSQL (Neon/Supabase)
+> **NEWGAME v0.1.1** â€” Panduan migrasi dari Firebase Firestore ke PostgreSQL (Neon/Supabase)
 
 ## Prasyarat
 
@@ -18,7 +18,7 @@
 node scripts/migrate-firestore.mjs --dry-run
 ```
 
-Review output — pastikan semua data terdeteksi dan mapping benar.
+Review output â€” pastikan semua data terdeteksi dan mapping benar.
 
 ### 2. Migrasi per Collection (Opsional)
 
@@ -36,7 +36,7 @@ node scripts/migrate-firestore.mjs
 
 Output yang diharapkan:
 ```
-✅ Migrated X users, Y events, Z attendance records
+âœ… Migrated X users, Y events, Z attendance records
 ```
 
 ### 4. Verifikasi
@@ -75,7 +75,7 @@ Jika terjadi masalah setelah cutover:
 
 1. Set `USE_FIRESTORE_FALLBACK=true` di environment
 2. Deploy ulang backend
-3. Firestore masih memiliki data — tidak ada data yang dihapus oleh migrasi
+3. Firestore masih memiliki data â€” tidak ada data yang dihapus oleh migrasi
 
 ## Restore dari Backup
 
@@ -86,4 +86,4 @@ psql $DATABASE_URL < backups/backup-YYYY-MM-DD-HH.sql
 
 ---
 
-> ⚠️ **PENTING**: Jangan hapus data Firestore sampai minimal 30 hari setelah cutover berhasil dan stabil.
+> âš ï¸ **PENTING**: Jangan hapus data Firestore sampai minimal 30 hari setelah cutover berhasil dan stabil.

@@ -1,6 +1,6 @@
-# Panduan Developer — NEWGAME V1.1
+﻿# Panduan Developer â€” NEWGAME v0.1.1
 
-Dokumen ini adalah referensi utama bagi setiap developer yang berkontribusi pada platform NEWGAME V1.1. Bacalah seluruh panduan ini sebelum menulis kode pertama Anda untuk memastikan konsistensi arsitektur monorepo terjaga.
+Dokumen ini adalah referensi utama bagi setiap developer yang berkontribusi pada platform NEWGAME v0.1.1. Bacalah seluruh panduan ini sebelum menulis kode pertama Anda untuk memastikan konsistensi arsitektur monorepo terjaga.
 
 ---
 
@@ -22,23 +22,23 @@ Dokumen ini adalah referensi utama bagi setiap developer yang berkontribusi pada
 
 ```
 apps/
-├── api/                        # Backend NestJS (Port 3001)
-│   ├── prisma/                 # Skema database dan file migrasi PostgreSQL
-│   └── src/
-│       ├── auth/               # Konfigurasi Better Auth
-│       ├── database/           # Global DatabaseModule (PrismaService)
-│       ├── common/             # Guard, Decorator, Interceptor, Exception Filter
-│       └── modules/            # Modul bisnis: attendance, xp, news, members, dll
-│
-└── web/                        # Frontend Next.js (Port 3000)
-    └── src/
-        ├── app/                # Next.js App Router Pages
-        │   ├── dev-tools/      # Web Mobile Simulator (internal developer)
-        │   ├── landing/        # Halaman publik
-        │   └── (dashboard)/    # Portal terproteksi (Zustand Auth Store)
-        ├── components/         # Komponen UI, ErrorBoundary, PostHogProvider
-        ├── lib/                # Integrasi PostHog, API client, Firebase client
-        └── styles/             # globals.css — design tokens dan animasi global
+â”œâ”€â”€ api/                        # Backend NestJS (Port 3001)
+â”‚   â”œâ”€â”€ prisma/                 # Skema database dan file migrasi PostgreSQL
+â”‚   â””â”€â”€ src/
+â”‚       â”œâ”€â”€ auth/               # Konfigurasi Better Auth
+â”‚       â”œâ”€â”€ database/           # Global DatabaseModule (PrismaService)
+â”‚       â”œâ”€â”€ common/             # Guard, Decorator, Interceptor, Exception Filter
+â”‚       â””â”€â”€ modules/            # Modul bisnis: attendance, xp, news, members, dll
+â”‚
+â””â”€â”€ web/                        # Frontend Next.js (Port 3000)
+    â””â”€â”€ src/
+        â”œâ”€â”€ app/                # Next.js App Router Pages
+        â”‚   â”œâ”€â”€ dev-tools/      # Web Mobile Simulator (internal developer)
+        â”‚   â”œâ”€â”€ landing/        # Halaman publik
+        â”‚   â””â”€â”€ (dashboard)/    # Portal terproteksi (Zustand Auth Store)
+        â”œâ”€â”€ components/         # Komponen UI, ErrorBoundary, PostHogProvider
+        â”œâ”€â”€ lib/                # Integrasi PostHog, API client, Firebase client
+        â””â”€â”€ styles/             # globals.css â€” design tokens dan animasi global
 ```
 
 ---
@@ -54,11 +54,11 @@ Setiap file krusial diberi penanda komentar yang wajib dipatuhi:
 
 File yang memerlukan perhatian khusus:
 
-`apps/api/src/main.ts` — Titik masuk NestJS. Berisi konfigurasi global prefix `api`, CORS, in-memory rate limiter, global exception filter, dan global response interceptor. Tidak boleh dimodifikasi tanpa review ketat.
+`apps/api/src/main.ts` â€” Titik masuk NestJS. Berisi konfigurasi global prefix `api`, CORS, in-memory rate limiter, global exception filter, dan global response interceptor. Tidak boleh dimodifikasi tanpa review ketat.
 
-`apps/web/next.config.js` — Berisi optimasi bundle dan konfigurasi cache. Perubahan dapat memengaruhi performa build secara signifikan.
+`apps/web/next.config.js` â€” Berisi optimasi bundle dan konfigurasi cache. Perubahan dapat memengaruhi performa build secara signifikan.
 
-`apps/api/prisma/schema.prisma` — Deklarasi seluruh tabel PostgreSQL. Setiap perubahan wajib diikuti pembuatan file migrasi baru.
+`apps/api/prisma/schema.prisma` â€” Deklarasi seluruh tabel PostgreSQL. Setiap perubahan wajib diikuti pembuatan file migrasi baru.
 
 ---
 
@@ -122,10 +122,10 @@ Proyek mengaktifkan TypeScript Strict Mode secara menyeluruh.
 
 Aturan wajib:
 
-- No Implicit Any — Hindari tipe `any`. Gunakan `unknown` diikuti type narrowing jika tipe runtime tidak diketahui.
-- Indentasi — Gunakan 2 spasi, bukan tab.
-- Quotes — Single quote untuk TypeScript, double quote untuk JSX attributes dan JSON.
-- Trailing Commas — Selalu gunakan trailing comma pada objek atau array multiline.
+- No Implicit Any â€” Hindari tipe `any`. Gunakan `unknown` diikuti type narrowing jika tipe runtime tidak diketahui.
+- Indentasi â€” Gunakan 2 spasi, bukan tab.
+- Quotes â€” Single quote untuk TypeScript, double quote untuk JSX attributes dan JSON.
+- Trailing Commas â€” Selalu gunakan trailing comma pada objek atau array multiline.
 
 Konvensi penamaan:
 
@@ -144,30 +144,30 @@ Konvensi penamaan:
 > [!IMPORTANT]
 > Jangan pernah melakukan push langsung ke branch `main`. Semua perubahan harus melalui Pull Request.
 
-Langkah 1 — Sinkronkan repositori lokal:
+Langkah 1 â€” Sinkronkan repositori lokal:
 ```bash
 git checkout main
 git pull origin main
 ```
 
-Langkah 2 — Buat branch fitur baru:
+Langkah 2 â€” Buat branch fitur baru:
 ```bash
 git checkout -b feature/nama-fitur-baru
 ```
 
-Langkah 3 — Pastikan project dapat di-build tanpa error:
+Langkah 3 â€” Pastikan project dapat di-build tanpa error:
 ```bash
 npm run build
 ```
 
-Langkah 4 — Commit dengan format pesan konvensional:
+Langkah 4 â€” Commit dengan format pesan konvensional:
 ```
 feat(xp): tambah animasi wave bar liquid di TopBar
 fix(auth): perbaiki validasi token yang bocor di logs
-docs(readme): perbarui panduan setup manual V1.1
+docs(readme): perbarui panduan setup manual v0.1.1
 ```
 
-Langkah 5 — Push branch dan buat Pull Request di GitHub. Pipeline GitHub Actions akan berjalan otomatis untuk mengecek type-safety, security audit, dan kebersihan kode.
+Langkah 5 â€” Push branch dan buat Pull Request di GitHub. Pipeline GitHub Actions akan berjalan otomatis untuk mengecek type-safety, security audit, dan kebersihan kode.
 
 ---
 
@@ -235,7 +235,7 @@ Semua endpoint REST API diproses melalui `ResponseInterceptor` global di `main.t
 
 ### Alur Autentikasi Firebase
 
-1. **Email/Password** — Setelah login, `auth.currentUser` tersedia via Firebase Auth.
-2. **Google OAuth** — Callback URL production: `https://unandnewgame-tan.vercel.app`
-3. **Auth Guard** — `useAuthStore` (Zustand) menjaga semua route dashboard.
-4. **Token Refresh** — Token Firebase di-refresh otomatis setiap 10 menit via interval di `auth-store.ts`.
+1. **Email/Password** â€” Setelah login, `auth.currentUser` tersedia via Firebase Auth.
+2. **Google OAuth** â€” Callback URL production: `https://unandnewgame-tan.vercel.app`
+3. **Auth Guard** â€” `useAuthStore` (Zustand) menjaga semua route dashboard.
+4. **Token Refresh** â€” Token Firebase di-refresh otomatis setiap 10 menit via interval di `auth-store.ts`.

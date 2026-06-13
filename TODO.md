@@ -1,6 +1,6 @@
-NEWGAME V1.2 — Project Task List
+NEWGAME v0.1.4 — Project Task List
 UKM Game Development, Universitas Andalas
-Last updated: 10 Juni 2026
+Last updated: 13 Juni 2026
 
 This file tracks the development status of all features across the platform.
 Update this file whenever a task is started, completed, or reprioritized.
@@ -251,7 +251,14 @@ FRONTEND — NEXT.JS WEB
   Developer Tools
     [x] /dev-tools — Web Mobile Simulator (8 presets, orientation toggle, scale slider)
     [x] /dev-profile — Developer profile page
-    [x] Flutter Desktop Simulator (tools/mobile-simulator)
+    [x] Flutter Mobile App (tools/mobile-simulator) — Android WebView + bottom nav + drawer (UPDATED)
+        [x] WebView native Android (webview_flutter)
+        [x] Bottom navigation bar (5 halaman utama)
+        [x] Full drawer menu (11 halaman)
+        [x] Server URL config dialog (emulator vs HP fisik)
+        [x] Error state + retry saat server tidak berjalan
+        [x] Loading progress bar
+        [x] Dark theme matching web design system
 
   UI Components and System
     [x] Dark mode toggle with FOUC prevention (theme-engine.ts)
@@ -282,7 +289,7 @@ DOCUMENTATION
   [x] SECURITY.md — layered security architecture, rate limits, Firestore rules
   [x] MEMBER_REGISTRATION.md — admin guide for adding and managing members
   [x] MEMBER_CREDENTIALS.md — all 125 members with Member IDs and access codes
-  [x] CHANGELOG.md — version history including V1.2 gap fixes (UPDATED)
+  [x] CHANGELOG.md — version history including v0.1.3 gap fixes (UPDATED)
   [x] TODO.md — this file
   [x] MIGRATION.md — Firestore → PostgreSQL cutover guide (NEW)
   [-] API Postman / Insomnia collection export
@@ -322,4 +329,4 @@ PENDING FROM PREVIOUS SESSIONS
 
 ---
 
-NEWGAME V1.2 — UKM Game Development, Universitas Andalas
+NEWGAME v0.1.4 — UKM Game Development, Universitas Andalas

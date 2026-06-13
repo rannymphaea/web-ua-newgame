@@ -1,20 +1,20 @@
-# NEWGAME V1.1 — Frontend Application
+﻿# NEWGAME v0.1.1 â€” Frontend Application
 
-Dokumentasi teknis untuk aplikasi frontend Next.js 14 di direktori `apps/web/`. Mencakup fitur utama V1.1, spesifikasi desain, peta direktori, dan konfigurasi environment.
+Dokumentasi teknis untuk aplikasi frontend Next.js 14 di direktori `apps/web/`. Mencakup fitur utama v0.1.1, spesifikasi desain, peta direktori, dan konfigurasi environment.
 
 ---
 
-### Fitur Utama V1.1
+### Fitur Utama v0.1.1
 
-Space Grotesk Typography — Font brand NEWGAME dimigrasikan ke Space Grotesk untuk tampilan modern dan keterbacaan tinggi di semua perangkat. Diintegrasikan langsung menggunakan `next/font/google` sehingga tidak ada permintaan jaringan tambahan saat runtime dan CLS (Cumulative Layout Shift) bernilai nol.
+Space Grotesk Typography â€” Font brand NEWGAME dimigrasikan ke Space Grotesk untuk tampilan modern dan keterbacaan tinggi di semua perangkat. Diintegrasikan langsung menggunakan `next/font/google` sehingga tidak ada permintaan jaringan tambahan saat runtime dan CLS (Cumulative Layout Shift) bernilai nol.
 
-Interactive PirateMap — Komponen PirateMap.tsx dibangun ulang sepenuhnya menggunakan pure SVG interaktif dengan diagram pohon (left-to-right tree). Animasi stroke konektor berjalan secara staggered dan panel deskripsi muncul secara reaktif saat node di-hover.
+Interactive PirateMap â€” Komponen PirateMap.tsx dibangun ulang sepenuhnya menggunakan pure SVG interaktif dengan diagram pohon (left-to-right tree). Animasi stroke konektor berjalan secara staggered dan panel deskripsi muncul secara reaktif saat node di-hover.
 
-Web Mobile Simulator — Halaman khusus internal developer di route `/dev-tools` untuk mempreview tampilan aplikasi pada berbagai ukuran layar ponsel. Menggunakan iframe dengan 8 preset perangkat, toggle orientasi, dan slider skala.
+Web Mobile Simulator â€” Halaman khusus internal developer di route `/dev-tools` untuk mempreview tampilan aplikasi pada berbagai ukuran layar ponsel. Menggunakan iframe dengan 8 preset perangkat, toggle orientasi, dan slider skala.
 
-PostHog Observability — Terintegrasi penuh dengan PostHogProvider untuk perekaman pageview secara manual dan asinkron serta pelacakan event CTA tanpa memperlambat First Contentful Paint.
+PostHog Observability â€” Terintegrasi penuh dengan PostHogProvider untuk perekaman pageview secara manual dan asinkron serta pelacakan event CTA tanpa memperlambat First Contentful Paint.
 
-ErrorBoundary Resilience — Komponen ErrorBoundary membungkus seluruh layout utama. Jika terjadi error crash di sisi client, komponen ini menangkap error, mengirim laporan ke PostHog, dan menyediakan tombol retry tanpa perlu reload penuh.
+ErrorBoundary Resilience â€” Komponen ErrorBoundary membungkus seluruh layout utama. Jika terjadi error crash di sisi client, komponen ini menangkap error, mengirim laporan ke PostHog, dan menyediakan tombol retry tanpa perlu reload penuh.
 
 ---
 
@@ -47,43 +47,43 @@ Semua animasi diatur menggunakan pure CSS keyframes dengan `will-change` untuk a
 
 ```
 apps/web/src/
-├── app/
-│   ├── layout.tsx                  # Entry layout utama, Space Grotesk dan PostHog init
-│   ├── page.tsx                    # Redirect ke /landing
-│   ├── dev-tools/                  # Web Mobile Simulator (internal developer)
-│   ├── landing/                    # Landing page publik dengan PirateMap
-│   └── (dashboard)/                # Portal terproteksi (Zustand auth store)
-│       ├── dashboard/              # Halaman utama dashboard anggota
-│       ├── leaderboard/            # Papan peringkat XP gamifikasi
-│       ├── badges/                 # Koleksi lencana dan pencapaian
-│       ├── attendance/             # Scan QR dan riwayat kehadiran
-│       ├── news/                   # Artikel berita dan tutorial UKM
-│       ├── profile/                # Profil dan riwayat aktivitas anggota
-│       └── admin/                  # Panel manajemen (admin/owner only)
-│
-├── components/
-│   ├── providers/
-│   │   └── PostHogProvider.tsx     # Perekam otomatis navigasi pageview
-│   ├── ui/
-│   │   ├── ErrorBoundary.tsx       # Penahan crash runtime client-side
-│   │   ├── ProfileCard.tsx         # Kartu informasi anggota (avatar dan detail)
-│   │   ├── Toast.tsx               # Notifikasi pop-up ARIA live
-│   │   └── ToggleDarkMode.tsx      # Tombol toggle tema gelap/terang
-│   └── layout/
-│       ├── Sidebar.tsx             # Sidebar dinamis hover-elastis, mobile responsive
-│       └── TopBar.tsx              # Header dengan XP wave liquid bar
-│
-├── lib/
-│   ├── posthog.ts                  # Helper tracker event kustom PostHog
-│   ├── api.ts                      # Klien HTTP fetchApi terpadu
-│   ├── theme-engine.ts             # Script pengendali FOUC dan hook useTheme
-│   └── scroll-manager.ts          # Manajemen scroll halaman
-│
-├── styles/
-│   └── globals.css                 # Design tokens, variabel CSS, animasi global
-│
-└── types/
-    └── api.types.ts                # Shared TypeScript types dengan backend
+â”œâ”€â”€ app/
+â”‚   â”œâ”€â”€ layout.tsx                  # Entry layout utama, Space Grotesk dan PostHog init
+â”‚   â”œâ”€â”€ page.tsx                    # Redirect ke /landing
+â”‚   â”œâ”€â”€ dev-tools/                  # Web Mobile Simulator (internal developer)
+â”‚   â”œâ”€â”€ landing/                    # Landing page publik dengan PirateMap
+â”‚   â””â”€â”€ (dashboard)/                # Portal terproteksi (Zustand auth store)
+â”‚       â”œâ”€â”€ dashboard/              # Halaman utama dashboard anggota
+â”‚       â”œâ”€â”€ leaderboard/            # Papan peringkat XP gamifikasi
+â”‚       â”œâ”€â”€ badges/                 # Koleksi lencana dan pencapaian
+â”‚       â”œâ”€â”€ attendance/             # Scan QR dan riwayat kehadiran
+â”‚       â”œâ”€â”€ news/                   # Artikel berita dan tutorial UKM
+â”‚       â”œâ”€â”€ profile/                # Profil dan riwayat aktivitas anggota
+â”‚       â””â”€â”€ admin/                  # Panel manajemen (admin/owner only)
+â”‚
+â”œâ”€â”€ components/
+â”‚   â”œâ”€â”€ providers/
+â”‚   â”‚   â””â”€â”€ PostHogProvider.tsx     # Perekam otomatis navigasi pageview
+â”‚   â”œâ”€â”€ ui/
+â”‚   â”‚   â”œâ”€â”€ ErrorBoundary.tsx       # Penahan crash runtime client-side
+â”‚   â”‚   â”œâ”€â”€ ProfileCard.tsx         # Kartu informasi anggota (avatar dan detail)
+â”‚   â”‚   â”œâ”€â”€ Toast.tsx               # Notifikasi pop-up ARIA live
+â”‚   â”‚   â””â”€â”€ ToggleDarkMode.tsx      # Tombol toggle tema gelap/terang
+â”‚   â””â”€â”€ layout/
+â”‚       â”œâ”€â”€ Sidebar.tsx             # Sidebar dinamis hover-elastis, mobile responsive
+â”‚       â””â”€â”€ TopBar.tsx              # Header dengan XP wave liquid bar
+â”‚
+â”œâ”€â”€ lib/
+â”‚   â”œâ”€â”€ posthog.ts                  # Helper tracker event kustom PostHog
+â”‚   â”œâ”€â”€ api.ts                      # Klien HTTP fetchApi terpadu
+â”‚   â”œâ”€â”€ theme-engine.ts             # Script pengendali FOUC dan hook useTheme
+â”‚   â””â”€â”€ scroll-manager.ts          # Manajemen scroll halaman
+â”‚
+â”œâ”€â”€ styles/
+â”‚   â””â”€â”€ globals.css                 # Design tokens, variabel CSS, animasi global
+â”‚
+â””â”€â”€ types/
+    â””â”€â”€ api.types.ts                # Shared TypeScript types dengan backend
 ```
 
 ---

@@ -1,94 +1,83 @@
-# NEWGAME Mobile Simulator
+# NEWGAME Mobile — Flutter App
 
-Aplikasi Flutter Desktop mandiri untuk mempreview tampilan Web App NEWGAME di berbagai ukuran layar ponsel Android dan iOS secara real-time — tanpa perlu membuka Chrome DevTools.
+Aplikasi mobile untuk platform NEWGAME. Menampilkan web app (`localhost:3000`) dalam WebView native Android dengan desain dark theme yang sama.
 
----
+## Fitur
 
-### Fitur Utama
-
-| Fitur | Detail |
+| Fitur | Keterangan |
 |---|---|
-| 9 Preset Perangkat | iPhone SE, iPhone 14, iPhone 14 Pro Max, Google Pixel 7, Samsung Galaxy S23, Redmi Note 12, OPPO Reno 10, iPad Mini, iPad Air |
-| Peralihan Orientasi | Rotasi Portrait dan Landscape dengan sekali klik |
-| Slider Skala | Zoom dari 30% hingga 100% untuk monitor resolusi rendah |
-| Quick Navigation | 8 tombol pintasan untuk berpindah rute halaman NEWGAME secara instan |
-| URL Kustom | Input alamat bebas untuk menguji localhost maupun server staging |
-| Tema Dark Mode | Antarmuka mode gelap yang konsisten dengan desain sistem NEWGAME V1.1 |
+| WebView Android | Menampilkan web app NEWGAME dalam WebView native |
+| Bottom Nav | 5 halaman utama: Landing, Dashboard, Scan, Berita, Profil |
+| Drawer | Menu lengkap semua 11 halaman |
+| Error Handling | Tampilan error jika server tidak berjalan + tombol retry |
+| Server Config | Dialog untuk ganti URL server (emulator vs HP fisik) |
+| Dark Theme | Palet warna sama dengan web (kBg, kGold, kPurple, dsb) |
+| Loading Bar | Progress indicator saat halaman loading |
 
----
+## Cara Pakai
 
-### Prasyarat Sistem
+### Prasyarat
 
-Sebelum menjalankan simulator, pastikan hal-hal berikut sudah terpenuhi:
+1. Flutter SDK 3.16+ terinstall
+2. Android SDK / emulator
+3. Dev server berjalan: `cd apps/web && npm run dev`
 
-1. Flutter SDK versi 3.16.0 atau lebih baru — [Panduan Instalasi Flutter](https://docs.flutter.dev/get-started/install)
-2. Windows 10 atau 11 — Microsoft Edge WebView2 Runtime sudah terpasang secara default
-3. NEWGAME Development Server berjalan di Port 3000 (`npm run dev:web`)
-
----
-
-### Langkah Menjalankan Simulator
+### Jalankan di Emulator Android
 
 ```bash
-# 1. Verifikasi Flutter SDK sudah terinstall
-flutter --version
-
-# 2. Masuk ke direktori simulator
 cd tools/mobile-simulator
 
-# 3. Aktifkan dukungan Windows Desktop (cukup sekali)
-flutter config --enable-windows-desktop
-
-# 4. Buat file platform Windows (cukup sekali)
-flutter create . --platforms windows
-
-# 5. Install dependencies Flutter
+# Install dependencies
 flutter pub get
 
-# 6. Pastikan dev server Next.js sudah berjalan di terminal lain
-#    npm run dev:web
-
-# 7. Jalankan simulator
-flutter run -d windows
+# Jalankan
+flutter run
 ```
 
----
+Emulator menggunakan `10.0.2.2:3000` untuk mengakses `localhost` PC.
 
-### Build Executable
+### Jalankan di HP Fisik (via USB)
 
-Untuk mendistribusikan simulator kepada developer atau pengurus lain dalam format mandiri:
+1. Aktifkan **Developer Mode** dan **USB Debugging** di HP
+2. Hubungkan HP ke PC via USB
+3. Cari IP PC: `ipconfig` → cari IPv4 di WiFi yang sama
+4. Jalankan:
 
 ```bash
-flutter build windows --release
+flutter run
 ```
 
-File hasil build tersedia di:
+5. Di app, tekan ikon gear (⚙️) → ganti URL ke `http://[IP_PC]:3000`
 
-```
-tools/mobile-simulator/build/windows/x64/runner/Release/newgame_mobile_simulator.exe
-```
+### Preview di Chrome (Web Simulator)
 
-Salin seluruh folder `Release/` — jangan hanya file `.exe`-nya saja, karena aplikasi membutuhkan file DLL dan aset di sekitarnya.
+Versi web simulator lama masih bisa dijalankan terpisah jika dibutuhkan.
 
----
-
-### Struktur Direktori
+## Struktur
 
 ```
 tools/mobile-simulator/
 ├── lib/
-│   └── main.dart       # Seluruh kode aplikasi simulator dalam satu file
-├── pubspec.yaml        # Konfigurasi dependensi Flutter
-└── README.md           # Dokumen ini
+│   └── main.dart          # App utama (WebView + navigation)
+├── android/               # Platform Android
+│   └── app/src/main/
+│       └── AndroidManifest.xml  # Internet + cleartext permission
+├── pubspec.yaml           # Dependencies (webview_flutter, connectivity_plus)
+└── README.md              # Dokumen ini
 ```
 
----
+## Konfigurasi URL
 
-### Pemecahan Masalah
+| Skenario | URL |
+|---|---|
+| Emulator Android | `http://10.0.2.2:3000` (default) |
+| HP fisik di WiFi yang sama | `http://[IP_PC]:3000` |
+| Production | `https://unandnewgame-tan.vercel.app` |
 
-| Gejala | Penyebab | Solusi |
-|---|---|---|
-| WebView2 not installed atau layar putih kosong | Driver Microsoft Edge WebView2 belum terpasang | Unduh dan pasang di [Microsoft Edge WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) |
-| Halaman tidak dapat dimuat — Connection Refused | Server Next.js belum berjalan di Port 3000 | Jalankan `npm run dev:web` dari direktori root monorepo |
-| Perintah flutter tidak dikenali | Flutter SDK belum ditambahkan ke PATH sistem | Tambahkan direktori `flutter/bin` ke PATH Windows, lalu restart terminal |
-| Build Windows gagal atau konflik cache | File cache Flutter lama bermasalah | Jalankan `flutter clean`, kemudian ulangi `flutter pub get` dan `flutter run -d windows` |
+URL bisa diubah via dialog Settings (ikon gear) di app bar.
+
+## Catatan
+
+- `android:usesCleartextTraffic="true"` diperlukan untuk akses HTTP localhost
+- WebView memblokir navigasi ke URL eksternal (hanya localhost/LAN)
+- Dark mode otomatis di-inject via `localStorage.setItem('ng-theme', 'dark')`

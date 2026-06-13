@@ -1,7 +1,7 @@
 <div align="center">
   <img src="apps/web/public/logo.png" alt="NEWGAME" width="72" />
 
-  <h1>NEWGAME V1.2</h1>
+  <h1>NEWGAME v0.1.4</h1>
   <p>Platform Web UKM Game Development — Universitas Andalas</p>
 
   <p>
@@ -11,7 +11,7 @@
     <img src="https://img.shields.io/badge/Firebase-Aktif-orange?logo=firebase" alt="Firebase" />
     <img src="https://img.shields.io/badge/PostgreSQL-Siap_Migrasi-336791?logo=postgresql" alt="PostgreSQL" />
     <img src="https://img.shields.io/badge/Redis-Upstash-DC382D?logo=redis" alt="Redis" />
-    <img src="https://img.shields.io/badge/Versi-1.2-6366f1" alt="Versi" />
+    <img src="https://img.shields.io/badge/Versi-0.1.3-6366f1" alt="Versi" />
     <a href="https://unandnewgame-tan.vercel.app"><img src="https://img.shields.io/badge/Live-unandnewgame--tan.vercel.app-black?logo=vercel" alt="Live" /></a>
   </p>
 </div>
@@ -22,13 +22,13 @@
 
 | Komponen | Status | Keterangan |
 |---|---|---|
-| **Firebase Firestore** | ✅ Aktif | Sumber data utama produksi |
-| **Firebase Auth** | ✅ Aktif | Autentikasi login semua anggota |
-| **PostgreSQL (local)** | ✅ Schema tersinkron | `npx prisma db push` sudah dijalankan, **data belum dimigrasikan** |
-| **Prisma Client** | ✅ Generated | v5.22.0, terhubung ke `newgame` di localhost |
-| **Upstash Redis** | ✅ Aktif | Rate limiting & leaderboard cache |
-| **Cloudinary** | ✅ Aktif | Upload media |
-| **Vercel** | ✅ Deployed | Frontend + API serverless |
+| **Firebase Firestore** | âœ… Aktif | Sumber data utama produksi |
+| **Firebase Auth** | âœ… Aktif | Autentikasi login semua anggota |
+| **PostgreSQL (local)** | âœ… Schema tersinkron | `npx prisma db push` sudah dijalankan, **data belum dimigrasikan** |
+| **Prisma Client** | âœ… Generated | v5.22.0, terhubung ke `newgame` di localhost |
+| **Upstash Redis** | âœ… Aktif | Rate limiting & leaderboard cache |
+| **Cloudinary** | âœ… Aktif | Upload media |
+| **Vercel** | âœ… Deployed | Frontend + API serverless |
 
 > **Catatan migrasi:** Firestore masih menjadi sumber data utama. PostgreSQL sudah disiapkan dan skema sudah tersinkron, tetapi data belum dipindahkan. Lihat [MIGRATION.md](./MIGRATION.md) untuk panduan cutover.
 
@@ -50,9 +50,9 @@ NEWGAME adalah platform web terpadu UKM Game Development Universitas Andalas yan
 
 | Collection | Isi |
 |---|---|
-| `members` | Data administrasi anggota — Member ID, nama, pilar, kode akses |
-| `users` | Akun login — email, role, XP, avatar, status |
-| `events` | Data event — nama, waktu, XP reward, status aktif |
+| `members` | Data administrasi anggota â€” Member ID, nama, pilar, kode akses |
+| `users` | Akun login â€” email, role, XP, avatar, status |
+| `events` | Data event â€” nama, waktu, XP reward, status aktif |
 | `attendance` | Riwayat presensi per anggota per event |
 | `tokens` | QR token untuk presensi |
 | `logs` | Forensic activity log |
@@ -64,39 +64,39 @@ NEWGAME adalah platform web terpadu UKM Game Development Universitas Andalas yan
 
 ## Struktur Aset
 
-### `storage/` — Aset Master (Sumber)
+### `storage/` â€” Aset Master (Sumber)
 
 Direktori ini menyimpan file sumber beresolusi tinggi. **Jangan diimport langsung ke kode Next.js.**
 
 ```
 storage/
-├── characters/      # Karakter OC NEWGAME (PNG + SVG resolusi tinggi)
-│   ├── CodeCommandColourOutlined.{png,svg}   # Code Commander OC
-│   ├── goldGuardianColourOutlined.{png,svg}  # Gold Guardian OC
-│   ├── sekumColourOutlined.{png,svg}          # Quest Keeper OC
-│   ├── colourOutlined.{png,svg}               # Karakter umum
-│   ├── yua.{png,svg}                          # Maskot Yua
-│   └── logo.{png,svg}                         # Logo resolusi tinggi
-├── logo/            # Variasi logo untuk branding eksternal
-└── sfx/             # Audio source sebelum kompresi
+â”œâ”€â”€ characters/      # Karakter OC NEWGAME (PNG + SVG resolusi tinggi)
+â”‚   â”œâ”€â”€ CodeCommandColourOutlined.{png,svg}   # Code Commander OC
+â”‚   â”œâ”€â”€ goldGuardianColourOutlined.{png,svg}  # Gold Guardian OC
+â”‚   â”œâ”€â”€ sekumColourOutlined.{png,svg}          # Quest Keeper OC
+â”‚   â”œâ”€â”€ colourOutlined.{png,svg}               # Karakter umum
+â”‚   â”œâ”€â”€ yua.{png,svg}                          # Maskot Yua
+â”‚   â””â”€â”€ logo.{png,svg}                         # Logo resolusi tinggi
+â”œâ”€â”€ logo/            # Variasi logo untuk branding eksternal
+â””â”€â”€ sfx/             # Audio source sebelum kompresi
 ```
 
-### `apps/web/public/` — Aset Web (Deploy)
+### `apps/web/public/` â€” Aset Web (Deploy)
 
 ```
 public/
-├── logo.png                   # Favicon / PWA icon (19 KB)
-├── manifest.json              # PWA manifest
-├── images/
-│   ├── logo.svg               # Logo untuk sidebar
-│   └── characters/            # OC SVG siap web
-│       ├── oc-cmd.svg         # Code Commander (dipakai di /scan, /calendar)
-│       ├── oc-gold.svg        # Gold Guardian
-│       ├── oc-hero.svg        # Hero OC
-│       ├── oc-read.svg        # Quest Keeper / Sekum
-│       └── yua.svg            # Maskot Yua (dipakai di /dashboard, /profile, /landing)
-└── assets/sfx/
-    └── yua-select.mp3         # SFX klik karakter Yua
+â”œâ”€â”€ logo.png                   # Favicon / PWA icon (19 KB)
+â”œâ”€â”€ manifest.json              # PWA manifest
+â”œâ”€â”€ images/
+â”‚   â”œâ”€â”€ logo.svg               # Logo untuk sidebar
+â”‚   â””â”€â”€ characters/            # OC SVG siap web
+â”‚       â”œâ”€â”€ oc-cmd.svg         # Code Commander (dipakai di /scan, /calendar)
+â”‚       â”œâ”€â”€ oc-gold.svg        # Gold Guardian
+â”‚       â”œâ”€â”€ oc-hero.svg        # Hero OC
+â”‚       â”œâ”€â”€ oc-read.svg        # Quest Keeper / Sekum
+â”‚       â””â”€â”€ yua.svg            # Maskot Yua (dipakai di /dashboard, /profile, /landing)
+â””â”€â”€ assets/sfx/
+    â””â”€â”€ yua-select.mp3         # SFX klik karakter Yua
 ```
 
 > Semua path gambar di kode menggunakan prefix `/images/characters/` atau `/images/`.
@@ -115,7 +115,7 @@ Menu sidebar didefinisikan di [`apps/web/src/components/layout/Sidebar.tsx`](./a
 
 Untuk menambah, menghapus, atau mengganti item menu:
 ```typescript
-// apps/web/src/components/layout/Sidebar.tsx — NAV_ITEMS
+// apps/web/src/components/layout/Sidebar.tsx â€” NAV_ITEMS
 { href: '/pirate-map', label: 'Pirate Map', icon: 'ri-map-2-line',
   roles: ['member', 'admin', ...] },
 // Ganti href, label, atau icon sesuai kebutuhan
@@ -174,7 +174,7 @@ Pola: `NG` + `[kode generasi+batch]` + `[nomor urut]` + `[suffix pilar]`
 | `GD` | Game Design |
 | `SF` | Game Sound |
 
-Contoh: `NG11020125SF` → GEN 1, nomor urut 125, Game Sound
+Contoh: `NG11020125SF` â†’ GEN 1, nomor urut 125, Game Sound
 
 Total anggota terdaftar: **125 orang** (GEN 1 + GEN 2)
 
@@ -184,9 +184,9 @@ Total anggota terdaftar: **125 orang** (GEN 1 + GEN 2)
 
 Halaman `/login` memiliki **3 tab**:
 
-1. **Email** — email + password Firebase
-2. **Member ID** — masukkan `NG11020125SF` + password → backend lookup email → Firebase sign in
-3. **Daftar** — verifikasi Member ID + Kode Akses → buat akun Firebase
+1. **Email** â€” email + password Firebase
+2. **Member ID** â€” masukkan `NG11020125SF` + password â†’ backend lookup email â†’ Firebase sign in
+3. **Daftar** â€” verifikasi Member ID + Kode Akses â†’ buat akun Firebase
 
 ---
 
@@ -247,7 +247,7 @@ NEXT_PUBLIC_POSTHOG_KEY=phc_your_key
 NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ```
 
-### 3. Setup Database (opsional — jika belum)
+### 3. Setup Database (opsional â€” jika belum)
 
 ```bash
 cd apps/api
@@ -259,10 +259,10 @@ npx prisma migrate deploy  # Apply schema ke PostgreSQL
 ### 4. Jalankan Lokal
 
 ```bash
-# Terminal 1 — API (port 3001)
+# Terminal 1 â€” API (port 3001)
 cd apps/api && npm run dev
 
-# Terminal 2 — Web (port 3000)
+# Terminal 2 â€” Web (port 3000)
 cd apps/web && npm run dev
 ```
 
@@ -274,79 +274,79 @@ Buka: `http://localhost:3000/landing`
 
 ```
 web-ua-newgame/
-├── apps/
-│   ├── api/                          # Backend NestJS (Port 3001)
-│   │   ├── prisma/
-│   │   │   ├── schema.prisma         # Schema PostgreSQL (synced, belum diisi)
-│   │   │   └── migrations/           # 1 migration: 20260602171817_init
-│   │   ├── serviceAccountKey.json    # ⚠️ Firebase credentials (jangan commit)
-│   │   └── src/
-│   │       ├── firebase/             # FirebaseService — data source aktif
-│   │       ├── database/             # PrismaService — siap digunakan
-│   │       ├── auth/                 # Better Auth config (placeholder)
-│   │       ├── common/
-│   │       │   ├── constants/
-│   │       │   │   └── roles.ts      # Role system (8 level, source of truth)
-│   │       │   ├── guards/           # Firebase, Roles, RateLimit
-│   │       │   ├── decorators/
-│   │       │   ├── filters/
-│   │       │   └── interceptors/
-│   │       └── modules/              # 21 modul bisnis
-│   │           ├── auth/             # + lookup-id endpoint (V1.2)
-│   │           ├── attendance/       # + idempotent endpoint (V1.2)
-│   │           └── ...
-│   │
-│   └── web/                          # Frontend Next.js (Port 3000)
-│       ├── public/
-│       │   ├── logo.png              # Favicon / PWA icon
-│       │   ├── manifest.json         # PWA manifest
-│       │   ├── images/
-│       │   │   ├── logo.svg          # Logo sidebar
-│       │   │   └── characters/       # OC SVG: oc-cmd, oc-gold, oc-hero, oc-read, yua
-│       │   └── assets/sfx/
-│       │       └── yua-select.mp3    # SFX klik Yua
-│       └── src/
-│           ├── app/
-│           │   ├── login/            # 3-tab: Email / Member ID / Daftar (V1.2)
-│           │   ├── landing/
-│           │   └── (dashboard)/
-│           │       └── scan/         # + offline sync (V1.2)
-│           ├── components/
-│           │   ├── layout/
-│           │   │   └── Sidebar.tsx   # NAV_ITEMS — Pirate Map bisa dikustomisasi
-│           │   └── ui/
-│           │       ├── Toast.tsx     # + showError() (V1.2)
-│           │       └── ErrorBanner.tsx # (BARU V1.2)
-│           └── lib/
-│               ├── api.ts            # + ApiError (V1.2)
-│               ├── errors.ts         # Error mapping Indonesia (BARU V1.2)
-│               └── attendance-sync.ts # Offline QR sync (BARU V1.2)
-│
-├── storage/                          # Aset master beresolusi tinggi
-│   ├── characters/                   # Karakter OC PNG + SVG
-│   ├── logo/                         # Variasi logo branding
-│   ├── sfx/                          # Audio source
-│   └── README.md
-│
-├── scripts/
-│   ├── backup.mjs                    # Backup PostgreSQL (BARU V1.2)
-│   ├── migrate-firestore.mjs         # Migrasi Firestore→PostgreSQL (BARU V1.2)
-│   ├── audit.mjs
-│   └── find-dupes.mjs
-│
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                    # Typecheck, lint, security audit
-│       └── backup.yml                # Backup harian 02:00 WIB (BARU V1.2)
-│
-├── README.md
-├── CHANGELOG.md
-├── DEVELOPER_GUIDE.md
-├── SECURITY.md
-├── MIGRATION.md                      # Panduan Firestore→PostgreSQL (BARU V1.2)
-├── MEMBER_REGISTRATION.md
-├── MEMBER_CREDENTIALS.md             # ⚠️ RAHASIA — jangan commit
-└── TODO.md
+â”œâ”€â”€ apps/
+â”‚   â”œâ”€â”€ api/                          # Backend NestJS (Port 3001)
+â”‚   â”‚   â”œâ”€â”€ prisma/
+â”‚   â”‚   â”‚   â”œâ”€â”€ schema.prisma         # Schema PostgreSQL (synced, belum diisi)
+â”‚   â”‚   â”‚   â””â”€â”€ migrations/           # 1 migration: 20260602171817_init
+â”‚   â”‚   â”œâ”€â”€ serviceAccountKey.json    # âš ï¸ Firebase credentials (jangan commit)
+â”‚   â”‚   â””â”€â”€ src/
+â”‚   â”‚       â”œâ”€â”€ firebase/             # FirebaseService â€” data source aktif
+â”‚   â”‚       â”œâ”€â”€ database/             # PrismaService â€” siap digunakan
+â”‚   â”‚       â”œâ”€â”€ auth/                 # Better Auth config (placeholder)
+â”‚   â”‚       â”œâ”€â”€ common/
+â”‚   â”‚       â”‚   â”œâ”€â”€ constants/
+â”‚   â”‚       â”‚   â”‚   â””â”€â”€ roles.ts      # Role system (8 level, source of truth)
+â”‚   â”‚       â”‚   â”œâ”€â”€ guards/           # Firebase, Roles, RateLimit
+â”‚   â”‚       â”‚   â”œâ”€â”€ decorators/
+â”‚   â”‚       â”‚   â”œâ”€â”€ filters/
+â”‚   â”‚       â”‚   â””â”€â”€ interceptors/
+â”‚   â”‚       â””â”€â”€ modules/              # 21 modul bisnis
+â”‚   â”‚           â”œâ”€â”€ auth/             # + lookup-id endpoint (v0.1.3)
+â”‚   â”‚           â”œâ”€â”€ attendance/       # + idempotent endpoint (v0.1.3)
+â”‚   â”‚           â””â”€â”€ ...
+â”‚   â”‚
+â”‚   â””â”€â”€ web/                          # Frontend Next.js (Port 3000)
+â”‚       â”œâ”€â”€ public/
+â”‚       â”‚   â”œâ”€â”€ logo.png              # Favicon / PWA icon
+â”‚       â”‚   â”œâ”€â”€ manifest.json         # PWA manifest
+â”‚       â”‚   â”œâ”€â”€ images/
+â”‚       â”‚   â”‚   â”œâ”€â”€ logo.svg          # Logo sidebar
+â”‚       â”‚   â”‚   â””â”€â”€ characters/       # OC SVG: oc-cmd, oc-gold, oc-hero, oc-read, yua
+â”‚       â”‚   â””â”€â”€ assets/sfx/
+â”‚       â”‚       â””â”€â”€ yua-select.mp3    # SFX klik Yua
+â”‚       â””â”€â”€ src/
+â”‚           â”œâ”€â”€ app/
+â”‚           â”‚   â”œâ”€â”€ login/            # 3-tab: Email / Member ID / Daftar (v0.1.3)
+â”‚           â”‚   â”œâ”€â”€ landing/
+â”‚           â”‚   â””â”€â”€ (dashboard)/
+â”‚           â”‚       â””â”€â”€ scan/         # + offline sync (v0.1.3)
+â”‚           â”œâ”€â”€ components/
+â”‚           â”‚   â”œâ”€â”€ layout/
+â”‚           â”‚   â”‚   â””â”€â”€ Sidebar.tsx   # NAV_ITEMS â€” Pirate Map bisa dikustomisasi
+â”‚           â”‚   â””â”€â”€ ui/
+â”‚           â”‚       â”œâ”€â”€ Toast.tsx     # + showError() (v0.1.3)
+â”‚           â”‚       â””â”€â”€ ErrorBanner.tsx # (BARU v0.1.3)
+â”‚           â””â”€â”€ lib/
+â”‚               â”œâ”€â”€ api.ts            # + ApiError (v0.1.3)
+â”‚               â”œâ”€â”€ errors.ts         # Error mapping Indonesia (BARU v0.1.3)
+â”‚               â””â”€â”€ attendance-sync.ts # Offline QR sync (BARU v0.1.3)
+â”‚
+â”œâ”€â”€ storage/                          # Aset master beresolusi tinggi
+â”‚   â”œâ”€â”€ characters/                   # Karakter OC PNG + SVG
+â”‚   â”œâ”€â”€ logo/                         # Variasi logo branding
+â”‚   â”œâ”€â”€ sfx/                          # Audio source
+â”‚   â””â”€â”€ README.md
+â”‚
+â”œâ”€â”€ scripts/
+â”‚   â”œâ”€â”€ backup.mjs                    # Backup PostgreSQL (BARU v0.1.3)
+â”‚   â”œâ”€â”€ migrate-firestore.mjs         # Migrasi Firestoreâ†’PostgreSQL (BARU v0.1.3)
+â”‚   â”œâ”€â”€ audit.mjs
+â”‚   â””â”€â”€ find-dupes.mjs
+â”‚
+â”œâ”€â”€ .github/
+â”‚   â””â”€â”€ workflows/
+â”‚       â”œâ”€â”€ ci.yml                    # Typecheck, lint, security audit
+â”‚       â””â”€â”€ backup.yml                # Backup harian 02:00 WIB (BARU v0.1.3)
+â”‚
+â”œâ”€â”€ README.md
+â”œâ”€â”€ CHANGELOG.md
+â”œâ”€â”€ DEVELOPER_GUIDE.md
+â”œâ”€â”€ SECURITY.md
+â”œâ”€â”€ MIGRATION.md                      # Panduan Firestoreâ†’PostgreSQL (BARU v0.1.3)
+â”œâ”€â”€ MEMBER_REGISTRATION.md
+â”œâ”€â”€ MEMBER_CREDENTIALS.md             # âš ï¸ RAHASIA â€” jangan commit
+â””â”€â”€ TODO.md
 ```
 
 ---
@@ -356,7 +356,7 @@ web-ua-newgame/
 ### Setup GitHub Actions Backup
 
 Tambahkan `DATABASE_URL` sebagai **Repository Secret** di:
-`GitHub → Settings → Secrets and variables → Actions`
+`GitHub â†’ Settings â†’ Secrets and variables â†’ Actions`
 
 Setelah itu, backup otomatis berjalan setiap hari jam **02:00 WIB** via `.github/workflows/backup.yml`.
 
@@ -375,9 +375,9 @@ psql $DATABASE_URL < backups/backup-YYYY-MM-DD-HH.sql
 
 ---
 
-## Migrasi Firestore → PostgreSQL
+## Migrasi Firestore â†’ PostgreSQL
 
-> **Status: BELUM DILAKUKAN** — Firebase masih menjadi sumber data utama.
+> **Status: BELUM DILAKUKAN** â€” Firebase masih menjadi sumber data utama.
 
 ```bash
 # 1. Preview data yang akan dimigrasikan (aman, tidak ada write)
@@ -411,7 +411,7 @@ Panduan lengkap: [MIGRATION.md](./MIGRATION.md)
 | Validasi Cloudinary credentials di `.env` | Coba upload foto profil |
 | Tambah Google OAuth URI di Google Console | Tambah `https://unandnewgame-tan.vercel.app/api/auth/callback/google` |
 | Aktifkan backup otomatis | Tambah `DATABASE_URL` sebagai GitHub Repository Secret |
-| Update role di Firestore ke nama baru | `superadmin` → `code commander`, `presiden` → `pixel presiden` |
+| Update role di Firestore ke nama baru | `superadmin` â†’ `code commander`, `presiden` â†’ `pixel presiden` |
 
 ---
 
@@ -421,9 +421,9 @@ Panduan lengkap: [MIGRATION.md](./MIGRATION.md)
 |---|---|
 | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | Standar kode, Git workflow, pola dual-write |
 | [SECURITY.md](./SECURITY.md) | Arsitektur keamanan berlapis, rate limiting |
-| [MIGRATION.md](./MIGRATION.md) | Panduan cutover Firestore → PostgreSQL |
+| [MIGRATION.md](./MIGRATION.md) | Panduan cutover Firestore â†’ PostgreSQL |
 | [MEMBER_REGISTRATION.md](./MEMBER_REGISTRATION.md) | Panduan admin untuk tambah & kelola anggota |
-| [MEMBER_CREDENTIALS.md](./MEMBER_CREDENTIALS.md) | ⚠️ RAHASIA — 125 anggota + kode akses |
+| [MEMBER_CREDENTIALS.md](./MEMBER_CREDENTIALS.md) | âš ï¸ RAHASIA â€” 125 anggota + kode akses |
 | [CHANGELOG.md](./CHANGELOG.md) | Riwayat lengkap pembaruan platform |
 | [TODO.md](./TODO.md) | Backlog fitur dan perbaikan |
 
@@ -433,10 +433,10 @@ Panduan lengkap: [MIGRATION.md](./MIGRATION.md)
 
 | Trigger | Workflow | Isi |
 |---|---|---|
-| Push ke `main` | `ci.yml` | TypeScript typecheck · npm audit · ESLint |
-| Cron 19:00 UTC | `backup.yml` | pg_dump → artifact (retensi 30 hari) |
+| Push ke `main` | `ci.yml` | TypeScript typecheck Â· npm audit Â· ESLint |
+| Cron 19:00 UTC | `backup.yml` | pg_dump â†’ artifact (retensi 30 hari) |
 | Manual dispatch | `backup.yml` | Backup on-demand |
 
 ---
 
-MIT License — 2026 NEWGAME, UKM Game Development Universitas Andalas
+MIT License â€” 2026 NEWGAME, UKM Game Development Universitas Andalas

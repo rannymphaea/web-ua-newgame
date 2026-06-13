@@ -1,11 +1,11 @@
-/**
- * Role Constants — NEWGAME V1.1
+﻿/**
+ * Role Constants â€” NEWGAME v0.1.1
  *
  * Single source of truth untuk role system.
  * Semua guard, decorator, dan middleware harus mereferensi file ini.
  */
 
-// ── Role Names ────────────────────────────────────────────────
+// â”€â”€ Role Names â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type RoleName =
   | 'npc'
   | 'member'
@@ -16,7 +16,7 @@ export type RoleName =
   | 'code commander'
   | 'pixel presiden';
 
-// ── Role Hierarchy (level rendah → tinggi) ────────────────────
+// â”€â”€ Role Hierarchy (level rendah â†’ tinggi) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Digunakan oleh RolesGuard untuk menentukan akses berbasis hierarki.
 export const ROLE_HIERARCHY: Record<string, number> = {
   'npc':              0,
@@ -29,17 +29,17 @@ export const ROLE_HIERARCHY: Record<string, number> = {
   'pixel presiden':   7,
 };
 
-// ── Permission Matrix ─────────────────────────────────────────
+// â”€â”€ Permission Matrix â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
 // ROLE_PERMISSIONS matrix:
-//   pixel presiden  → semua akses
-//   code commander  → semua kecuali hapus pixel presiden
-//   gold guardian   → kelola keuangan, event, presensi, member
-//   quest keeper    → kelola event, presensi, member, laporan
-//   admin           → kelola event, presensi, member
-//   inventori       → akses inventori + dashboard + presensi + profil
-//   member          → dashboard, presensi, profil pribadi
-//   npc             → hanya halaman publik (landing page)
+//   pixel presiden  â†’ semua akses
+//   code commander  â†’ semua kecuali hapus pixel presiden
+//   gold guardian   â†’ kelola keuangan, event, presensi, member
+//   quest keeper    â†’ kelola event, presensi, member, laporan
+//   admin           â†’ kelola event, presensi, member
+//   inventori       â†’ akses inventori + dashboard + presensi + profil
+//   member          â†’ dashboard, presensi, profil pribadi
+//   npc             â†’ hanya halaman publik (landing page)
 //
 
 export enum Permission {

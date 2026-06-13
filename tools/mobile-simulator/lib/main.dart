@@ -1,18 +1,18 @@
-// NEWGAME Mobile Simulator — Flutter Web
-// Jalankan: flutter run -d chrome
-// Load web asli (localhost:3000) dalam frame HP yang bisa di-switch device
-
-// ignore_for_file: avoid_web_libraries_in_flutter
-import 'dart:ui_web' as ui;
-import 'dart:html' as html;
+// NEWGAME Mobile — Flutter App
+// Preview & mobile app dengan desain yang sama dengan web.
+//
+// Android: flutter run (via USB/ADB ke HP)
+// Web:     flutter run -d chrome (simulator preview)
+//
+// Pastikan dev server berjalan: cd apps/web && npm run dev
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:webview_flutter/webview_flutter.dart';
 
-void main() {
-  runApp(const SimulatorApp());
-}
+void main() => runApp(const NewgameApp());
 
-// ── Color Palette ──────────────────────────────────────
+// ── Color Palette (match web globals.css) ──────────────
 const kBg     = Color(0xFF080D14);
 const kSurf   = Color(0xFF0C1420);
 const kSurf2  = Color(0xFF111827);
@@ -23,571 +23,529 @@ const kGold   = Color(0xFFFDCF41);
 const kPurple = Color(0xFFB9A6CE);
 const kGreen  = Color(0xFF22C55E);
 const kRed    = Color(0xFFEF4444);
+const kDanger = Color(0xFFEF4444);
 
-// ── Device Preset ──────────────────────────────────────
-class DevicePreset {
-  final String name;
-  final String emoji;
-  final double w;
-  final double h;
-  final bool tablet;
-  const DevicePreset(this.name, this.emoji, this.w, this.h, {this.tablet = false});
+// ── Quick Nav Pages ───────────────────────────────────
+const navPages = <_NavPage>[
+  _NavPage('Landing',     '/landing',     Icons.home_rounded),
+  _NavPage('Login',       '/login',       Icons.lock_rounded),
+  _NavPage('Dashboard',   '/dashboard',   Icons.dashboard_rounded),
+  _NavPage('Scan QR',     '/scan',        Icons.qr_code_scanner_rounded),
+  _NavPage('Leaderboard', '/leaderboard', Icons.leaderboard_rounded),
+  _NavPage('Berita',      '/news',        Icons.newspaper_rounded),
+  _NavPage('Profil',      '/profile',     Icons.person_rounded),
+  _NavPage('Kalender',    '/calendar',    Icons.calendar_month_rounded),
+  _NavPage('Badges',      '/badges',      Icons.military_tech_rounded),
+  _NavPage('Pirate Map',  '/pirate-map',  Icons.map_rounded),
+  _NavPage('Admin',       '/admin',       Icons.admin_panel_settings_rounded),
+];
+
+class _NavPage {
+  final String label;
+  final String path;
+  final IconData icon;
+  const _NavPage(this.label, this.path, this.icon);
 }
 
-const devices = <DevicePreset>[
-  DevicePreset('iPhone SE 3',      '📱', 375, 667),
-  DevicePreset('iPhone 14',        '📱', 390, 844),
-  DevicePreset('iPhone 14 Pro Max','📱', 430, 932),
-  DevicePreset('Pixel 7',          '📱', 412, 915),
-  DevicePreset('Samsung Galaxy S23','📱',360, 780),
-  DevicePreset('Redmi Note 12',    '📱', 393, 873),
-  DevicePreset('iPad Mini 6',      '📟', 768, 1024, tablet: true),
-  DevicePreset('iPad Air 5',       '📟', 820, 1180, tablet: true),
-];
-
-const navLinks = <Map<String, String>>[
-  {'label': 'Landing',     'path': '/landing',             'emoji': '🏠'},
-  {'label': 'Login',       'path': '/login',               'emoji': '🔐'},
-  {'label': 'Dashboard',   'path': '/dashboard',           'emoji': '📊'},
-  {'label': 'Leaderboard', 'path': '/leaderboard',         'emoji': '🏆'},
-  {'label': 'Berita',      'path': '/news',                'emoji': '📰'},
-  {'label': 'Profile',     'path': '/profile',             'emoji': '👤'},
-  {'label': 'Scan QR',     'path': '/scan',                'emoji': '📷'},
-  {'label': 'Admin',       'path': '/admin',               'emoji': '⚙️'},
-];
-
 // ── App ────────────────────────────────────────────────
-class SimulatorApp extends StatelessWidget {
-  const SimulatorApp({super.key});
+class NewgameApp extends StatelessWidget {
+  const NewgameApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'NEWGAME Mobile Simulator',
+      title: 'NEWGAME Mobile',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: kBg,
         colorScheme: const ColorScheme.dark(
-          primary: kGold, surface: kSurf,
+          primary: kGold,
+          surface: kSurf,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: kBg,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
         ),
       ),
-      home: const SimulatorPage(),
+      home: kIsWeb ? const _WebNotSupportedPage() : const MobilePage(),
     );
   }
 }
 
-// ── Main Page ──────────────────────────────────────────
-class SimulatorPage extends StatefulWidget {
-  const SimulatorPage({super.key});
-  @override State<SimulatorPage> createState() => _SimulatorPageState();
+// ── Web fallback (tell user to use Chrome simulator instead) ──
+class _WebNotSupportedPage extends StatelessWidget {
+  const _WebNotSupportedPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBg,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [kGold, kPurple]),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Center(child: Icon(Icons.phone_android, size: 40, color: kBg)),
+            ),
+            const SizedBox(height: 24),
+            const Text('NEWGAME Mobile', style: TextStyle(
+              fontSize: 24, fontWeight: FontWeight.w800, color: kGold,
+            )),
+            const SizedBox(height: 12),
+            const Text(
+              'Aplikasi ini dijalankan di Android.\n\n'
+              'Untuk preview web, gunakan:\nflutter run -d chrome\n'
+              'dengan simulator lama di branch web-simulator.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: kMuted, height: 1.6),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
 }
 
-class _SimulatorPageState extends State<SimulatorPage> {
-  static const baseUrl = 'http://localhost:3000';
+// ── Mobile Page (Android) ──────────────────────────────
+class MobilePage extends StatefulWidget {
+  const MobilePage({super.key});
+  @override
+  State<MobilePage> createState() => _MobilePageState();
+}
 
-  int _deviceIdx = 1;       // iPhone 14 default
-  double _scale  = 0.72;
-  bool _landscape = false;
-  String _url = '$baseUrl/landing';
-  bool _registered = false;
+class _MobilePageState extends State<MobilePage> {
+  // Change this to your PC's local IP when testing on physical device
+  // Use 10.0.2.2 for Android emulator (maps to host localhost)
+  static const _baseUrl = 'http://10.0.2.2:3000';
 
-  final _urlCtrl = TextEditingController(text: '$baseUrl/landing');
-  html.IFrameElement? _iframe;
-
-  DevicePreset get _device => devices[_deviceIdx];
-  double get _devW => _landscape ? _device.h : _device.w;
-  double get _devH => _landscape ? _device.w : _device.h;
+  late final WebViewController _controller;
+  String _currentUrl = '$_baseUrl/landing'; // tracked for nav highlight
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
+  int _currentNavIndex = 0;
+  double _loadProgress = 0;
 
   @override
   void initState() {
     super.initState();
-    _registerIframe();
+    _initWebView();
   }
 
-  void _registerIframe() {
-    _iframe = html.IFrameElement()
-      ..src = _url
-      ..style.border = 'none'
-      ..style.width  = '100%'
-      ..style.height = '100%'
-      ..allow = 'fullscreen'
-      ..setAttribute('sandbox',
-          'allow-same-origin allow-scripts allow-forms allow-popups allow-modals');
+  void _initWebView() {
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(kBg)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (url) {
+          setState(() {
+            _isLoading = true;
+            _hasError = false;
+            _currentUrl = url;
+            _updateNavIndex(url);
+          });
+        },
+        onPageFinished: (url) {
+          setState(() {
+            _isLoading = false;
+            _currentUrl = url;
+            _updateNavIndex(url);
+          });
+          // Inject dark theme preference
+          _controller.runJavaScript(
+            "try { localStorage.setItem('ng-theme', 'dark'); } catch(e) {}"
+          );
+        },
+        onProgress: (progress) {
+          setState(() => _loadProgress = progress / 100);
+        },
+        onWebResourceError: (error) {
+          setState(() {
+            _hasError = true;
+            _isLoading = false;
+            _errorMessage = error.description;
+          });
+        },
+        onNavigationRequest: (request) {
+          // Allow all localhost navigation
+          if (request.url.contains('localhost') ||
+              request.url.contains('10.0.2.2') ||
+              request.url.contains('192.168.')) {
+            return NavigationDecision.navigate;
+          }
+          // Block external URLs (open in browser instead)
+          return NavigationDecision.prevent;
+        },
+      ))
+      ..loadRequest(Uri.parse('$_baseUrl/landing'));
+  }
 
-    ui.platformViewRegistry.registerViewFactory(
-      'newgame-webview',
-      (_) => _iframe!,
-      isVisible: true,
-    );
-    setState(() => _registered = true);
+  void _updateNavIndex(String url) {
+    for (int i = 0; i < navPages.length; i++) {
+      if (url.contains(navPages[i].path)) {
+        _currentNavIndex = i;
+        return;
+      }
+    }
   }
 
   void _navigate(String path) {
-    final url = path.startsWith('http') ? path : '$baseUrl$path';
-    setState(() => _url = url);
-    _urlCtrl.text = url;
-    _iframe?.src = url;
+    final url = '$_baseUrl$path';
+    setState(() {
+      _currentUrl = url;
+      _hasError = false;
+    });
+    _controller.loadRequest(Uri.parse(url));
   }
 
-  void _reload() => _iframe?.src = _url;
+  void _reload() {
+    setState(() => _hasError = false);
+    _controller.reload();
+  }
 
   @override
   Widget build(BuildContext context) {
-    const sidebarW = 260.0;
     return Scaffold(
       backgroundColor: kBg,
-      body: Row(children: [
-        // ── Sidebar ────────────────────────
-        _buildSidebar(sidebarW),
-        // ── Canvas ─────────────────────────
-        Expanded(child: _buildCanvas()),
-      ]),
-    );
-  }
-
-  // ──────────────────────────────────────────────────────
-  Widget _buildSidebar(double w) {
-    return Container(
-      width: w,
-      decoration: const BoxDecoration(
-        color: kBg,
-        border: Border(right: BorderSide(color: kBorder)),
-      ),
-      child: Column(children: [
-        // Brand
-        _brand(),
-        // Scrollable body
-        Expanded(
-          child: ListView(padding: const EdgeInsets.all(14), children: [
-            // URL
-            _label('URL'),
-            _urlBar(),
-            const SizedBox(height: 20),
-            // Nav links
-            _label('Navigasi Cepat'),
-            ...navLinks.map((l) => _navItem(l)),
-            const SizedBox(height: 20),
-            // Devices
-            _label('Device'),
-            ...List.generate(devices.length, (i) => _deviceItem(i)),
-            const SizedBox(height: 20),
-            // Scale
-            _label('Skala'),
-            _scaleRow(),
-            const SizedBox(height: 20),
-            // Orientation
-            _label('Orientasi'),
-            _orientRow(),
-            const SizedBox(height: 20),
-            // Info
-            _infoBox(),
-          ]),
-        ),
-        // Status
-        _statusBar(),
-      ]),
-    );
-  }
-
-  Widget _brand() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-    decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: kBorder)),
-    ),
-    child: Row(children: [
-      Container(
-        width: 34, height: 34,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [kGold, kPurple]),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Center(child: Text('📱', style: TextStyle(fontSize: 17))),
-      ),
-      const SizedBox(width: 10),
-      const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('NEWGAME', style: TextStyle(
-          fontSize: 12, fontWeight: FontWeight.w800,
-          color: kGold, letterSpacing: 1.5,
-        )),
-        Text('Mobile Simulator', style: TextStyle(fontSize: 9.5, color: kMuted)),
-      ]),
-    ]),
-  );
-
-  Widget _label(String txt) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Text(txt.toUpperCase(), style: const TextStyle(
-      fontSize: 9, fontWeight: FontWeight.w800,
-      color: kMuted, letterSpacing: 1.8,
-    )),
-  );
-
-  Widget _urlBar() => Container(
-    decoration: BoxDecoration(
-      color: kSurf, borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: kBorder),
-    ),
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    child: Row(children: [
-      Expanded(
-        child: TextField(
-          controller: _urlCtrl,
-          style: const TextStyle(fontSize: 11, color: kTxt),
-          decoration: const InputDecoration(
-            border: InputBorder.none, isDense: true,
-            hintText: 'http://localhost:3000/...',
-            hintStyle: TextStyle(fontSize: 11, color: kMuted),
+      // Top bar
+      appBar: AppBar(
+        backgroundColor: kBg,
+        toolbarHeight: 52,
+        title: Row(children: [
+          Container(
+            width: 28, height: 28,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [kGold, kPurple]),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(
+              child: Text('N', style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w900, color: kBg,
+              )),
+            ),
           ),
-          onSubmitted: _navigate,
-        ),
-      ),
-      GestureDetector(
-        onTap: () => _navigate(_urlCtrl.text),
-        child: const Icon(Icons.refresh_rounded, size: 16, color: kMuted),
-      ),
-    ]),
-  );
-
-  Widget _navItem(Map<String, String> l) {
-    final active = _url.contains(l['path']!);
-    return GestureDetector(
-      onTap: () => _navigate(l['path']!),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: active ? kGold.withAlpha(25) : Colors.transparent,
-          borderRadius: BorderRadius.circular(7),
-          border: Border.all(
-            color: active ? kGold.withAlpha(60) : Colors.transparent,
-          ),
-        ),
-        child: Row(children: [
-          Text(l['emoji']!, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(l['label']!, style: TextStyle(
-            fontSize: 12, color: active ? kGold : kTxt,
-            fontWeight: active ? FontWeight.w700 : FontWeight.normal,
-          ))),
-          if (active) Container(
-            width: 5, height: 5,
-            decoration: const BoxDecoration(color: kGold, shape: BoxShape.circle),
-          ),
-        ]),
-      ),
-    );
-  }
-
-  Widget _deviceItem(int i) {
-    final d = devices[i];
-    final active = _deviceIdx == i;
-    return GestureDetector(
-      onTap: () => setState(() { _deviceIdx = i; }),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: active ? kPurple.withAlpha(30) : Colors.transparent,
-          borderRadius: BorderRadius.circular(7),
-          border: Border.all(
-            color: active ? kPurple.withAlpha(60) : Colors.transparent,
-          ),
-        ),
-        child: Row(children: [
-          Text(d.emoji, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(d.name, style: TextStyle(
-            fontSize: 11, color: active ? kPurple : kTxt,
-            fontWeight: active ? FontWeight.w700 : FontWeight.normal,
-          ), overflow: TextOverflow.ellipsis)),
-          Text('${d.w.round()}×${d.h.round()}', style: const TextStyle(
-            fontSize: 9.5, color: kMuted,
+          const SizedBox(width: 10),
+          const Text('NEWGAME', style: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w800,
+            color: kGold, letterSpacing: 1.5,
           )),
-        ]),
-      ),
-    );
-  }
-
-  Widget _scaleRow() => Row(children: [
-    SizedBox(
-      width: 38,
-      child: Text('${(_scale * 100).round()}%',
-        textAlign: TextAlign.right,
-        style: const TextStyle(fontSize: 11, color: kMuted)),
-    ),
-    Expanded(
-      child: Slider(
-        value: _scale,
-        min: 0.25, max: 1.0,
-        activeColor: kGold,
-        inactiveColor: kSurf2,
-        onChanged: (v) => setState(() => _scale = v),
-      ),
-    ),
-  ]);
-
-  Widget _orientRow() => Row(children: [
-    Expanded(child: _orientBtn(false, '📱', 'Portrait')),
-    const SizedBox(width: 8),
-    Expanded(child: _orientBtn(true, '📺', 'Landscape')),
-  ]);
-
-  Widget _orientBtn(bool landscape, String icon, String label) {
-    final active = _landscape == landscape;
-    return GestureDetector(
-      onTap: () => setState(() => _landscape = landscape),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: active ? kGold.withAlpha(25) : kSurf,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: active ? kGold.withAlpha(70) : kBorder,
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: kGold.withAlpha(25),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: kGold.withAlpha(60)),
+            ),
+            child: const Text('v0.1.4', style: TextStyle(
+              fontSize: 9, color: kGold, fontWeight: FontWeight.w600,
+            )),
           ),
-        ),
-        child: Column(children: [
-          Text(icon, style: const TextStyle(fontSize: 16)),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(
-            fontSize: 10,
-            color: active ? kGold : kMuted,
-            fontWeight: active ? FontWeight.w700 : FontWeight.normal,
-          )),
         ]),
-      ),
-    );
-  }
-
-  Widget _infoBox() => Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: kGold.withAlpha(15),
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: kGold.withAlpha(40)),
-    ),
-    child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        Text('ℹ️', style: TextStyle(fontSize: 11)),
-        SizedBox(width: 6),
-        Text('CARA PAKAI', style: TextStyle(
-          fontSize: 9, fontWeight: FontWeight.w800, color: kGold, letterSpacing: 1.2,
-        )),
-      ]),
-      SizedBox(height: 8),
-      Text(
-        'Jalankan dev server:\n'
-        'npm run dev\n\n'
-        'Lalu tekan Ctrl+Shift+B\n'
-        'di VS Code untuk buka\n'
-        'simulator ini.',
-        style: TextStyle(fontSize: 10, color: kMuted, height: 1.5),
-      ),
-    ]),
-  );
-
-  Widget _statusBar() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    decoration: const BoxDecoration(
-      color: Color(0xFF050A10),
-      border: Border(top: BorderSide(color: kBorder)),
-    ),
-    child: Row(children: [
-      Container(
-        width: 6, height: 6,
-        decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 8),
-      const Expanded(child: Text('Flutter Web — Running', style: TextStyle(fontSize: 10, color: kMuted))),
-      Text('${_devW.round()}×${_devH.round()}',
-        style: const TextStyle(fontSize: 9.5, color: kMuted, fontFamily: 'monospace')),
-    ]),
-  );
-
-  // ──────────────────────────────────────────────────────
-  Widget _buildCanvas() {
-    final frameW = _devW * _scale + 44;
-    final frameH = _devH * _scale + 48 + 20;
-    final isTablet = _device.tablet;
-    final borderR = isTablet ? 22.0 : 40.0;
-
-    return Container(
-      color: const Color(0xFF060B11),
-      child: Stack(children: [
-        // Dot grid
-        Positioned.fill(child: CustomPaint(painter: _DotGridPainter())),
-
-        // Center content
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Chip
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: kSurf,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kBorder),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(_device.emoji, style: const TextStyle(fontSize: 13)),
-                  const SizedBox(width: 8),
-                  Text(_device.name, style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: kTxt,
-                  )),
-                  Container(margin: const EdgeInsets.symmetric(horizontal: 8),
-                    width: 1, height: 12, color: kBorder),
-                  Text('${_devW.round()}×${_devH.round()}',
-                    style: const TextStyle(fontSize: 11, color: kMuted, fontFamily: 'monospace')),
-                  Container(margin: const EdgeInsets.symmetric(horizontal: 8),
-                    width: 1, height: 12, color: kBorder),
-                  Text('${(_scale * 100).round()}%',
-                    style: const TextStyle(fontSize: 11, color: kGold, fontWeight: FontWeight.w700)),
-                  if (_landscape) ...[
-                    Container(margin: const EdgeInsets.symmetric(horizontal: 8),
-                      width: 1, height: 12, color: kBorder),
-                    const Text('🔄', style: TextStyle(fontSize: 11)),
-                  ],
-                ]),
-              ),
-
-              // Phone frame
-              Container(
-                width: frameW,
-                height: frameH,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF18202E),
-                  borderRadius: BorderRadius.circular(borderR),
-                  border: Border.all(color: const Color(0xFF2A3650), width: 2.5),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withAlpha(180), blurRadius: 60, spreadRadius: 8),
-                    BoxShadow(color: kGold.withAlpha(8), blurRadius: 100, spreadRadius: 30),
-                  ],
-                ),
-                child: Column(children: [
-                  // Notch / top bar
-                  if (!isTablet) _phoneTop(),
-                  // WebView
-                  Expanded(child: ClipRRect(
-                    borderRadius: isTablet
-                      ? BorderRadius.circular(borderR - 2)
-                      : BorderRadius.zero,
-                    child: SizedBox(
-                      width: _devW * _scale,
-                      child: _registered
-                        ? _buildWebView()
-                        : const Center(child: CircularProgressIndicator(color: kGold)),
-                    ),
-                  )),
-                  // Bottom indicator
-                  _phoneBottom(isTablet),
-                ]),
-              ),
-
-              // Nav buttons
-              const SizedBox(height: 14),
-              Row(mainAxisSize: MainAxisSize.min, children: [
-                _navBtn(Icons.arrow_back_ios_rounded, () {
-                  html.window.history.back();
-                }),
-                const SizedBox(width: 8),
-                _navBtn(Icons.home_rounded, () => _navigate('/landing')),
-                const SizedBox(width: 8),
-                _navBtn(Icons.refresh_rounded, _reload),
-                const SizedBox(width: 8),
-                _navBtn(Icons.arrow_forward_ios_rounded, () {
-                  html.window.history.forward();
-                }),
-              ]),
-            ],
+        actions: [
+          // Reload
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, size: 20, color: kMuted),
+            onPressed: _reload,
+            tooltip: 'Reload',
           ),
-        ),
-      ]),
+          // Server config
+          IconButton(
+            icon: const Icon(Icons.settings_rounded, size: 20, color: kMuted),
+            onPressed: _showServerDialog,
+            tooltip: 'Server URL',
+          ),
+        ],
+        bottom: _isLoading
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(2),
+              child: LinearProgressIndicator(
+                value: _loadProgress,
+                backgroundColor: Colors.transparent,
+                valueColor: const AlwaysStoppedAnimation<Color>(kGold),
+                minHeight: 2,
+              ),
+            )
+          : null,
+      ),
+
+      // Body
+      body: _hasError ? _buildErrorView() : _buildWebView(),
+
+      // Bottom nav with quick links
+      bottomNavigationBar: _buildBottomNav(),
+
+      // Drawer for full page list
+      drawer: _buildDrawer(),
     );
   }
 
   Widget _buildWebView() {
-    return Transform.scale(
-      scale: _scale,
-      alignment: Alignment.topLeft,
-      child: SizedBox(
-        width: _devW,
-        height: _devH,
-        child: const HtmlElementView(viewType: 'newgame-webview'),
+    return WebViewWidget(controller: _controller);
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 80, height: 80,
+            decoration: BoxDecoration(
+              color: kRed.withAlpha(20),
+              shape: BoxShape.circle,
+              border: Border.all(color: kRed.withAlpha(60)),
+            ),
+            child: const Icon(Icons.wifi_off_rounded, size: 36, color: kRed),
+          ),
+          const SizedBox(height: 20),
+          const Text('Tidak Dapat Terhubung', style: TextStyle(
+            fontSize: 18, fontWeight: FontWeight.w700, color: kTxt,
+          )),
+          const SizedBox(height: 10),
+          Text(
+            'Pastikan dev server berjalan:\ncd apps/web && npm run dev\n\n'
+            'Jika menggunakan HP fisik, ganti\nIP di settings ke IP komputer kamu.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: kMuted, height: 1.6),
+          ),
+          if (_errorMessage.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: kSurf,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: kBorder),
+              ),
+              child: Text(_errorMessage, style: const TextStyle(
+                fontSize: 10, color: kMuted, fontFamily: 'monospace',
+              )),
+            ),
+          ],
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _reload,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Coba Lagi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kGold,
+              foregroundColor: kBg,
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ]),
       ),
     );
   }
 
-  Widget _phoneTop() => Container(
-    height: 28,
-    color: const Color(0xFF0F1521),
-    child: Center(
-      child: Container(
-        width: 90, height: 18,
-        decoration: BoxDecoration(
-          color: const Color(0xFF18202E),
-          borderRadius: BorderRadius.circular(9),
+  // Bottom nav bar — 5 most used pages
+  Widget _buildBottomNav() {
+    const mainNav = [0, 2, 3, 5, 6]; // Landing, Dashboard, Scan, Berita, Profil
+    return Container(
+      decoration: const BoxDecoration(
+        color: kBg,
+        border: Border(top: BorderSide(color: kBorder)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: mainNav.map((i) {
+              final page = navPages[i];
+              final active = _currentNavIndex == i;
+              return GestureDetector(
+                onTap: () => _navigate(page.path),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: active ? kGold.withAlpha(20) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(page.icon, size: 22,
+                      color: active ? kGold : kMuted),
+                    const SizedBox(height: 3),
+                    Text(page.label, style: TextStyle(
+                      fontSize: 9.5,
+                      color: active ? kGold : kMuted,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.normal,
+                    )),
+                  ]),
+                ),
+              );
+            }).toList(),
+          ),
         ),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Container(width: 9, height: 9,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F1521),
-              shape: BoxShape.circle,
-              border: Border.all(color: kBorder, width: 0.5),
-            )),
-          const SizedBox(width: 6),
-          Container(width: 32, height: 5,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F1521),
-              borderRadius: BorderRadius.circular(3),
-            )),
+      ),
+    );
+  }
+
+  // Full navigation drawer
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: kBg,
+      child: SafeArea(
+        child: Column(children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: kBorder)),
+            ),
+            child: Row(children: [
+              Container(
+                width: 44, height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [kGold, kPurple]),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(
+                  child: Text('N', style: TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.w900, color: kBg,
+                  )),
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('NEWGAME', style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w800,
+                  color: kGold, letterSpacing: 1.5,
+                )),
+                SizedBox(height: 2),
+                Text('Learn · Create · Play', style: TextStyle(
+                  fontSize: 11, color: kMuted, fontStyle: FontStyle.italic,
+                )),
+              ]),
+            ]),
+          ),
+
+          // Nav list
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+              itemCount: navPages.length,
+              itemBuilder: (context, i) {
+                final page = navPages[i];
+                final active = _currentNavIndex == i;
+                return ListTile(
+                  dense: true,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  tileColor: active ? kGold.withAlpha(20) : Colors.transparent,
+                  leading: Icon(page.icon, size: 20,
+                    color: active ? kGold : kMuted),
+                  title: Text(page.label, style: TextStyle(
+                    fontSize: 13,
+                    color: active ? kGold : kTxt,
+                    fontWeight: active ? FontWeight.w700 : FontWeight.normal,
+                  )),
+                  trailing: active
+                    ? Container(width: 6, height: 6,
+                        decoration: const BoxDecoration(
+                          color: kGold, shape: BoxShape.circle,
+                        ))
+                    : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _navigate(page.path);
+                  },
+                );
+              },
+            ),
+          ),
+
+          // Footer
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: kBorder)),
+            ),
+            child: Row(children: [
+              Container(width: 6, height: 6,
+                decoration: BoxDecoration(
+                  color: _hasError ? kRed : kGreen,
+                  shape: BoxShape.circle,
+                )),
+              const SizedBox(width: 8),
+              Expanded(child: Text(
+                _hasError ? 'Disconnected' : 'Connected',
+                style: const TextStyle(fontSize: 10, color: kMuted),
+              )),
+              const Text('v0.1.4', style: TextStyle(
+                fontSize: 10, color: kMuted, fontFamily: 'monospace',
+              )),
+            ]),
+          ),
         ]),
       ),
-    ),
-  );
-
-  Widget _phoneBottom(bool tablet) => Container(
-    height: tablet ? 10 : 20,
-    color: const Color(0xFF0F1521),
-    child: Center(
-      child: Container(
-        width: tablet ? 80 : 60,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha(60),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    ),
-  );
-
-  Widget _navBtn(IconData icon, VoidCallback onTap) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: 36, height: 36,
-      decoration: BoxDecoration(
-        color: kSurf,
-        shape: BoxShape.circle,
-        border: Border.all(color: kBorder),
-      ),
-      child: Icon(icon, size: 14, color: kMuted),
-    ),
-  );
-}
-
-// ── Dot Grid Background ────────────────────────────────
-class _DotGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    const step = 28.0;
-    final paint = Paint()
-      ..color = const Color(0xFF0F1521)
-      ..style = PaintingStyle.fill;
-    for (double x = 0; x < size.width; x += step) {
-      for (double y = 0; y < size.height; y += step) {
-        canvas.drawCircle(Offset(x, y), 1, paint);
-      }
-    }
+    );
   }
-  @override bool shouldRepaint(_) => false;
+
+  void _showServerDialog() {
+    final urlCtrl = TextEditingController(text: _baseUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: kSurf,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Server URL', style: TextStyle(
+          fontSize: 16, fontWeight: FontWeight.w700, color: kTxt,
+        )),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text(
+            'Emulator: http://10.0.2.2:3000\n'
+            'HP fisik: http://[IP_PC]:3000\n\n'
+            'Jalankan dulu: cd apps/web && npm run dev',
+            style: TextStyle(fontSize: 11, color: kMuted, height: 1.5),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: urlCtrl,
+            style: const TextStyle(fontSize: 12, color: kTxt, fontFamily: 'monospace'),
+            decoration: InputDecoration(
+              labelText: 'Base URL',
+              labelStyle: const TextStyle(fontSize: 12, color: kMuted),
+              filled: true,
+              fillColor: kBg,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: kBorder),
+              ),
+            ),
+          ),
+        ]),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal', style: TextStyle(color: kMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              final url = urlCtrl.text.trim();
+              if (url.isNotEmpty) {
+                _controller.loadRequest(Uri.parse('$url/landing'));
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kGold, foregroundColor: kBg,
+            ),
+            child: const Text('Terapkan'),
+          ),
+        ],
+      ),
+    );
+  }
 }

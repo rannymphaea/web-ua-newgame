@@ -1,12 +1,12 @@
-# Keamanan Platform NEWGAME V1.1
+﻿# Keamanan Platform NEWGAME v0.1.1
 
-Dokumen ini menjelaskan rancangan sistem keamanan berlapis pada NEWGAME V1.1, mencakup pertahanan jaringan, kontrol autentikasi, mitigasi brute force, dan keamanan integritas data relasional.
+Dokumen ini menjelaskan rancangan sistem keamanan berlapis pada NEWGAME v0.1.1, mencakup pertahanan jaringan, kontrol autentikasi, mitigasi brute force, dan keamanan integritas data relasional.
 
 ---
 
 ### Arsitektur Keamanan Berlapis
 
-NEWGAME V1.1 menerapkan strategi Defense in Depth — setiap lapisan didesain agar kegagalan satu lapisan tidak membuka akses ke lapisan berikutnya.
+NEWGAME v0.1.1 menerapkan strategi Defense in Depth â€” setiap lapisan didesain agar kegagalan satu lapisan tidak membuka akses ke lapisan berikutnya.
 
 ```
                 Internet
@@ -41,23 +41,23 @@ Counter request disimpan di Upstash Redis secara terdistribusi, tahan terhadap s
 
 ### Autentikasi Mandiri (Better Auth)
 
-Session Rotation — Setiap kali pengguna masuk atau melakukan perubahan penting, token sesi dirotasi untuk mencegah eksploitasi Session Fixation Attack.
+Session Rotation â€” Setiap kali pengguna masuk atau melakukan perubahan penting, token sesi dirotasi untuk mencegah eksploitasi Session Fixation Attack.
 
-Perlindungan CSRF dan XSS — CSRF dilindungi melalui validasi double-submit cookie bawaan Better Auth. Input pengguna disanitasi menggunakan DOMPurify di sisi client dan ValidationPipe di sisi server.
+Perlindungan CSRF dan XSS â€” CSRF dilindungi melalui validasi double-submit cookie bawaan Better Auth. Input pengguna disanitasi menggunakan DOMPurify di sisi client dan ValidationPipe di sisi server.
 
-Penyimpanan Password — Kata sandi di-hash menggunakan bcrypt dengan work factor 10 sebelum tersimpan di PostgreSQL. Tidak ada password yang disimpan dalam bentuk plaintext.
+Penyimpanan Password â€” Kata sandi di-hash menggunakan bcrypt dengan work factor 10 sebelum tersimpan di PostgreSQL. Tidak ada password yang disimpan dalam bentuk plaintext.
 
-Google OAuth — State parameter divalidasi ketat pada setiap callback untuk memitigasi serangan OAuth Replay.
+Google OAuth â€” State parameter divalidasi ketat pada setiap callback untuk memitigasi serangan OAuth Replay.
 
 ---
 
 ### Keamanan Data Relasional (Prisma PostgreSQL)
 
-Pencegahan SQL Injection — Prisma ORM secara otomatis memparameterisasi semua query SQL. Input pengguna tidak pernah digabungkan langsung sebagai string mentah ke dalam query.
+Pencegahan SQL Injection â€” Prisma ORM secara otomatis memparameterisasi semua query SQL. Input pengguna tidak pernah digabungkan langsung sebagai string mentah ke dalam query.
 
-Fault Tolerance Database — PrismaService memuat penanganan toleransi kegagalan yang mendeteksi apabila server PostgreSQL offline, kemudian memberikan respons fallback yang aman tanpa membocorkan stack trace.
+Fault Tolerance Database â€” PrismaService memuat penanganan toleransi kegagalan yang mendeteksi apabila server PostgreSQL offline, kemudian memberikan respons fallback yang aman tanpa membocorkan stack trace.
 
-Graceful Disconnect — NestJS mendaftarkan hook siklus hidup untuk memutus koneksi PostgreSQL secara bersih ketika server dimatikan.
+Graceful Disconnect â€” NestJS mendaftarkan hook siklus hidup untuk memutus koneksi PostgreSQL secara bersih ketika server dimatikan.
 
 ---
 
@@ -68,10 +68,10 @@ Graceful Disconnect — NestJS mendaftarkan hook siklus hidup untuk memutus kone
 
 Contoh pengecekan yang aman:
 ```typescript
-// Salah — membocorkan nilai kunci ke log produksi
+// Salah â€” membocorkan nilai kunci ke log produksi
 console.log('GROQ KEY:', process.env.GROQ_API_KEY);
 
-// Benar — hanya mengecek keberadaan dan panjang
+// Benar â€” hanya mengecek keberadaan dan panjang
 this.logger.log(`GROQ_API_KEY loaded: ${process.env.GROQ_API_KEY?.length ?? 0} chars`);
 ```
 
