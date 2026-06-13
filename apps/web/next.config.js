@@ -44,9 +44,11 @@ const nextConfig = {
 
   // API proxy ke backend NestJS — aktif di dev DAN production
   // Dev: proxy ke localhost:3001
-  // Production: proxy ke NEXT_PUBLIC_API_URL (set di Vercel env vars)
+  // Production: proxy ke api.unandnewgame.vercel.app
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    const isDev = process.env.NODE_ENV === 'development';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      || (isDev ? 'http://localhost:3001/api' : 'https://api.unandnewgame.vercel.app/api');
     return [
       {
         source: '/api/:path*',

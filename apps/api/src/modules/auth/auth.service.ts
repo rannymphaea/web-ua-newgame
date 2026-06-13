@@ -9,10 +9,26 @@ export class AuthService {
   /**
    * Verifikasi member ID dan password sementara.
    * Dipanggil sebelum registrasi akun Firebase.
+   * Tries: 1) doc(memberId) 2) query by memberId field (case-insensitive)
    */
   async verifyMember(memberId: string, tempPassword: string) {
-    const memberRef = this.firebaseService.firestore.collection('members').doc(memberId);
-    const memberSnap = await memberRef.get();
+    const db = this.firebaseService.firestore;
+    const normalizedId = memberId.trim().toUpperCase();
+
+    // Try 1: direct document lookup
+    let memberSnap = await db.collection('members').doc(normalizedId).get();
+
+    // Try 2: query by memberId field if doc not found
+    if (!memberSnap.exists) {
+      const querySnap = await db
+        .collection('members')
+        .where('memberId', '==', normalizedId)
+        .limit(1)
+        .get();
+      if (!querySnap.empty) {
+        memberSnap = querySnap.docs[0];
+      }
+    }
 
     if (!memberSnap.exists) {
       throw new NotFoundException('Member ID tidak ditemukan');
@@ -36,7 +52,7 @@ export class AuthService {
 
     return {
       valid: true,
-      memberId: member.memberId,
+      memberId: member.memberId || normalizedId,
       name: member.name,
       division: member.division,
       team: member.team || '',
