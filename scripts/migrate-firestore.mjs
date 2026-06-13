@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /**
  * Firestore â†’ PostgreSQL Migration Script â€” NEWGAME v0.1.1
  *

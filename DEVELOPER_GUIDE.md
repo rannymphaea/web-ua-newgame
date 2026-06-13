@@ -1,4 +1,4 @@
-﻿# Panduan Developer â€” NEWGAME v0.1.1
+# Panduan Developer â€” NEWGAME v0.1.1
 
 Dokumen ini adalah referensi utama bagi setiap developer yang berkontribusi pada platform NEWGAME v0.1.1. Bacalah seluruh panduan ini sebelum menulis kode pertama Anda untuk memastikan konsistensi arsitektur monorepo terjaga.
 

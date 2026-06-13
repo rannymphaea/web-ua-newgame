@@ -1,4 +1,4 @@
-﻿# storage/
+# storage/
 
 High-resolution source assets untuk platform NEWGAME.
 File-file di sini adalah sumber master yang digunakan untuk menghasilkan

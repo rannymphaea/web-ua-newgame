@@ -1,4 +1,4 @@
-﻿# Komponen UI â€” NEWGAME v0.1.1
+# Komponen UI â€” NEWGAME v0.1.1
 
 Direktori ini menampung komponen antarmuka yang modular, dapat digunakan ulang, dan kompatibel dengan sistem design token di `src/styles/globals.css`.
 

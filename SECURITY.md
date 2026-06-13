@@ -1,4 +1,4 @@
-﻿# Keamanan Platform NEWGAME v0.1.1
+# Keamanan Platform NEWGAME v0.1.1
 
 Dokumen ini menjelaskan rancangan sistem keamanan berlapis pada NEWGAME v0.1.1, mencakup pertahanan jaringan, kontrol autentikasi, mitigasi brute force, dan keamanan integritas data relasional.
 

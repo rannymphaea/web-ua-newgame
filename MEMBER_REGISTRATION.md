@@ -1,4 +1,4 @@
-﻿# Panduan Registrasi dan Manajemen Anggota â€” NEWGAME v0.1.1
+# Panduan Registrasi dan Manajemen Anggota â€” NEWGAME v0.1.1
 
 Dokumen ini adalah referensi operasional untuk pengurus dan admin platform NEWGAME v0.1.1. Berisi data keanggotaan aktif, format kode akses, dan tutorial lengkap untuk menambahkan anggota baru baik satu per satu maupun secara massal.
 

@@ -1,4 +1,4 @@
-﻿// HTTP client inti â€” NEWGAME v0.1.1
+// HTTP client inti â€” NEWGAME v0.1.1
 // Dipakai oleh semua halaman untuk komunikasi ke backend.
 // Enhanced: throws ApiError with user-friendly Indonesian messages.
 import { ApiError, getErrorMessage } from './errors';

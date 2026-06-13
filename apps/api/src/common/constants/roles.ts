@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Role Constants â€” NEWGAME v0.1.1
  *
  * Single source of truth untuk role system.

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Error Mapping Library â€” NEWGAME v0.1.1
  *
  * Memetakan error backend (HTTP status + domain codes) ke pesan

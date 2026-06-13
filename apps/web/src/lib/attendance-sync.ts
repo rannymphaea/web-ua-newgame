@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AttendanceSyncService â€” NEWGAME v0.1.1
  *
  * Resiliensi presensi QR saat jaringan tidak stabil.

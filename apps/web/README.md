@@ -1,4 +1,4 @@
-﻿# NEWGAME v0.1.1 â€” Frontend Application
+# NEWGAME v0.1.1 â€” Frontend Application
 
 Dokumentasi teknis untuk aplikasi frontend Next.js 14 di direktori `apps/web/`. Mencakup fitur utama v0.1.1, spesifikasi desain, peta direktori, dan konfigurasi environment.
 

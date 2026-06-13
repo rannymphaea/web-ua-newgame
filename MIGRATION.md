@@ -1,4 +1,4 @@
-﻿# MIGRATION.md â€” Firestore â†’ PostgreSQL
+# MIGRATION.md â€” Firestore â†’ PostgreSQL
 
 > **NEWGAME v0.1.1** â€” Panduan migrasi dari Firebase Firestore ke PostgreSQL (Neon/Supabase)
 

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
