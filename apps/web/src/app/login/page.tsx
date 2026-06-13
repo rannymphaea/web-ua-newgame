@@ -122,7 +122,7 @@ export default function LoginPage() {
     try {
       // Step 1: Lookup Member ID → get email
       const lookupRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/lookup-id`,
+        `/api/auth/lookup-id`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -180,7 +180,7 @@ export default function LoginPage() {
     try {
       // Step 1: Verifikasi Member ID + Kode Akses ke backend
       const verifyRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/verify-member`,
+        `/api/auth/verify-member`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

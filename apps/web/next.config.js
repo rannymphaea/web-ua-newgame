@@ -42,14 +42,15 @@ const nextConfig = {
     },
   },
 
-  // API proxy ke backend NestJS — hanya aktif di development (localhost)
+  // API proxy ke backend NestJS — aktif di dev DAN production
+  // Dev: proxy ke localhost:3001
+  // Production: proxy ke NEXT_PUBLIC_API_URL (set di Vercel env vars)
   async rewrites() {
-    const isDev = process.env.NODE_ENV === 'development';
-    if (!isDev) return [];
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3001/api/:path*',
+        destination: `${apiUrl}/:path*`,
       },
     ];
   },

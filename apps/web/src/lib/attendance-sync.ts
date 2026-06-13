@@ -81,8 +81,7 @@ export class AttendanceSyncService {
 
     for (const scan of activePending) {
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || '/api';
-        const res = await fetch(`${apiBase}/attendance/process`, {
+        const res = await fetch(`/api/attendance/process`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,9 +1,10 @@
-// HTTP client inti â€” NEWGAME v0.1.1
+// HTTP client inti — NEWGAME v0.1.4
 // Dipakai oleh semua halaman untuk komunikasi ke backend.
+// API calls go through Next.js rewrites proxy (/api/* → backend).
 // Enhanced: throws ApiError with user-friendly Indonesian messages.
 import { ApiError, getErrorMessage } from './errors';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
+const API_BASE = '/api';
 
 class ApiClient {
   private token: string | null = null;
