@@ -4,42 +4,66 @@ Catatan lengkap perjalanan pengembangan platform NEWGAME UKM Game Development Un
 
 ---
 
-### v0.1.5 — 14 Juni 2026
+### v0.1.5 — 14–15 Juni 2026
 
-#### Login & Auth
-- **Login tabs merged**: 3 tabs (Email/MemberID/Daftar) → 2 tabs (Login/Daftar)
-- Login tab now has Email/Member ID toggle + Google sign-in in one view
+#### Sesi 3 — Dokumentasi & Cleanup (15 Jun)
+- **MANUAL_TASKS.md** — dokumen khusus tugas manual, terorganisir URGENT/PENTING/OPSIONAL
+- **TODO.md** — ditulis ulang, hanya berisi pending items (completed → CHANGELOG)
+- **README.md** — update menyeluruh: struktur folder, fitur baru, cara penggunaan
+- **CHANGELOG.md** — semua fitur batch 1 dan 2 dicatat di sini
+
+#### Sesi 2 — Backend & Frontend Features (15 Jun)
+
+**Backend:**
+- **WebSocket real-time** — `NotificationsGateway` (socket.io) dengan per-user room `user:{uid}`
+- **Email notifications** — Nodemailer SMTP, configurable via `SMTP_HOST/USER/PASS`
+- **Event reminder** — `sendEventReminder()`: notif Firestore + email blast ke semua anggota
+- **Video upload** — `uploadVideo()` Cloudinary `resource_type:video`, max 100MB, mp4/webm/mov
+- **XP history export CSV** — `exportXpHistory()` dengan filter `userId` + date range
+- **Media pagination enhanced** — filter `mimeType` + `page/limit` pada `getAll()`
+- **Notifications controller** — endpoint baru: `GET /notifications`, `PATCH /:id/read`, `GET /broadcasts`, dismiss broadcast, admin send/broadcast/reminder
+- **API deps** — tambah `@nestjs/websockets`, `socket.io`, `nodemailer`, `@nestjs/schedule`, `@nestjs/platform-socket.io`
+
+**Frontend:**
+- **News search** — search bar debounced + clear button di `news/page.tsx`
+- **Members directory** — search by nama/pilar + card grid dengan click-through (`members/page.tsx`)
+- **Member profile page** — `members/[uid]/page.tsx`: XP bar, stats, bio, skills, GitHub/LinkedIn
+- **Calendar events** — month grid dengan event dots, sidebar detail, color legend per type
+- **Logs filter + export** — filter action type + date range, CSV download (`logs/page.tsx`)
+- **Leaderboard** — generation filter (GEN 1/GEN 2), top-3 trophy badges, export CSV fallback
+- **AnnouncementBanner** — emergency broadcast UI, polling 60s, WebSocket-ready, dismiss
+- **ActivityHeatmap** — GitHub-style 16-week grid komponen (`ActivityHeatmap.tsx`)
+- **BadgeDetailModal** — rarity glow/border, progress bar, unlock date, Framer Motion spring
+- **SEO** — full `metadata` di `layout.tsx`: OG, Twitter card, robots, canonical, keywords, publisher
+
+**Docs:**
+- **DEPLOYMENT_RUNBOOK.md** — panduan deploy lengkap: env vars, DB setup, Vercel/Railway/Fly.io
+- **generate-api-collection.ts** — generator Postman/Insomnia JSON collection otomatis
+- **API collection** — semua endpoint: Auth, Members, Attendance, Events, XP, Notifications, Media, News, Badges
+
+#### Sesi 1 — Core Features (14 Jun)
+- **Login tabs merged**: 3 tabs → 2 tabs (Login + Daftar)
 - **Forgot password flow** — inline Firebase sendPasswordResetEmail
-- **Duplicate registration guard** — detects email-already-in-use and memberId already registered
-- **2FA for admin accounts** — TOTP RFC 6238, setup/verify/validate/disable endpoints
-  - Pure Node.js crypto implementation (no external TOTP library)
-  - QR code otpauth URI generation for Google Authenticator
-
-#### Backend Features
-- **Member search** — search by name, pillar, or generation (query params)
-- **Generation filter** — NG1xxx = GEN 1, NG2xxx = GEN 2
-- **Export members CSV** — `GET /members/export/csv` with division/status/generation filters
-- **XP season reset** — `POST /xp/season-reset` with configurable decay percentage
-- **XP streak bonus** — `POST /xp/streak-bonus/:userId` with 4 tiers (3/7/14/30 days)
-- **Attendance export CSV** — `GET /attendance/export/csv` with event/date filters
-- **Manual attendance input** — `POST /attendance/manual` for trainers (quest keeper+)
-- **Late check-in penalty** — automatic -2 XP per 15min late (max -10)
-- **Recurring events** — weekly/biweekly/monthly with auto-generation of future instances
-- **Media gallery pagination** — `GET /media?page=&limit=` support
-
-#### Frontend Features
-- **Global search (Cmd+K)** — full-page search modal with arrow key navigation
-- **Toast queue system** — stacked toasts (max 5), auto-dismiss, slide-in animation
-- **ToastProvider** context — `useToast()` hook with `showError()` / `showSuccess()`
-
-#### Infrastructure
-- **Docker Compose** — full-stack local dev setup (API + Web + Redis)
-- **Dockerfiles** — separate Dockerfiles for API (NestJS) and Web (Next.js)
-
-#### Documentation
+- **2FA TOTP RFC 6238** — setup/verify/validate/disable, pure Node.js crypto, QR URI
+- **Member search** — by name, pillar, generation
+- **Export members CSV** — `GET /members/export/csv`
+- **XP season reset** — configurable decay %
+- **XP streak bonus** — 4 tier (3/7/14/30 hari: +5/+10/+20/+30 XP)
+- **Attendance export CSV** — filter event + date range
+- **Manual attendance** — trainer (quest keeper+) input kehadiran
+- **Late check-in penalty** — -2 XP / 15 menit, max -10 XP
+- **Recurring events** — weekly/biweekly/monthly, auto-generate max 12 instance
+- **Media gallery pagination** — `?page=&limit=` support
+- **GlobalSearch (Cmd+K)** — modal search dengan arrow key navigation
+- **Toast queue** — stacked toasts, auto-dismiss, `useToast()` hook
+- **ProfileEditModal** — form edit bio, GitHub, LinkedIn, skills
+- **ProfileCardDownload** — export profile card sebagai PNG (canvas-based)
+- **KeyboardShortcuts** — component + hook + ShortcutHelpOverlay (`?` key)
+- **Admin attendance** — `/admin/attendance` — filter + CSV export
+- **Bulk member import UI** — `/admin/import` — CSV + JSON + error detail per baris
+- **SIEM log viewer** — `/admin/siem` — severity badge NORMAL→CRITICAL, pagination, detail modal
+- **Docker Compose** — local dev full-stack (API + Web + Redis)
 - **DESIGN.md** — comprehensive platform design document
-  - Architecture diagram, design system tokens, page inventory
-  - Role hierarchy, auth flow diagram, 4-batch implementation plan
 
 ---
 

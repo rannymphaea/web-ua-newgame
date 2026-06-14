@@ -1,7 +1,7 @@
 <div align="center">
   <img src="apps/web/public/logo.png" alt="NEWGAME" width="72" />
 
-  <h1>NEWGAME v0.1.4</h1>
+  <h1>NEWGAME v0.1.5</h1>
   <p>Platform Web UKM Game Development — Universitas Andalas</p>
 
   <p>
@@ -9,147 +9,217 @@
     <img src="https://img.shields.io/badge/NestJS-10-red?logo=nestjs" alt="NestJS" />
     <img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript" alt="TypeScript" />
     <img src="https://img.shields.io/badge/Firebase-Aktif-orange?logo=firebase" alt="Firebase" />
-    <img src="https://img.shields.io/badge/PostgreSQL-Siap_Migrasi-336791?logo=postgresql" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/PostgreSQL-Direncanakan-336791?logo=postgresql" alt="PostgreSQL" />
     <img src="https://img.shields.io/badge/Redis-Upstash-DC382D?logo=redis" alt="Redis" />
-    <img src="https://img.shields.io/badge/Versi-0.1.3-6366f1" alt="Versi" />
+    <img src="https://img.shields.io/badge/Versi-0.1.5-6366f1" alt="Versi" />
     <a href="https://unandnewgame-tan.vercel.app"><img src="https://img.shields.io/badge/Live-unandnewgame--tan.vercel.app-black?logo=vercel" alt="Live" /></a>
   </p>
 </div>
 
 ---
 
-## Status Arsitektur (Per Juni 2026)
+## Ringkasan
+
+NEWGAME adalah platform web terpadu UKM Game Development Universitas Andalas. Dibangun sebagai monorepo dengan dua aplikasi utama:
+
+- **Backend:** NestJS REST API (port 3001) — 21 modul bisnis
+- **Frontend:** Next.js 14 App Router (port 3000) — dark mode, PWA, realtime
+
+**Anggota terdaftar:** 125 orang (GEN 1 + GEN 2)
+**Firebase Project:** `qr-absensi-unandnewgame`
+**Deploy:** Vercel — https://unandnewgame-tan.vercel.app
+
+---
+
+## Status Infrastruktur (Juni 2026)
 
 | Komponen | Status | Keterangan |
 |---|---|---|
-| **Firebase Firestore** | âœ… Aktif | Sumber data utama produksi |
-| **Firebase Auth** | âœ… Aktif | Autentikasi login semua anggota |
-| **PostgreSQL (local)** | âœ… Schema tersinkron | `npx prisma db push` sudah dijalankan, **data belum dimigrasikan** |
-| **Prisma Client** | âœ… Generated | v5.22.0, terhubung ke `newgame` di localhost |
-| **Upstash Redis** | âœ… Aktif | Rate limiting & leaderboard cache |
-| **Cloudinary** | âœ… Aktif | Upload media |
-| **Vercel** | âœ… Deployed | Frontend + API serverless |
+| **Firebase Firestore** | ✅ Aktif | Sumber data utama production |
+| **Firebase Auth** | ✅ Aktif | Autentikasi semua anggota |
+| **Upstash Redis** | ✅ Aktif | Rate limiting + leaderboard cache TTL 60s |
+| **Cloudinary** | ⚙️ Butuh env | Upload gambar/video — perlu credential valid |
+| **Vercel** | ✅ Deployed | Frontend + API serverless |
+| **PostgreSQL** | 🔜 Direncanakan | Schema ada (Prisma), migrasi data belum — lihat MIGRATION.md |
+| **Docker** | 🔜 Direncanakan | Compose file ada, belum fully tested — lihat TODO.md |
+| **Flutter (mobile)** | 🔜 Parsial | Embedded di `tools/mobile-simulator`, belum production-ready |
+| **WebSocket (socket.io)** | ✅ Implemented | NotificationsGateway — butuh server persistent (bukan Vercel serverless) |
+| **SMTP Email** | ⚙️ Butuh env | Nodemailer — perlu SMTP_HOST/USER/PASS |
 
-> **Catatan migrasi:** Firestore masih menjadi sumber data utama. PostgreSQL sudah disiapkan dan skema sudah tersinkron, tetapi data belum dipindahkan. Lihat [MIGRATION.md](./MIGRATION.md) untuk panduan cutover.
+> **Catatan PostgreSQL:** Firestore adalah sumber data aktif. PostgreSQL + Prisma sudah disiapkan dan schema sudah ada, tapi data belum dipindahkan. Migrasi dijadwalkan setelah platform stabil. Lihat [MIGRATION.md](./MIGRATION.md).
 
----
-
-## Ringkasan
-
-NEWGAME adalah platform web terpadu UKM Game Development Universitas Andalas yang mengelola:
-- **125 anggota** aktif (GEN 1 dan GEN 2)
-- Presensi berbasis QR code + gamifikasi XP
-- Leaderboard, lencana, berita internal
-- Panel admin untuk pengurus
-
-**Firebase Project:** `qr-absensi-unandnewgame`
+> **Catatan Docker:** `docker-compose.yml` dan Dockerfile API/Web sudah ada, tapi belum diuji end-to-end di semua OS. Lihat [TODO.md](./TODO.md) untuk detail.
 
 ---
 
-## Struktur Data Firestore (Aktif)
+## Fitur Utama
 
-| Collection | Isi |
+### Backend API (NestJS)
+- **Auth** — Firebase, login via Member ID, Google OAuth, 2FA TOTP (RFC 6238)
+- **Members** — CRUD, bulk import CSV/JSON, search, generasi filter, export CSV
+- **Attendance** — QR scan idempotent, manual input, late penalty (-2 XP/15min), export CSV
+- **Events** — recurring (weekly/biweekly/monthly), reminder email + notif
+- **XP** — level computation, leaderboard Redis cache, season reset, streak bonus
+- **Notifications** — WebSocket real-time (socket.io), Nodemailer email, Firestore persist
+- **Media** — Cloudinary upload (gambar + video 100MB), pagination, metadata
+- **News** — artikel, tutorial per pilar, YouTube embed, search
+- **Badges** — definisi + award manual/otomatis via `checkAndAward()`
+- **AI** — koneksi Milvus/Zilliz vector DB + OpenAI embedding (semantic search, parsial)
+- **Security** — RateLimit (Upstash + fallback memory), Helmet, CORS, anomaly detection
+
+### Frontend (Next.js 14)
+- **Landing page** — HeroTypewriter, PirateMap animasi Framer Motion
+- **Auth** — 2-tab login (Login + Daftar), forgot password inline, 2FA TOTP
+- **Dashboard** — XP wave bar, stat cards, event upcoming, quick actions
+- **Leaderboard** — generasi filter (GEN 1/2), pilar filter, top-3 trophy
+- **Calendar** — month grid event dots, sidebar detail, color legend
+- **Members** — directory search, card grid, click-through profile detail
+- **News** — artikel search, list dengan cover, reader
+- **Profile** — edit bio/skills/links, avatar selection, download profile card PNG
+- **Badges** — grid koleksi, detail modal rarity (rarity glow + progress bar)
+- **Logs** — filter tipe + date range, export CSV
+- **Admin** — member management, event creation, news CRUD, media gallery, SIEM viewer
+- **Scan** — QR scanner, offline queue (sync-on-reconnect)
+- **UI System** — dark mode, GlobalSearch Cmd+K, Toast queue, keyboard shortcuts, heatmap
+
+---
+
+## Struktur Proyek
+
+```
+web-ua-newgame/
+├── apps/
+│   ├── api/                          # Backend NestJS (Port 3001)
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma         # Schema PostgreSQL (ada, belum dipakai di prod)
+│   │   │   └── migrations/           # 1 migration: 20260602171817_init
+│   │   ├── Dockerfile                # Docker image API
+│   │   └── src/
+│   │       ├── firebase/             # FirebaseService — data source aktif
+│   │       ├── database/             # PrismaService — siap, belum dipakai di prod
+│   │       ├── common/
+│   │       │   ├── constants/roles.ts # Role system 8 level
+│   │       │   ├── guards/           # FirebaseAuth, Roles, RateLimit
+│   │       │   ├── decorators/
+│   │       │   ├── filters/          # AllExceptionsFilter
+│   │       │   └── interceptors/     # ResponseInterceptor
+│   │       ├── modules/              # 21 modul bisnis
+│   │       │   ├── auth/             # login, register, 2FA, OAuth
+│   │       │   ├── members/          # CRUD, bulk import, search
+│   │       │   ├── attendance/       # QR scan, manual, export
+│   │       │   ├── events/           # CRUD, recurring, reminder
+│   │       │   ├── xp/               # level, leaderboard, streak, export CSV
+│   │       │   ├── notifications/    # WebSocket gateway + email + Firestore
+│   │       │   ├── media/            # Cloudinary upload gambar + video
+│   │       │   ├── news/             # artikel, tutorial, YouTube
+│   │       │   ├── badges/           # definisi + award + auto-check
+│   │       │   ├── ai/               # Milvus, OpenAI embedding
+│   │       │   ├── logs/             # activity log forensic
+│   │       │   ├── dashboard/        # agregat dashboard stats
+│   │       │   ├── anomalies/        # anomaly detection
+│   │       │   ├── cyber-defense/    # security module
+│   │       │   ├── export/           # CSV export helpers
+│   │       │   ├── import/           # bulk import helpers
+│   │       │   ├── leave/            # izin tidak hadir
+│   │       │   ├── pillar-levels/    # XP per pilar
+│   │       │   ├── user-history/     # timeline anggota
+│   │       │   └── user-vault/       # data sensitif
+│   │       └── scripts/
+│   │           ├── seed-members.js   # Seed 125 anggota ke Firestore
+│   │           ├── add-member.js     # CLI tambah satu anggota
+│   │           └── generate-api-collection.ts # Postman/Insomnia JSON
+│   │
+│   └── web/                          # Frontend Next.js (Port 3000)
+│       ├── Dockerfile                # Docker image Web
+│       ├── public/
+│       │   ├── logo.png              # Favicon / PWA icon
+│       │   ├── manifest.json         # PWA manifest
+│       │   ├── images/characters/    # OC SVG: oc-cmd, oc-gold, oc-hero, oc-read, yua
+│       │   └── assets/sfx/yua-select.mp3
+│       └── src/
+│           ├── app/
+│           │   ├── login/            # Auth: 2-tab (Login + Daftar)
+│           │   ├── landing/          # Landing page publik
+│           │   └── (dashboard)/
+│           │       ├── dashboard/    # Halaman utama member
+│           │       ├── leaderboard/  # Top XP + filter
+│           │       ├── calendar/     # Event calendar
+│           │       ├── members/      # Directory + [uid] profile
+│           │       ├── news/         # Artikel + search
+│           │       ├── profile/      # Edit profil + download card
+│           │       ├── badges/       # Koleksi badge
+│           │       ├── logs/         # Activity log + export
+│           │       ├── scan/         # QR scanner
+│           │       ├── admin/        # Panel admin
+│           │       └── dev-tools/    # Mobile simulator
+│           ├── components/
+│           │   ├── layout/Sidebar.tsx
+│           │   ├── ui/
+│           │   │   ├── Toast.tsx
+│           │   │   ├── AnnouncementBanner.tsx  # Emergency broadcast
+│           │   │   ├── GlobalSearch.tsx        # Cmd+K search
+│           │   │   └── NovelCursor.tsx
+│           │   ├── badges/BadgeDetailModal.tsx  # Rarity modal
+│           │   └── profile/ActivityHeatmap.tsx  # GitHub-style heatmap
+│           └── lib/
+│               ├── api.ts            # HTTP client
+│               ├── errors.ts         # Error mapping Indonesia
+│               └── attendance-sync.ts # Offline QR sync
+│
+├── tools/
+│   └── mobile-simulator/             # Flutter Android app (parsial, belum production)
+│
+├── storage/                          # Aset master beresolusi tinggi
+│   ├── characters/                   # Karakter OC PNG + SVG
+│   ├── logo/                         # Variasi logo branding
+│   └── sfx/                          # Audio source
+│
+├── scripts/
+│   ├── backup.mjs                    # Backup PostgreSQL manual
+│   ├── migrate-firestore.mjs         # Migrasi Firestore → PostgreSQL
+│   ├── audit.mjs
+│   └── find-dupes.mjs
+│
+├── .github/workflows/
+│   ├── ci.yml                        # TypeCheck + audit + lint
+│   └── backup.yml                    # Backup harian 02:00 WIB
+│
+├── docker-compose.yml                # Local dev: API + Web + Redis (butuh testing)
+│
+├── README.md                         # (file ini)
+├── CHANGELOG.md                      # Riwayat perubahan per versi
+├── TODO.md                           # Backlog fitur pending
+├── MANUAL_TASKS.md                   # Tugas wajib manual (credential, cloud console)
+├── DEPLOYMENT_RUNBOOK.md             # Panduan deploy ke production
+├── DEVELOPER_GUIDE.md                # Standar kode, Git workflow
+├── SECURITY.md                       # Arsitektur keamanan
+├── MIGRATION.md                      # Panduan Firestore → PostgreSQL
+├── DESIGN.md                         # Arsitektur platform + design system
+├── MEMBER_REGISTRATION.md            # Panduan admin kelola anggota
+└── MEMBER_CREDENTIALS.md             # ⚠️ RAHASIA — jangan commit ke public repo
+```
+
+---
+
+## Format Member ID
+
+Pola: `NG` + `[kode gen+batch]` + `[nomor urut]` + `[suffix pilar]`
+
+| Suffix | Pilar |
 |---|---|
-| `members` | Data administrasi anggota â€” Member ID, nama, pilar, kode akses |
-| `users` | Akun login â€” email, role, XP, avatar, status |
-| `events` | Data event â€” nama, waktu, XP reward, status aktif |
-| `attendance` | Riwayat presensi per anggota per event |
-| `tokens` | QR token untuk presensi |
-| `logs` | Forensic activity log |
-| `media` | Referensi file media (Cloudinary) |
-| `user_history` | Timeline aktivitas anggota |
-| `user_vault` | Data sensitif anggota |
+| `PG` | Game Logic |
+| `GD` | Game Design |
+| `SF` | Game Sound |
+
+Contoh: `NG11020125SF` → GEN 1, nomor 125, Game Sound
 
 ---
 
-## Struktur Aset
-
-### `storage/` â€” Aset Master (Sumber)
-
-Direktori ini menyimpan file sumber beresolusi tinggi. **Jangan diimport langsung ke kode Next.js.**
-
-```
-storage/
-â”œâ”€â”€ characters/      # Karakter OC NEWGAME (PNG + SVG resolusi tinggi)
-â”‚   â”œâ”€â”€ CodeCommandColourOutlined.{png,svg}   # Code Commander OC
-â”‚   â”œâ”€â”€ goldGuardianColourOutlined.{png,svg}  # Gold Guardian OC
-â”‚   â”œâ”€â”€ sekumColourOutlined.{png,svg}          # Quest Keeper OC
-â”‚   â”œâ”€â”€ colourOutlined.{png,svg}               # Karakter umum
-â”‚   â”œâ”€â”€ yua.{png,svg}                          # Maskot Yua
-â”‚   â””â”€â”€ logo.{png,svg}                         # Logo resolusi tinggi
-â”œâ”€â”€ logo/            # Variasi logo untuk branding eksternal
-â””â”€â”€ sfx/             # Audio source sebelum kompresi
-```
-
-### `apps/web/public/` â€” Aset Web (Deploy)
-
-```
-public/
-â”œâ”€â”€ logo.png                   # Favicon / PWA icon (19 KB)
-â”œâ”€â”€ manifest.json              # PWA manifest
-â”œâ”€â”€ images/
-â”‚   â”œâ”€â”€ logo.svg               # Logo untuk sidebar
-â”‚   â””â”€â”€ characters/            # OC SVG siap web
-â”‚       â”œâ”€â”€ oc-cmd.svg         # Code Commander (dipakai di /scan, /calendar)
-â”‚       â”œâ”€â”€ oc-gold.svg        # Gold Guardian
-â”‚       â”œâ”€â”€ oc-hero.svg        # Hero OC
-â”‚       â”œâ”€â”€ oc-read.svg        # Quest Keeper / Sekum
-â”‚       â””â”€â”€ yua.svg            # Maskot Yua (dipakai di /dashboard, /profile, /landing)
-â””â”€â”€ assets/sfx/
-    â””â”€â”€ yua-select.mp3         # SFX klik karakter Yua
-```
-
-> Semua path gambar di kode menggunakan prefix `/images/characters/` atau `/images/`.
-> Contoh: `<img src="/images/characters/yua.svg" />`
-
----
-
-## Kustomisasi Sidebar & Pirate Map
-
-Menu sidebar didefinisikan di [`apps/web/src/components/layout/Sidebar.tsx`](./apps/web/src/components/layout/Sidebar.tsx) dalam array `NAV_ITEMS`.
-
-**Item Pirate Map** adalah menu yang **dapat diubah oleh pengurus** ke depannya:
-- Route (`href`) bisa diganti sesuai kebutuhan
-- Label dan ikon bisa dikustomisasi
-- Saat ini mengarah ke `/pirate-map` (roadmap perjalanan anggota)
-
-Untuk menambah, menghapus, atau mengganti item menu:
-```typescript
-// apps/web/src/components/layout/Sidebar.tsx â€” NAV_ITEMS
-{ href: '/pirate-map', label: 'Pirate Map', icon: 'ri-map-2-line',
-  roles: ['member', 'admin', ...] },
-// Ganti href, label, atau icon sesuai kebutuhan
-```
-
-Akses tiap item dikontrol oleh field `roles` menggunakan nama role dari [`constants/roles.ts`](./apps/api/src/common/constants/roles.ts).
-
----
-
-## Struktur Data PostgreSQL (Siap, Belum Diisi)
-
-Schema tersinkron via `prisma migrate deploy`. Tabel yang tersedia:
-
-| Tabel | Model Prisma |
-|---|---|
-| `users` | `User` |
-| `user_profiles` | `UserProfile` |
-| `sessions` | `Session` |
-| `events` | `Event` |
-| `attendances` | `Attendance` |
-| `news_articles` | `NewsArticle` |
-| `xp_history` | `XpHistory` |
-| `activities` | `Activity` |
-| `notifications` | `Notification` |
-
----
-
-## Sistem Role (Application Layer)
-
-Sistem role di aplikasi (RolesGuard) menggunakan 8 level berikut:
+## Sistem Role
 
 | Role | Level | Akses |
 |---|---|---|
-| `npc` | 0 | Halaman publik saja, belum diverifikasi |
+| `npc` | 0 | Publik saja, belum diverifikasi |
 | `member` | 1 | Dashboard, presensi, profil |
 | `inventori` | 2 | + Manajemen inventori |
 | `admin` | 3 | + Kelola member, event, berita |
@@ -158,48 +228,27 @@ Sistem role di aplikasi (RolesGuard) menggunakan 8 level berikut:
 | `code commander` | 6 | + Kelola role, buat admin |
 | `pixel presiden` | 7 | Akses penuh |
 
-> Permission matrix lengkap: [`apps/api/src/common/constants/roles.ts`](./apps/api/src/common/constants/roles.ts)
->
-> **Catatan:** Prisma schema masih menggunakan enum lama (`TRAINEE, ASSOCIATE, TRAINER, SOLDAT, ADMIN, OWNER`) karena belum diupdate bersamaan dengan migrasi data. Role di Firestore menggunakan string langsung.
-
----
-
-## Format Member ID
-
-Pola: `NG` + `[kode generasi+batch]` + `[nomor urut]` + `[suffix pilar]`
-
-| Suffix | Pilar |
-|---|---|
-| `PG` | Game Logic |
-| `GD` | Game Design |
-| `SF` | Game Sound |
-
-Contoh: `NG11020125SF` â†’ GEN 1, nomor urut 125, Game Sound
-
-Total anggota terdaftar: **125 orang** (GEN 1 + GEN 2)
-
 ---
 
 ## Cara Login
 
-Halaman `/login` memiliki **2 tab** (diperbarui v0.1.5):
+Halaman `/login` memiliki **2 tab:**
 
 1. **Login** — pilih metode:
    - 📧 Email + password Firebase
-   - 🎮 Member ID (`NG11020125SF`) + password → backend lookup → Firebase sign in
-   - 🔑 Google OAuth (tombol Sign in with Google)
-   - 🔐 Forgot password → email reset link (inline, tanpa pindah halaman)
-2. **Daftar** — verifikasi Member ID + Kode Akses → buat akun Firebase → profil dibuat otomatis
+   - 🎮 Member ID + password → backend lookup → Firebase sign in
+   - 🔑 Google OAuth
+   - 🔐 Forgot password → email reset inline
+2. **Daftar** — verifikasi Member ID + Kode Akses → buat akun Firebase
 
 ---
 
 ## Setup Lokal
 
 ### Prasyarat
-
 - Node.js 20+
-- PostgreSQL lokal (database `newgame`) **atau** connection string Neon/Supabase
-- File `apps/api/serviceAccountKey.json` (Firebase service account)
+- Firebase service account (`apps/api/serviceAccountKey.json`)
+- (Opsional) PostgreSQL lokal atau Neon/Supabase URL
 
 ### 1. Install Dependencies
 
@@ -215,27 +264,34 @@ cd apps/web && npm install
 PORT=3001
 FRONTEND_URL=http://localhost:3000
 
-# Firebase (aktif digunakan sebagai data source)
+# Firebase
 FIREBASE_PROJECT_ID=qr-absensi-unandnewgame
-FIREBASE_STORAGE_BUCKET=qr-absensi-unandnewgame.appspot.com
-# Atau gunakan file: letakkan serviceAccountKey.json di apps/api/
+FIREBASE_CLIENT_EMAIL=...
+FIREBASE_PRIVATE_KEY=...
 
-# PostgreSQL (siap, data belum dimigrasikan)
+# PostgreSQL (opsional untuk dev)
 DATABASE_URL="postgresql://user:pass@localhost:5432/newgame"
-DIRECT_URL="postgresql://user:pass@localhost:5432/newgame"
 
-# Cache
-UPSTASH_REDIS_REST_URL="https://your-db.upstash.io"
-UPSTASH_REDIS_REST_TOKEN="your-token"
+# Redis
+UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
 
-# Media
+# Cloudinary
 CLOUDINARY_CLOUD_NAME=your-name
 CLOUDINARY_API_KEY=your-key
 CLOUDINARY_API_SECRET=your-secret
 
+# Email (Nodemailer)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM="NEWGAME <your-email@gmail.com>"
+
 # AI (opsional)
 OPENAI_API_KEY=sk-...
-GROQ_API_KEY=gsk_...
+ZILLIZ_URI=https://...
+ZILLIZ_TOKEN=...
 ```
 
 **`apps/web/.env.local`:**
@@ -247,174 +303,70 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=qr-absensi-unandnewgame
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 NEXT_PUBLIC_POSTHOG_KEY=phc_your_key
-NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-### 3. Setup Database (opsional â€” jika belum)
+### 3. Jalankan Lokal
 
 ```bash
-cd apps/api
-npx prisma generate        # Generate Prisma Client
-npx prisma migrate deploy  # Apply schema ke PostgreSQL
-# atau: npx prisma db push  (untuk development cepat)
-```
-
-### 4. Jalankan Lokal
-
-```bash
-# Terminal 1 â€” API (port 3001)
+# Terminal 1 — API
 cd apps/api && npm run dev
 
-# Terminal 2 â€” Web (port 3000)
+# Terminal 2 — Web
 cd apps/web && npm run dev
 ```
 
 Buka: `http://localhost:3000/landing`
 
----
+### 4. Jalankan via Docker (Eksperimental)
 
-## Struktur Proyek
+> ⚠️ Belum fully tested. Lihat [TODO.md](./TODO.md) untuk status.
 
-```
-web-ua-newgame/
-â”œâ”€â”€ apps/
-â”‚   â”œâ”€â”€ api/                          # Backend NestJS (Port 3001)
-â”‚   â”‚   â”œâ”€â”€ prisma/
-â”‚   â”‚   â”‚   â”œâ”€â”€ schema.prisma         # Schema PostgreSQL (synced, belum diisi)
-â”‚   â”‚   â”‚   â””â”€â”€ migrations/           # 1 migration: 20260602171817_init
-â”‚   â”‚   â”œâ”€â”€ serviceAccountKey.json    # âš ï¸ Firebase credentials (jangan commit)
-â”‚   â”‚   â””â”€â”€ src/
-â”‚   â”‚       â”œâ”€â”€ firebase/             # FirebaseService â€” data source aktif
-â”‚   â”‚       â”œâ”€â”€ database/             # PrismaService â€” siap digunakan
-â”‚   â”‚       â”œâ”€â”€ auth/                 # Better Auth config (placeholder)
-â”‚   â”‚       â”œâ”€â”€ common/
-â”‚   â”‚       â”‚   â”œâ”€â”€ constants/
-â”‚   â”‚       â”‚   â”‚   â””â”€â”€ roles.ts      # Role system (8 level, source of truth)
-â”‚   â”‚       â”‚   â”œâ”€â”€ guards/           # Firebase, Roles, RateLimit
-â”‚   â”‚       â”‚   â”œâ”€â”€ decorators/
-â”‚   â”‚       â”‚   â”œâ”€â”€ filters/
-â”‚   â”‚       â”‚   â””â”€â”€ interceptors/
-â”‚   â”‚       â””â”€â”€ modules/              # 21 modul bisnis
-â”‚   â”‚           â”œâ”€â”€ auth/             # + lookup-id endpoint (v0.1.3)
-â”‚   â”‚           â”œâ”€â”€ attendance/       # + idempotent endpoint (v0.1.3)
-â”‚   â”‚           â””â”€â”€ ...
-â”‚   â”‚
-â”‚   â””â”€â”€ web/                          # Frontend Next.js (Port 3000)
-â”‚       â”œâ”€â”€ public/
-â”‚       â”‚   â”œâ”€â”€ logo.png              # Favicon / PWA icon
-â”‚       â”‚   â”œâ”€â”€ manifest.json         # PWA manifest
-â”‚       â”‚   â”œâ”€â”€ images/
-â”‚       â”‚   â”‚   â”œâ”€â”€ logo.svg          # Logo sidebar
-â”‚       â”‚   â”‚   â””â”€â”€ characters/       # OC SVG: oc-cmd, oc-gold, oc-hero, oc-read, yua
-â”‚       â”‚   â””â”€â”€ assets/sfx/
-â”‚       â”‚       â””â”€â”€ yua-select.mp3    # SFX klik Yua
-â”‚       â””â”€â”€ src/
-â”‚           â”œâ”€â”€ app/
-â”‚           â”‚   â”œâ”€â”€ login/            # 3-tab: Email / Member ID / Daftar (v0.1.3)
-â”‚           â”‚   â”œâ”€â”€ landing/
-â”‚           â”‚   â””â”€â”€ (dashboard)/
-â”‚           â”‚       â””â”€â”€ scan/         # + offline sync (v0.1.3)
-â”‚           â”œâ”€â”€ components/
-â”‚           â”‚   â”œâ”€â”€ layout/
-â”‚           â”‚   â”‚   â””â”€â”€ Sidebar.tsx   # NAV_ITEMS â€” Pirate Map bisa dikustomisasi
-â”‚           â”‚   â””â”€â”€ ui/
-â”‚           â”‚       â”œâ”€â”€ Toast.tsx     # + showError() (v0.1.3)
-â”‚           â”‚       â””â”€â”€ ErrorBanner.tsx # (BARU v0.1.3)
-â”‚           â””â”€â”€ lib/
-â”‚               â”œâ”€â”€ api.ts            # + ApiError (v0.1.3)
-â”‚               â”œâ”€â”€ errors.ts         # Error mapping Indonesia (BARU v0.1.3)
-â”‚               â””â”€â”€ attendance-sync.ts # Offline QR sync (BARU v0.1.3)
-â”‚
-â”œâ”€â”€ storage/                          # Aset master beresolusi tinggi
-â”‚   â”œâ”€â”€ characters/                   # Karakter OC PNG + SVG
-â”‚   â”œâ”€â”€ logo/                         # Variasi logo branding
-â”‚   â”œâ”€â”€ sfx/                          # Audio source
-â”‚   â””â”€â”€ README.md
-â”‚
-â”œâ”€â”€ scripts/
-â”‚   â”œâ”€â”€ backup.mjs                    # Backup PostgreSQL (BARU v0.1.3)
-â”‚   â”œâ”€â”€ migrate-firestore.mjs         # Migrasi Firestoreâ†’PostgreSQL (BARU v0.1.3)
-â”‚   â”œâ”€â”€ audit.mjs
-â”‚   â””â”€â”€ find-dupes.mjs
-â”‚
-â”œâ”€â”€ .github/
-â”‚   â””â”€â”€ workflows/
-â”‚       â”œâ”€â”€ ci.yml                    # Typecheck, lint, security audit
-â”‚       â””â”€â”€ backup.yml                # Backup harian 02:00 WIB (BARU v0.1.3)
-â”‚
-â”œâ”€â”€ README.md
-â”œâ”€â”€ CHANGELOG.md
-â”œâ”€â”€ DEVELOPER_GUIDE.md
-â”œâ”€â”€ SECURITY.md
-â”œâ”€â”€ MIGRATION.md                      # Panduan Firestoreâ†’PostgreSQL (BARU v0.1.3)
-â”œâ”€â”€ MEMBER_REGISTRATION.md
-â”œâ”€â”€ MEMBER_CREDENTIALS.md             # âš ï¸ RAHASIA â€” jangan commit
-â””â”€â”€ TODO.md
+```bash
+# Pastikan Docker Desktop berjalan
+docker compose up --build
+
+# API: http://localhost:3001
+# Web: http://localhost:3000
+# Redis: localhost:6379
 ```
 
 ---
 
-## Backup & Restore
+## Rencana Migrasi PostgreSQL
 
-### Setup GitHub Actions Backup
+> **Status saat ini:** Firebase Firestore = sumber data aktif.
+> PostgreSQL + Prisma sudah disiapkan dan schema ada (`prisma/schema.prisma`).
+> Migrasi data dijadwalkan setelah platform stabil di production.
 
-Tambahkan `DATABASE_URL` sebagai **Repository Secret** di:
-`GitHub â†’ Settings â†’ Secrets and variables â†’ Actions`
-
-Setelah itu, backup otomatis berjalan setiap hari jam **02:00 WIB** via `.github/workflows/backup.yml`.
-
-### Backup Manual
-
+**Langkah migrasi (butuh dilakukan manual):**
 ```bash
-node scripts/backup.mjs
-# Output: backups/backup-YYYY-MM-DD-HH.sql
-```
-
-### Restore
-
-```bash
-psql $DATABASE_URL < backups/backup-YYYY-MM-DD-HH.sql
-```
-
----
-
-## Migrasi Firestore â†’ PostgreSQL
-
-> **Status: BELUM DILAKUKAN** â€” Firebase masih menjadi sumber data utama.
-
-```bash
-# 1. Preview data yang akan dimigrasikan (aman, tidak ada write)
+# 1. Dry-run — tidak ada write
 node scripts/migrate-firestore.mjs --dry-run
 
-# 2. Migrasi satu collection saja
+# 2. Migrasi satu collection
 node scripts/migrate-firestore.mjs --collection users --dry-run
 
 # 3. Jalankan migrasi penuh
 node scripts/migrate-firestore.mjs
 ```
 
-**Urutan migrasi yang aman:**
-1. Backup Firestore (screenshot jumlah dokumen tiap collection)
-2. Dry-run script migrasi
-3. Verifikasi jumlah data
-4. Jalankan migrasi aktual
-5. Update service layer dari `FirebaseService` ke `PrismaService`
-6. Testing end-to-end
-
-Panduan lengkap: [MIGRATION.md](./MIGRATION.md)
+Lihat panduan lengkap: [MIGRATION.md](./MIGRATION.md)
 
 ---
 
-## Pending Actions (Wajib Sebelum Migrasi)
+## Backup & Restore
 
-| Item | Perintah / Cara |
-|---|---|
-| Seed anggota ke Firestore (jika belum) | `node apps/api/src/scripts/seed-members.js` |
-| Distribute MEMBER_CREDENTIALS ke anggota | Bagikan secara personal |
-| Validasi Cloudinary credentials di `.env` | Coba upload foto profil |
-| Tambah Google OAuth URI di Google Console | Tambah `https://unandnewgame-tan.vercel.app/api/auth/callback/google` |
-| Aktifkan backup otomatis | Tambah `DATABASE_URL` sebagai GitHub Repository Secret |
-| Update role di Firestore ke nama baru | `superadmin` â†’ `code commander`, `presiden` â†’ `pixel presiden` |
+```bash
+# Backup manual
+node scripts/backup.mjs
+# Output: backups/backup-YYYY-MM-DD-HH.sql
+
+# Restore
+psql $DATABASE_URL < backups/backup-YYYY-MM-DD-HH.sql
+```
+
+Backup otomatis berjalan setiap hari **02:00 WIB** via GitHub Actions (butuh secret `DATABASE_URL`).
 
 ---
 
@@ -422,13 +374,16 @@ Panduan lengkap: [MIGRATION.md](./MIGRATION.md)
 
 | Dokumen | Deskripsi |
 |---|---|
-| [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | Standar kode, Git workflow, pola dual-write |
-| [SECURITY.md](./SECURITY.md) | Arsitektur keamanan berlapis, rate limiting |
-| [MIGRATION.md](./MIGRATION.md) | Panduan cutover Firestore â†’ PostgreSQL |
-| [MEMBER_REGISTRATION.md](./MEMBER_REGISTRATION.md) | Panduan admin untuk tambah & kelola anggota |
-| [MEMBER_CREDENTIALS.md](./MEMBER_CREDENTIALS.md) | âš ï¸ RAHASIA â€” 125 anggota + kode akses |
-| [CHANGELOG.md](./CHANGELOG.md) | Riwayat lengkap pembaruan platform |
-| [TODO.md](./TODO.md) | Backlog fitur dan perbaikan |
+| [CHANGELOG.md](./CHANGELOG.md) | Riwayat lengkap perubahan per versi |
+| [TODO.md](./TODO.md) | Backlog fitur pending |
+| [MANUAL_TASKS.md](./MANUAL_TASKS.md) | Tugas wajib manual (credential, cloud, infra) |
+| [DEPLOYMENT_RUNBOOK.md](./DEPLOYMENT_RUNBOOK.md) | Panduan deploy production lengkap |
+| [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | Standar kode + Git workflow |
+| [SECURITY.md](./SECURITY.md) | Arsitektur keamanan berlapis |
+| [MIGRATION.md](./MIGRATION.md) | Panduan cutover Firestore → PostgreSQL |
+| [DESIGN.md](./DESIGN.md) | Arsitektur + design system platform |
+| [MEMBER_REGISTRATION.md](./MEMBER_REGISTRATION.md) | Panduan admin kelola anggota |
+| [MEMBER_CREDENTIALS.md](./MEMBER_CREDENTIALS.md) | ⚠️ RAHASIA — 125 anggota + kode akses |
 
 ---
 
@@ -436,10 +391,10 @@ Panduan lengkap: [MIGRATION.md](./MIGRATION.md)
 
 | Trigger | Workflow | Isi |
 |---|---|---|
-| Push ke `main` | `ci.yml` | TypeScript typecheck Â· npm audit Â· ESLint |
-| Cron 19:00 UTC | `backup.yml` | pg_dump â†’ artifact (retensi 30 hari) |
+| Push ke `main` | `ci.yml` | TypeScript typecheck · npm audit · ESLint |
+| Cron 19:00 UTC | `backup.yml` | pg_dump → artifact (retensi 30 hari) |
 | Manual dispatch | `backup.yml` | Backup on-demand |
 
 ---
 
-MIT License â€” 2026 NEWGAME, UKM Game Development Universitas Andalas
+MIT License — 2026 NEWGAME, UKM Game Development Universitas Andalas

@@ -1,301 +1,140 @@
-NEWGAME v0.1.5 — Project Task List
+NEWGAME v0.1.5 — Pending Features
 UKM Game Development, Universitas Andalas
-Last updated: 14 Juni 2026
+Last updated: 15 Juni 2026
 
-Catatan: Item yang sudah selesai [x] diringkas di bagian "FITUR YANG SUDAH ADA" per modul.
-Item yang masih pending tetap ditandai [-], [~], atau [!].
+Catatan: File ini hanya berisi fitur yang BELUM selesai.
+Fitur yang sudah selesai → lihat CHANGELOG.md
+Tugas manual → lihat MANUAL_TASKS.md
 
 Status key:
-  [x] = Done and deployed (lihat ringkasan per modul)
   [~] = In progress / partially implemented
   [-] = Planned but not started
-  [!] = Blocked or needs review / action required
 
 ---
 
-INFRASTRUKTUR & DEVOPS
+INFRASTRUKTUR
 
-Sudah diimplementasikan:
-  Monorepo NestJS (port 3001) + Next.js (port 3000), GitHub repo rannymphaea/web-ua-newgame,
-  CI/CD via GitHub Actions (type-check, audit, lint), Vercel deployment + vercel.json rewrites,
-  .env structure documented, .gitignore lengkap, Docker Compose untuk local dev (API+Web+Redis),
-  Dockerfile terpisah untuk API dan Web.
+  Docker
+    [~] docker-compose.yml ada, tapi belum fully tested end-to-end
+        File: docker-compose.yml, apps/api/Dockerfile, apps/web/Dockerfile
+        Test lokal: docker compose up --build
+        Masalah potensial:
+          - Volume mount path beda di Windows vs Linux
+          - Urutan startup: Redis harus ready sebelum API
+          - Hot reload di Docker membutuhkan watchman atau polling
+        Perlu: testing di environment bersih (WSL2 atau Linux VM)
 
-Belum selesai:
-  [-] Staging environment terpisah dari production
+  Flutter Mobile App
+    [~] Embedded di tools/mobile-simulator, tapi bukan git submodule resmi
+        Status: code ada (Android WebView, bottom nav 5 halaman, drawer 11 halaman)
+        Belum:
+          - Build APK yang bisa didistribusikan
+          - WebSocket support (push notif dari API)
+          - Deep link ke halaman internal
+          - Push notification via Firebase Cloud Messaging
+          - Publish ke Play Store / internal track
+        Perlu (manual): lihat MANUAL_TASKS.md #10
 
----
+  PostgreSQL Migration
+    [~] Schema ada (Prisma), data belum dipindahkan dari Firestore
+        Status: Firestore = sumber data aktif, PostgreSQL = standby
+        Langkah yang tersisa:
+          [-] Jalankan migrasi Prisma di production DB (manual, MANUAL_TASKS.md #3)
+          [-] Update service layer: ganti FirebaseService → PrismaService per modul
+          [-] Update Prisma schema role enum (lama: TRAINEE,ADMIN,OWNER → baru: 8 role)
+          [-] End-to-end testing setelah cutover
+          [-] Dual-write period (tulis ke keduanya) sebelum full cutover
+        Panduan lengkap: MIGRATION.md
 
-BACKEND — NESTJS API
+  Staging Environment
+    [-] Vercel project terpisah untuk staging (env vars berbeda dari production)
+        Langkah: buat project baru di Vercel, set NEXT_PUBLIC_API_URL ke staging API
 
-  Authentication (apps/api/src/modules/auth)
-    Sudah ada: verify-member, register, /me, set-role, list users, register-admin,
-    lookup-id (Member ID → email), Google OAuth, login via Member ID, password reset
-    (Firebase sendPasswordResetEmail), 2FA TOTP RFC 6238 (setup/verify/validate/disable/status,
-    pure Node.js crypto, QR URI untuk Google Authenticator).
-    [~] Better Auth session fully replacing Firebase Auth (masih hybrid)
 
-  Member Management (apps/api/src/modules/members)
-    Sudah ada: CRUD lengkap (GET list/detail, POST create, PATCH update, DELETE soft-delete),
-    bulk import via CSV atau JSON, seed-members.js (125 anggota), add-member.js CLI,
-    search by name/pillar/generation, export member list to CSV, generation filter (NG1xxx/NG2xxx).
+  Authentication
+    [~] Better Auth session fully replacing Firebase Auth (masih hybrid — dual-write)
 
-  XP & Leaderboard (apps/api/src/modules/xp)
-    Sudah ada: XP hitung + increment, level computation, leaderboard dengan Redis cache (TTL 60s),
-    XP season reset (configurable decay %), bonus XP streak (4 tier: 3/7/14/30 hari).
-    [~] XP history per member (parsial)
+  XP & Leaderboard
+    [~] XP history per member (endpoint parsial, belum lengkap)
 
-  Attendance (apps/api/src/modules/attendance)
-    Sudah ada: QR scan endpoint (idempotent), attendance record creation, attendance history,
-    export CSV (/attendance/export/csv dengan filter event+tanggal),
-    manual input oleh trainer (/attendance/manual, quest keeper+),
-    late check-in penalty (-2 XP per 15 menit terlambat, max -10 XP).
+  News
+    [~] Image upload via Cloudinary untuk cover artikel
+        (endpoint ada di backend, butuh CLOUDINARY env valid — lihat MANUAL_TASKS.md #6)
 
-  Events (apps/api/src/modules/events)
-    Sudah ada: create + listing event, detail + attendance linking,
-    recurring event (weekly/biweekly/monthly, auto-generate max 12 instance).
-    [-] Event reminder notification (push/email)
+  Notifications
+    (Semua sudah diimplementasikan. Lihat CHANGELOG.md v0.1.5)
 
-  News (apps/api/src/modules/news)
-    Sudah ada: CRUD artikel (create/update/delete), published/draft toggle, slug generation,
-    kategori & tags (multi-kategori: blog/news/event/tutorial), search by keyword (client-side),
-    tutorial grouping by sub-category (game-logic/game-design/game-sound), YouTube embed.
-    [~] Image upload via Cloudinary untuk cover artikel (endpoint ada, butuh env Cloudinary valid)
+  AI Module
+    [-] Semantic news search via vector similarity (Milvus/Zilliz)
+        Butuh: setup collection di Zilliz, index artikel yang sudah ada
+        Lihat: MANUAL_TASKS.md #11
+    [-] Member recommendation engine (AI/ML)
+        Butuh: data training, model selection, endpoint integration
 
-  Notifications (apps/api/src/modules/notifications)
-    Sudah ada: notification creation endpoint, polling-based delivery.
-    [-] WebSocket push notifications
-    [-] Email notification integration
-
-  Media (apps/api/src/modules/media)
-    Sudah ada: upload ke Cloudinary via upload_stream, delete media, paginated listing
-    (?page=&limit=&usage=&mimeType=), avatar selection & upload profil.
-    [-] Video upload support
-
-  Badges (apps/api/src/modules/badges)
-    Sudah ada: badge definition schema, badge assignment ke user.
-    [-] Automatic badge trigger logic (attendance streaks, XP milestones)
-
-  AI Module (apps/api/src/modules/ai)
-    Sudah ada: koneksi Milvus/Zilliz Cloud vector DB, text embedding via OpenAI API.
-    [-] Semantic news search via vector similarity
-    [-] Member recommendation engine
-
-  Security & Monitoring
-    Sudah ada: ResponseInterceptor (unified response shape), AllExceptionsFilter (forensic logging),
-    RateLimitGuard (Upstash Redis: 5 req/15min lookup-id, 100 req/min general), fallback in-memory
-    rate limiter, RolesGuard + @Roles decorator (8-level hierarchy: npc → pixel presiden),
-    CORS whitelist, Helmet security headers, anomaly detection engine (isolation forest, Merkle
-    tree — parsial), SIEM adapters ELK + Grafana Loki (placeholder).
-    [-] PQCrypto — post-quantum cryptography (interface placeholder saja)
+  Security
+    [-] PQCrypto — post-quantum cryptography
+        Lihat: MANUAL_TASKS.md #13
     [-] Automated secret rotation via CI/CD
-    [-] Alerting saat anomaly score melewati threshold
-
-  Export & Import
-    Sudah ada: import member dari JSON payload, Firestore → PostgreSQL migration script,
-    export attendance report as CSV.
-    [-] Export XP history sebagai spreadsheet
-
-  Other Modules
-    Sudah ada: Logs module (activity log), User Vault (sensitive data), User History (timeline),
-    Pillar Levels (XP per pilar), Cyber Defense module, Leave request system (izin tidak hadir).
+        Lihat: MANUAL_TASKS.md (bagian infrastruktur)
+    [-] Anomaly alerting via webhook (PagerDuty/OpsGenie)
+        Lihat: MANUAL_TASKS.md #12
 
 ---
 
 FRONTEND — NEXT.JS WEB
 
-  Landing Page (apps/web/src/app/landing)
-    Sudah ada: HeroTypewriter multi-phrase (gradient shift + glitch + particle burst),
-    PirateMap vertical flowchart (Framer Motion: spring bounce, draw-stroke lines, star burst,
-    tooltip, mobile cards), vision/mission section, pillar cards, guidebook section, CTA,
-    Space Grotesk font (zero CLS).
-    [-] Internationalization (English/Indonesian toggle)
-    [-] SEO meta tags dan Open Graph images
-
-  Authentication (apps/web/src/app/login)
-    Sudah ada: Login page Firebase Auth, 2-tab UI (Login + Daftar) — tab Login berisi
-    Email/MemberID toggle + Google OAuth + forgot password inline, tab Daftar berisi
-    member verification flow + duplicate detection, Zustand auth store + IndexedDB cache,
-    post-login redirect guard, idle timeout extended, 2FA TOTP flow.
+  Authentication
     [~] Better Auth session fully replacing Firebase (masih hybrid)
     [-] Email verification resend button
+        (perlu Firebase sendEmailVerification + UI di login page)
 
-  Dashboard (apps/web/src/app/(dashboard)/dashboard)
-    Sudah ada: welcome hero (Yua, clickable SFX), XP liquid wave bar di TopBar,
-    stat cards (XP/level/attendance/badge), quick actions, upcoming events, guidebook shortcuts.
-    [-] Weekly activity heatmap
-    [-] Announcement banner (emergency broadcast dari admin)
+  Landing Page
+    [-] Internationalization — EN/ID language toggle
 
-  Leaderboard (apps/web/src/app/(dashboard)/leaderboard)
-    Sudah ada: global XP leaderboard, filter tab per pilar.
-    [-] Generation filter (GEN 1 / GEN 2)
-    [-] Season / time-period filter
-    [-] Export leaderboard as image
+  Dashboard
+    (Weekly activity heatmap sudah dibuat sebagai komponen ActivityHeatmap.tsx)
+    [-] Integrasikan ActivityHeatmap ke dashboard page — perlu fetch attendance history
 
-  Badges (apps/web/src/app/(dashboard)/badges)
-    Sudah ada: badge collection grid.
-    [-] Badge detail modal dengan unlock conditions
-    [-] Badge progress indicator
-
-  Attendance / Scan (apps/web/src/app/(dashboard)/scan)
-    Sudah ada: QR scanner, confirmation screen, scan history, offline scan queue
-    (sync-on-reconnect), pending sync indicator badge, Indonesian error messages.
-
-  News (apps/web/src/app/(dashboard)/news)
-    Sudah ada: article list dengan cover image, article detail reader.
-    [-] Article search UI (backend sudah ada, frontend belum)
+  News
     [-] Related articles sidebar
+        (logika: ambil artikel dengan tag/kategori serupa, tampilkan di sidebar)
 
-  Profile (apps/web/src/app/(dashboard)/profile)
-    Sudah ada: profile card (avatar/role/XP), activity history timeline, avatar selection
-    (termasuk Yua avatar), Cloudinary photo upload, profile edit form (bio/GitHub/LinkedIn/skills
-    via ProfileEditModal.tsx), download profile card sebagai PNG (canvas-based, ProfileCardDownload.tsx).
+  Members
+    [-] Add event form dari Calendar (admin only)
+        (tombol tambah event di kalender → modal form admin)
 
-  Admin Panel (apps/web/src/app/(dashboard)/admin)
-    Sudah ada: member management table, role change interface, news management
-    (create/edit/delete/publish toggle), media gallery management, analytics dashboard (PostHog),
-    attendance report view + export CSV (/admin/attendance), event creation form (di admin page),
-    bulk member import UI (/admin/import — CSV+JSON + error detail), SIEM log viewer
-    (/admin/siem — severity badges NORMAL→CRITICAL, pagination, detail modal).
+  Authentication
+    [-] Email verification resend button (di login/profile page)
 
-  Members Directory (apps/web/src/app/(dashboard)/members)
-    Sudah ada: member list dengan pillar filter.
-    [-] Member search by name (backend sudah ada)
-    [-] Member profile click-through
+---
 
-  Calendar (apps/web/src/app/(dashboard)/calendar)
-    Sudah ada: calendar view structure.
-    [-] Event display on calendar dates
-    [-] Add event dari calendar (admin only)
+INFRASTRUKTUR
 
-  Logs (apps/web/src/app/(dashboard)/logs)
-    Sudah ada: activity logs page structure.
-    [-] Filter by log type dan date range
-    [-] Export logs to CSV
-
-  Developer Tools
-    Sudah ada: /dev-tools (Web Mobile Simulator — 8 presets, orientasi, scale),
-    /dev-profile, Flutter Mobile App (tools/mobile-simulator — Android WebView, bottom nav 5
-    halaman, drawer 11 halaman, server URL config, error/retry, loading bar, dark theme).
-
-  UI Components & System
-    Sudah ada: dark mode toggle (FOUC prevention), ErrorBoundary (PostHog reporting),
-    ProfileCard, Toast (ARIA live region), ErrorBanner, Sidebar (elastic hover, mobile),
-    TopBar (XP bar), NovelCursor, PostHog Provider, design token system (globals.css),
-    skeleton shimmer, IdleSessionManager (30min auto-logout, 2min warning, SVG countdown ring),
-    Toast queue system (stacked max 5, auto-dismiss, slide-in — ToastQueue.tsx),
-    Global search Cmd+K (GlobalSearch.tsx — arrow key nav, semua halaman terindex),
-    Keyboard shortcut system (KeyboardShortcuts.tsx — component + hook + ShortcutHelpOverlay).
+  [-] Staging environment terpisah dari production
+      (buat Vercel project terpisah untuk staging, env vars berbeda)
 
 ---
 
 DOKUMENTASI
 
-Sudah ada: README.md (updated v0.1.5 — login section 2-tab), DEVELOPER_GUIDE.md,
-SECURITY.md, MEMBER_REGISTRATION.md, MEMBER_CREDENTIALS.md, CHANGELOG.md (v0.1.5 entry),
-TODO.md (file ini), MIGRATION.md, DESIGN.md.
-
-[-] API Postman / Insomnia collection export
-[-] Deployment runbook untuk Vercel + Neon + Upstash
+  [-] Internationalization guide (jika fitur i18n diimplementasikan)
 
 ---
 
-ITEM PENDING — BISA DIKERJAKAN AI (v0.1.6+)
+CATATAN SESI
 
-  Backend:
-    [x] WebSocket push notifications (real-time) — NotificationsGateway + socket.io
-    [x] Email notification integration — Nodemailer SMTP (SMTP_HOST/USER/PASS)
-    [x] Event reminder notification — sendEventReminder() per event + email blast
-    [x] Video upload support — uploadVideo() Cloudinary resource_type:video max 100MB
-    [x] Automatic badge trigger logic — checkAndAward() sudah ada, terintegrasi via BadgesService
-    [x] Export XP history sebagai CSV — exportXpHistory() di XpService
-    [-] Semantic news search via vector similarity (Milvus) — perlu setup collection di Zilliz
-    [-] Member recommendation engine (AI/ML) — perlu data training
+  Sesi 1 (14 Jun 2026): 2FA, attendance export/manual/late, recurring events,
+    GlobalSearch, ToastQueue, ProfileEdit, ProfileCard download, KeyboardShortcuts,
+    Admin attendance/import/SIEM pages. Commit: 0fa4114
 
-  Frontend:
-    [x] Article search UI — search bar debounced di news/page.tsx
-    [-] Related articles sidebar — hanya backend endpoint, UI belum dibuat
-    [x] Member search by name UI + click-through profile — members/page.tsx + members/[uid]/page.tsx
-    [x] Calendar: event display on dates + add event — calendar/page.tsx lengkap
-    [x] Logs: filter by type/date + export CSV — logs/page.tsx
-    [x] Weekly activity heatmap — ActivityHeatmap.tsx (GitHub-style)
-    [x] Emergency announcement banner — AnnouncementBanner.tsx (polling 60s)
-    [x] Leaderboard: generation filter + export CSV — leaderboard/page.tsx
-    [x] Badge detail modal + progress indicator — BadgeDetailModal.tsx (rarity colors)
-    [-] Email verification resend button — perlu Firebase sendEmailVerification
-    [x] SEO meta tags + Open Graph images — layout.tsx full metadata + Twitter card
-    [x] API Postman/Insomnia collection — generate-api-collection.ts
-    [x] Deployment runbook — DEPLOYMENT_RUNBOOK.md
-    [-] Staging environment terpisah dari production (Vercel env)
+  Sesi 2 (14-15 Jun 2026): WebSocket, Nodemailer email, video upload, XP export,
+    Calendar events, Members search+profile, Logs filter+export, Leaderboard gen filter,
+    AnnouncementBanner, ActivityHeatmap, BadgeDetailModal, SEO metadata,
+    API collection generator, Deployment runbook. Commit: f170c31
 
-  External/Manual tetap di bawah.
-
----
-
-ITEM PENDING — HARUS DILAKUKAN MANUAL (Tidak Bisa Otomatis)
-
-  Alasan: butuh akses credential, Google Cloud Console, database production,
-  atau distribusi fisik ke anggota. AI tidak bisa melakukan ini.
-
-  [!] SEED FIRESTORE
-      Jalankan SEKALI di komputer dengan akses service account production:
-      > node apps/api/src/scripts/seed-members.js
-      Tanpa ini, tidak ada anggota yang bisa registrasi.
-
-  [!] MEMBER CREDENTIALS
-      Isi MEMBER_CREDENTIALS.md dengan data tiap anggota lalu distribusikan
-      secara fisik atau via grup WA/Discord. Setiap anggota butuh Member ID + Kode Akses.
-
-  [!] CLOUDINARY ENV
-      Isi di apps/api/.env (dan Vercel environment variables):
-        CLOUDINARY_CLOUD_NAME=...
-        CLOUDINARY_API_KEY=...
-        CLOUDINARY_API_SECRET=...
-      Tanpa ini: upload foto, media gallery, dan cover artikel tidak berfungsi.
-
-  [!] GOOGLE OAUTH REDIRECT URI
-      Buka Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client
-      Tambahkan Authorized redirect URIs:
-        http://localhost:3000/api/auth/callback/google      (development)
-        https://unandnewgame-tan.vercel.app/api/auth/callback/google  (production)
-
-  [!] PRISMA MIGRATION (production DB)
-      Jalankan di mesin dengan DATABASE_URL production:
-      > npx prisma migrate deploy
-      Wajib sebelum fitur yang bergantung pada PostgreSQL bisa berjalan.
-
-  [!] GITHUB SECRET — DATABASE_URL
-      Buka: github.com/rannymphaea/web-ua-newgame → Settings → Secrets → Actions
-      Tambahkan: DATABASE_URL = (connection string Neon/Supabase production)
-      Mengaktifkan backup otomatis via .github/workflows/backup.yml
-
-  [!] FIRESTORE ROLE MIGRATION
-      Update role lama ke nama baru di dokumen user Firestore:
-        superadmin    → code commander
-        presiden      → pixel presiden
-        pengurus      → member
-      Lakukan dry-run dulu:
-      > node scripts/migrate-firestore.mjs --collection users --dry-run
-      Lalu jalankan tanpa --dry-run jika hasilnya benar.
-
-  [!] FLUTTER SUBMODULE (opsional)
-      Flutter app saat ini embedded repo (bukan submodule resmi).
-      Jika ingin tracking yang benar:
-      > git rm --cached tools/mobile-simulator
-      > git submodule add <url> tools/mobile-simulator
-
-  [-] PQCrypto — post-quantum cryptography
-      Interface placeholder sudah ada. Implementasi butuh library eksternal
-      (liboqs atau serupa) dan keputusan arsitektur — diskusikan sebelum implementasi.
-
-  [-] Automated secret rotation via CI/CD
-      Butuh akses ke Vault/AWS Secrets Manager/GCP Secret Manager dan
-      integrasi pipeline CI/CD — konfigurasi manual di cloud provider.
-
-  [-] Anomaly alerting threshold
-      Butuh integrasi PagerDuty/OpsGenie/email alert — konfigurasi di platform monitoring.
+  Sesi 3 (15 Jun 2026): MANUAL_TASKS.md, TODO cleanup, CHANGELOG update,
+    README update. Commit: [current]
 
 ---
 
 NEWGAME v0.1.5 — UKM Game Development, Universitas Andalas
-Last updated: 15 Juni 2026
