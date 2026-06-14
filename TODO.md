@@ -1,331 +1,228 @@
 NEWGAME v0.1.5 — Project Task List
 UKM Game Development, Universitas Andalas
-Last updated: 14 Juni 2026 (sesi 2 selesai)
+Last updated: 14 Juni 2026
 
-This file tracks the development status of all features across the platform.
-Update this file whenever a task is started, completed, or reprioritized.
+Catatan: Item yang sudah selesai [x] diringkas di bagian "FITUR YANG SUDAH ADA" per modul.
+Item yang masih pending tetap ditandai [-], [~], atau [!].
 
 Status key:
-  [x] = Done and deployed
+  [x] = Done and deployed (lihat ringkasan per modul)
   [~] = In progress / partially implemented
   [-] = Planned but not started
-  [!] = Blocked or needs review
+  [!] = Blocked or needs review / action required
 
 ---
 
-INFRASTRUCTURE AND DEVOPS
+INFRASTRUKTUR & DEVOPS
 
-  [x] Monorepo setup — NestJS API (Port 3001) + Next.js Web (Port 3000)
-  [x] GitHub repository at rannymphaea/web-ua-newgame
-  [x] GitHub Actions CI/CD pipeline (.github/workflows/ci.yml)
-      [x] TypeScript type-check on push
-      [x] Security audit (npm audit)
-      [x] Lint check — ESLint config added (.eslintrc.json)
-      [x] Fixed: npm ci → npm install --legacy-peer-deps (lock drift tolerant)
-  [x] Vercel deployment with vercel.json rewrites
-  [x] Environment variable structure documented (README.md)
-  [x] .gitignore configured — .env, node_modules, .next, serviceAccountKey
-  [x] Docker Compose setup for local full-stack development (NEW)
-  [-] Staging environment separate from production
+Sudah diimplementasikan:
+  Monorepo NestJS (port 3001) + Next.js (port 3000), GitHub repo rannymphaea/web-ua-newgame,
+  CI/CD via GitHub Actions (type-check, audit, lint), Vercel deployment + vercel.json rewrites,
+  .env structure documented, .gitignore lengkap, Docker Compose untuk local dev (API+Web+Redis),
+  Dockerfile terpisah untuk API dan Web.
+
+Belum selesai:
+  [-] Staging environment terpisah dari production
 
 ---
 
 BACKEND — NESTJS API
 
   Authentication (apps/api/src/modules/auth)
-    [x] POST /api/auth/verify-member — verify memberId + tempPassword against Firestore
-    [x] POST /api/auth/register — create user profile in PostgreSQL after Firebase auth
-    [x] GET /api/auth/me — fetch current authenticated user profile
-    [x] POST /api/auth/set-role — change user role (admin and above)
-    [x] GET /api/auth/users — list all users (code commander / pixel presiden only)
-    [x] POST /api/auth/register-admin — create admin account (code commander / pixel presiden only)
-    [x] POST /api/auth/lookup-id — resolve NEWGAME Member ID to email (NEW)
-    [x] Better Auth integration with Prisma adapter
-    [x] Google OAuth login support
-    [x] Login via NEWGAME Member ID (tab 3 in login page) (NEW)
-    [~] Better Auth session fully replacing Firebase Auth
-    [x] Password reset via email flow (NEW — Firebase sendPasswordResetEmail)
-    [x] Two-factor authentication (2FA) for admin accounts (NEW — TOTP RFC 6238)
+    Sudah ada: verify-member, register, /me, set-role, list users, register-admin,
+    lookup-id (Member ID → email), Google OAuth, login via Member ID, password reset
+    (Firebase sendPasswordResetEmail), 2FA TOTP RFC 6238 (setup/verify/validate/disable/status,
+    pure Node.js crypto, QR URI untuk Google Authenticator).
+    [~] Better Auth session fully replacing Firebase Auth (masih hybrid)
 
   Member Management (apps/api/src/modules/members)
-    [x] GET /api/members — paginated member list with filters
-    [x] GET /api/members/:uid — member detail with activity history
-    [x] POST /api/members — create single member record
-    [x] POST /api/members/import — bulk import via CSV or JSON
-    [x] PATCH /api/members/:uid — update member data
-    [x] DELETE /api/members/:uid — soft delete (status → inactive)
-    [x] seed-members.js — seeds all 125 members to Firestore with bcrypt hash
-    [x] add-member.js — interactive/CLI script to add one member at a time
-    [x] Member search by name, pillar, or generation (NEW)
-    [x] Export member list to CSV from admin panel (NEW)
+    Sudah ada: CRUD lengkap (GET list/detail, POST create, PATCH update, DELETE soft-delete),
+    bulk import via CSV atau JSON, seed-members.js (125 anggota), add-member.js CLI,
+    search by name/pillar/generation, export member list to CSV, generation filter (NG1xxx/NG2xxx).
 
-  XP and Leaderboard (apps/api/src/modules/xp)
-    [x] XP calculation and increment endpoint
-    [x] Level computation from XP total
-    [x] Leaderboard query with Redis caching (TTL 60s)
-    [~] XP history per member
-    [x] XP decay / season reset logic (NEW — configurable %)
-    [x] Bonus XP for event attendance streaks (NEW — 4 tiers)
+  XP & Leaderboard (apps/api/src/modules/xp)
+    Sudah ada: XP hitung + increment, level computation, leaderboard dengan Redis cache (TTL 60s),
+    XP season reset (configurable decay %), bonus XP streak (4 tier: 3/7/14/30 hari).
+    [~] XP history per member (parsial)
 
   Attendance (apps/api/src/modules/attendance)
-    [x] QR code scan endpoint (idempotent — safe for retry) (UPDATED)
-    [x] Attendance record creation
-    [x] Attendance history per member
-    [x] Attendance report export (CSV) (NEW)
-    [x] Manual attendance input by trainer (NEW)
-    [x] Late check-in penalty logic (NEW — -2 XP per 15min late)
+    Sudah ada: QR scan endpoint (idempotent), attendance record creation, attendance history,
+    export CSV (/attendance/export/csv dengan filter event+tanggal),
+    manual input oleh trainer (/attendance/manual, quest keeper+),
+    late check-in penalty (-2 XP per 15 menit terlambat, max -10 XP).
 
   Events (apps/api/src/modules/events)
-    [x] Event creation and listing
-    [x] Event detail and attendance linking
+    Sudah ada: create + listing event, detail + attendance linking,
+    recurring event (weekly/biweekly/monthly, auto-generate max 12 instance).
     [-] Event reminder notification (push/email)
-    [x] Recurring event support (NEW — weekly/biweekly/monthly)
 
   News (apps/api/src/modules/news)
-    [x] Article creation, update, delete
-    [x] Published/draft toggle
-    [x] Slug generation
-    [~] Image upload via Cloudinary for article cover
-    [x] Article categories and tags (ALREADY IMPLEMENTED)
-    [x] Search articles by keyword (ALREADY IMPLEMENTED)
+    Sudah ada: CRUD artikel (create/update/delete), published/draft toggle, slug generation,
+    kategori & tags (multi-kategori: blog/news/event/tutorial), search by keyword (client-side),
+    tutorial grouping by sub-category (game-logic/game-design/game-sound), YouTube embed.
+    [~] Image upload via Cloudinary untuk cover artikel (endpoint ada, butuh env Cloudinary valid)
 
   Notifications (apps/api/src/modules/notifications)
-    [x] Notification creation endpoint
-    [~] Real-time delivery (polling-based)
+    Sudah ada: notification creation endpoint, polling-based delivery.
     [-] WebSocket push notifications
     [-] Email notification integration
 
   Media (apps/api/src/modules/media)
-    [x] Upload to Cloudinary via upload_stream
-    [x] Delete media from Cloudinary
-    [x] Media gallery paginated listing (NEW)
+    Sudah ada: upload ke Cloudinary via upload_stream, delete media, paginated listing
+    (?page=&limit=&usage=&mimeType=), avatar selection & upload profil.
     [-] Video upload support
 
   Badges (apps/api/src/modules/badges)
-    [x] Badge definition schema
-    [x] Badge assignment to user
+    Sudah ada: badge definition schema, badge assignment ke user.
     [-] Automatic badge trigger logic (attendance streaks, XP milestones)
 
   AI Module (apps/api/src/modules/ai)
-    [x] Milvus / Zilliz Cloud vector DB connection
-    [x] Text embedding via OpenAI API
-    [-] Semantic news search using vector similarity
+    Sudah ada: koneksi Milvus/Zilliz Cloud vector DB, text embedding via OpenAI API.
+    [-] Semantic news search via vector similarity
     [-] Member recommendation engine
 
-  Security and Monitoring
-    [x] Global ResponseInterceptor — unified { success, data, meta, timestamp }
-    [x] Global AllExceptionsFilter — forensic logging + safe error responses
-    [x] RateLimitGuard — Upstash Redis, 5 req/15min lookup-id, 100 req/min general
-    [x] In-memory rate limiter fallback in main.ts
-    [x] RolesGuard + @Roles decorator — 8-level hierarchy (NEW)
-    [x] Role constants — centralized in constants/roles.ts (NEW)
-    [x] Role permission matrix — npc→pixel presiden (NEW)
-    [x] CORS configured with frontend URL whitelist
-    [x] Helmet security headers
-    [~] Anomaly detection engine (isolation forest, evidence chain, Merkle tree)
-    [~] SIEM integration — ELK Stack + Grafana Loki adapters (placeholder)
-    [-] PQCrypto — post-quantum cryptography (placeholder interfaces exist)
+  Security & Monitoring
+    Sudah ada: ResponseInterceptor (unified response shape), AllExceptionsFilter (forensic logging),
+    RateLimitGuard (Upstash Redis: 5 req/15min lookup-id, 100 req/min general), fallback in-memory
+    rate limiter, RolesGuard + @Roles decorator (8-level hierarchy: npc → pixel presiden),
+    CORS whitelist, Helmet security headers, anomaly detection engine (isolation forest, Merkle
+    tree — parsial), SIEM adapters ELK + Grafana Loki (placeholder).
+    [-] PQCrypto — post-quantum cryptography (interface placeholder saja)
     [-] Automated secret rotation via CI/CD
-    [-] Alerting when anomaly score exceeds threshold
+    [-] Alerting saat anomaly score melewati threshold
 
-  Export and Import (apps/api/src/modules/export, import)
-    [x] Import members from JSON payload
-    [x] Firestore → PostgreSQL migration script (NEW)
-    [x] Export attendance report as CSV (NEW — via /attendance/export/csv)
-    [-] Export XP history as spreadsheet
+  Export & Import
+    Sudah ada: import member dari JSON payload, Firestore → PostgreSQL migration script,
+    export attendance report as CSV.
+    [-] Export XP history sebagai spreadsheet
 
   Other Modules
-    [x] Logs module — activity log storage
-    [x] User Vault — sensitive user data storage
-    [x] User History — event and activity timeline
-    [x] Pillar Levels — per-pillar XP level tracking
-    [x] Cyber Defense module structure
-    [x] Leave request system (izin tidak hadir) (ALREADY IMPLEMENTED)
+    Sudah ada: Logs module (activity log), User Vault (sensitive data), User History (timeline),
+    Pillar Levels (XP per pilar), Cyber Defense module, Leave request system (izin tidak hadir).
 
 ---
 
 FRONTEND — NEXT.JS WEB
 
   Landing Page (apps/web/src/app/landing)
-    [x] Hero section — HeroTypewriter multi-phrase (NEWGAME/LEARN/PLAY/LEVEL UP)
-        [x] Gradient color shift per phrase + glitch chromatic flash on transition
-        [x] Radial particle burst (8 particles, CSS trig + fallback)
-    [x] PirateMap — vertical flowchart dengan Framer Motion animations
-        [x] Spring bounce per stage node (staggered)
-        [x] Draw-stroke animated connector lines + arrowheads
-        [x] Star burst terminal animation (Soldat)
-        [x] Hover tooltip + pulsing glow ring
-        [x] Mobile slide-in step cards
-    [x] Vision and mission section
-    [x] Pillar introduction cards
-    [x] Guidebook section with banner and chips
-    [x] Call-to-action section
-    [x] Space Grotesk font integration (zero CLS)
+    Sudah ada: HeroTypewriter multi-phrase (gradient shift + glitch + particle burst),
+    PirateMap vertical flowchart (Framer Motion: spring bounce, draw-stroke lines, star burst,
+    tooltip, mobile cards), vision/mission section, pillar cards, guidebook section, CTA,
+    Space Grotesk font (zero CLS).
     [-] Internationalization (English/Indonesian toggle)
-    [-] SEO meta tags and Open Graph images
+    [-] SEO meta tags dan Open Graph images
 
   Authentication (apps/web/src/app/login)
-    [x] Login page with Firebase Auth
-    [x] Login via NEWGAME Member ID (NEW)
-    [x] 2-tab login: Login (Email+MemberID+Google) / Daftar (UPDATED v0.1.5)
-    [x] Registration tab with member verification flow + duplicate detection (UPDATED)
-    [x] Google OAuth login button
-    [x] Zustand auth store with IndexedDB cache (instant session restore)
-    [x] Fix post-login redirect (ng-just-logged-in sessionStorage flag)
-    [x] Dashboard layout debounced redirect (1.2–2.5s) → /login not /landing
-    [x] Root page Firebase timeout extended 600ms → 1500ms
-    [~] Better Auth session fully replacing Firebase on frontend
-    [x] Forgot password inline flow (NEW — in login tab)
+    Sudah ada: Login page Firebase Auth, 2-tab UI (Login + Daftar) — tab Login berisi
+    Email/MemberID toggle + Google OAuth + forgot password inline, tab Daftar berisi
+    member verification flow + duplicate detection, Zustand auth store + IndexedDB cache,
+    post-login redirect guard, idle timeout extended, 2FA TOTP flow.
+    [~] Better Auth session fully replacing Firebase (masih hybrid)
     [-] Email verification resend button
 
   Dashboard (apps/web/src/app/(dashboard)/dashboard)
-    [x] Welcome hero with Yua character (clickable with SFX)
-    [x] XP liquid wave bar in TopBar
-    [x] Stat cards — XP, level, attendance count, badge count
-    [x] Quick action buttons
-    [x] Upcoming events section
-    [x] Guidebook shortcut cards
+    Sudah ada: welcome hero (Yua, clickable SFX), XP liquid wave bar di TopBar,
+    stat cards (XP/level/attendance/badge), quick actions, upcoming events, guidebook shortcuts.
     [-] Weekly activity heatmap
-    [-] Announcement banner (emergency broadcast from admin)
+    [-] Announcement banner (emergency broadcast dari admin)
 
   Leaderboard (apps/web/src/app/(dashboard)/leaderboard)
-    [x] Global XP leaderboard
-    [x] Pillar filter tabs
+    Sudah ada: global XP leaderboard, filter tab per pilar.
     [-] Generation filter (GEN 1 / GEN 2)
     [-] Season / time-period filter
     [-] Export leaderboard as image
 
   Badges (apps/web/src/app/(dashboard)/badges)
-    [x] Badge collection display grid
-    [-] Badge detail modal with unlock conditions
+    Sudah ada: badge collection grid.
+    [-] Badge detail modal dengan unlock conditions
     [-] Badge progress indicator
 
-  Attendance (apps/web/src/app/(dashboard)/scan)
-    [x] QR code scanner component
-    [x] Attendance confirmation screen
-    [x] Scan history list
-    [x] Offline scan queue with sync-on-reconnect (NEW)
-    [x] Pending sync indicator badge (NEW)
-    [x] Indonesian error messages for scan failures (NEW)
+  Attendance / Scan (apps/web/src/app/(dashboard)/scan)
+    Sudah ada: QR scanner, confirmation screen, scan history, offline scan queue
+    (sync-on-reconnect), pending sync indicator badge, Indonesian error messages.
 
   News (apps/web/src/app/(dashboard)/news)
-    [x] Article list with cover image
-    [x] Article detail reader
-    [-] Article search
+    Sudah ada: article list dengan cover image, article detail reader.
+    [-] Article search UI (backend sudah ada, frontend belum)
     [-] Related articles sidebar
 
   Profile (apps/web/src/app/(dashboard)/profile)
-    [x] Profile card with avatar, role, and XP
-    [x] Activity history timeline
-    [x] Avatar selection (including Yua avatar)
-    [x] Cloudinary photo upload
-    [x] Profile edit form (bio, GitHub, LinkedIn, skills) (NEW)
-    [x] Download profile card as image (NEW — canvas PNG export)
+    Sudah ada: profile card (avatar/role/XP), activity history timeline, avatar selection
+    (termasuk Yua avatar), Cloudinary photo upload, profile edit form (bio/GitHub/LinkedIn/skills
+    via ProfileEditModal.tsx), download profile card sebagai PNG (canvas-based, ProfileCardDownload.tsx).
 
   Admin Panel (apps/web/src/app/(dashboard)/admin)
-    [x] Member management table
-    [x] Role change interface
-    [x] News management (create, edit, delete, publish toggle)
-    [x] Media gallery management
-    [x] Analytics dashboard (PostHog-powered)
-    [x] Attendance report view and export (NEW — /admin/attendance)
-    [x] Event creation form (ALREADY IN ADMIN)
-    [x] Bulk member import UI (NEW — /admin/import, CSV+JSON)
-    [x] SIEM log viewer for anomaly events (NEW — /admin/siem)
+    Sudah ada: member management table, role change interface, news management
+    (create/edit/delete/publish toggle), media gallery management, analytics dashboard (PostHog),
+    attendance report view + export CSV (/admin/attendance), event creation form (di admin page),
+    bulk member import UI (/admin/import — CSV+JSON + error detail), SIEM log viewer
+    (/admin/siem — severity badges NORMAL→CRITICAL, pagination, detail modal).
 
   Members Directory (apps/web/src/app/(dashboard)/members)
-    [x] Member list with pillar filter
-    [-] Member search by name
+    Sudah ada: member list dengan pillar filter.
+    [-] Member search by name (backend sudah ada)
     [-] Member profile click-through
 
   Calendar (apps/web/src/app/(dashboard)/calendar)
-    [x] Calendar view structure
+    Sudah ada: calendar view structure.
     [-] Event display on calendar dates
-    [-] Add event from calendar (admin only)
+    [-] Add event dari calendar (admin only)
 
   Logs (apps/web/src/app/(dashboard)/logs)
-    [x] Activity logs page structure
-    [-] Filter by log type and date range
+    Sudah ada: activity logs page structure.
+    [-] Filter by log type dan date range
     [-] Export logs to CSV
 
   Developer Tools
-    [x] /dev-tools — Web Mobile Simulator (8 presets, orientation toggle, scale slider)
-    [x] /dev-profile — Developer profile page
-    [x] Flutter Mobile App (tools/mobile-simulator) — Android WebView + bottom nav + drawer (UPDATED)
-        [x] WebView native Android (webview_flutter)
-        [x] Bottom navigation bar (5 halaman utama)
-        [x] Full drawer menu (11 halaman)
-        [x] Server URL config dialog (emulator vs HP fisik)
-        [x] Error state + retry saat server tidak berjalan
-        [x] Loading progress bar
-        [x] Dark theme matching web design system
+    Sudah ada: /dev-tools (Web Mobile Simulator — 8 presets, orientasi, scale),
+    /dev-profile, Flutter Mobile App (tools/mobile-simulator — Android WebView, bottom nav 5
+    halaman, drawer 11 halaman, server URL config, error/retry, loading bar, dark theme).
 
-  UI Components and System
-    [x] Dark mode toggle with FOUC prevention (theme-engine.ts)
-    [x] ErrorBoundary — crash handler with retry button + PostHog reporting
-    [x] ProfileCard — avatar, name, role, leading slot
-    [x] Toast notifications — ARIA live region + showError() auto-mapping (UPDATED)
-    [x] ErrorBanner — persistent dismissible error component (NEW)
-    [x] Sidebar — elastic hover, mobile responsive
-    [x] TopBar — XP liquid bar, dark mode toggle, notification slot
-    [x] NovelCursor — canvas trail cursor effect
-    [x] PostHog Provider — pageview recording, event tracking
-    [x] Design token system in globals.css — colors, spacing, animation
-    [x] Skeleton shimmer loading states
-    [x] IdleSessionManager — auto-logout 30min idle, 2min warning countdown dialog
-        [x] SVG countdown ring (gold→red color shift)
-        [x] AbortController cleanup, tab visibility handling
-        [x] Framer Motion animated dialog
-    [x] Toast queue system (multiple stacked toasts) (NEW)
-    [x] Global search component (Cmd+K / Ctrl+K) (NEW)
-    [x] Keyboard shortcut system (NEW — KeyboardShortcuts component + useKeyboardShortcuts hook + ShortcutHelpOverlay)
+  UI Components & System
+    Sudah ada: dark mode toggle (FOUC prevention), ErrorBoundary (PostHog reporting),
+    ProfileCard, Toast (ARIA live region), ErrorBanner, Sidebar (elastic hover, mobile),
+    TopBar (XP bar), NovelCursor, PostHog Provider, design token system (globals.css),
+    skeleton shimmer, IdleSessionManager (30min auto-logout, 2min warning, SVG countdown ring),
+    Toast queue system (stacked max 5, auto-dismiss, slide-in — ToastQueue.tsx),
+    Global search Cmd+K (GlobalSearch.tsx — arrow key nav, semua halaman terindex),
+    Keyboard shortcut system (KeyboardShortcuts.tsx — component + hook + ShortcutHelpOverlay).
 
 ---
 
-DOCUMENTATION
+DOKUMENTASI
 
-  [x] README.md — platform overview, setup, structure, role table (UPDATED)
-  [x] DEVELOPER_GUIDE.md — coding standards, Git workflow, dual-write pattern
-  [x] SECURITY.md — layered security architecture, rate limits, Firestore rules
-  [x] MEMBER_REGISTRATION.md — admin guide for adding and managing members
-  [x] MEMBER_CREDENTIALS.md — all 125 members with Member IDs and access codes
-  [x] CHANGELOG.md — version history including v0.1.3 gap fixes (UPDATED)
-  [x] TODO.md — this file
-  [x] MIGRATION.md — Firestore → PostgreSQL cutover guide (NEW)
-  [-] API Postman / Insomnia collection export
-  [-] Deployment runbook for Vercel + Neon + Upstash
+Sudah ada: README.md (updated v0.1.5 — login section 2-tab), DEVELOPER_GUIDE.md,
+SECURITY.md, MEMBER_REGISTRATION.md, MEMBER_CREDENTIALS.md, CHANGELOG.md (v0.1.5 entry),
+TODO.md (file ini), MIGRATION.md, DESIGN.md.
+
+[-] API Postman / Insomnia collection export
+[-] Deployment runbook untuk Vercel + Neon + Upstash
 
 ---
 
-PENDING FROM PREVIOUS SESSIONS
+ACTION ITEMS — WAJIB DILAKUKAN MANUAL
 
-  [!] seed-members.js needs to be run once against production Firestore
-      to seed all 125 members before any member can register
+  [!] Jalankan seed-members.js sekali di Firestore production sebelum anggota bisa registrasi
       Command: node apps/api/src/scripts/seed-members.js
 
-  [!] MEMBER_CREDENTIALS.md must be filled with data and distributed
-      to all members who have not yet registered
+  [!] Isi dan distribusikan MEMBER_CREDENTIALS.md ke semua anggota yang belum registrasi
 
-  [!] Cloudinary credentials in apps/api/.env must be valid
-      before upload features and media management will work
+  [!] Pastikan Cloudinary credentials di apps/api/.env valid sebelum upload/media berfungsi
 
-  [!] Google OAuth redirect URIs must be added in Google Cloud Console:
+  [!] Tambahkan Google OAuth redirect URIs di Google Cloud Console:
       - http://localhost:3000/api/auth/callback/google (development)
       - https://unandnewgame-tan.vercel.app/api/auth/callback/google (production)
 
-  [!] Prisma migration must be run on production database (Neon or Supabase)
+  [!] Jalankan Prisma migration di production database
       Command: npx prisma migrate deploy
 
-  [!] DATABASE_URL must be added as a GitHub Repository Secret to activate
-      automated daily backup via .github/workflows/backup.yml
+  [!] Tambahkan DATABASE_URL sebagai GitHub Repository Secret untuk backup otomatis
 
-  [!] Role names in Firestore user documents must be updated to new names:
-      superadmin → code commander, presiden → pixel presiden, pengurus → member
-      Use: node scripts/migrate-firestore.mjs --collection users --dry-run first
+  [!] Update role names di Firestore: superadmin → code commander, presiden → pixel presiden
+      Command: node scripts/migrate-firestore.mjs --collection users --dry-run
 
-  [~] Flutter submodule was added as an embedded git repo (warning in git add)
-      Consider: git rm --cached flutter
-      Then add properly as a git submodule if needed
+  [~] Flutter submodule masih embedded repo — pertimbangkan:
+      git rm --cached flutter && tambahkan sebagai git submodule resmi
 
 ---
 
