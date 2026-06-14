@@ -1,6 +1,8 @@
 name: newgame_mobile
-description: NEWGAME Mobile — Preview & mobile app untuk platform NEWGAME. Menampilkan web app dalam WebView dengan desain yang sama.
-version: 0.1.4+1
+description: >
+  NEWGAME Mobile Simulator — Tampilkan web app dalam frame HP di desktop Windows,
+  atau sebagai WebView nyata di Android. Satu app, dua mode.
+version: 0.1.5+1
 publish_to: 'none'
 
 environment:
@@ -10,9 +12,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  webview_flutter: ^4.10.0
+  webview_flutter: ^4.10.0          # Android WebView
+  webview_windows: ^0.4.0           # Windows WebView (EdgeChromium)
   connectivity_plus: ^6.1.0
   url_launcher: ^6.3.1
+  window_manager: ^0.3.9            # Kontrol ukuran jendela desktop
 
 dev_dependencies:
   flutter_test:
