@@ -38,25 +38,20 @@ export default function LeaderboardPage() {
   }
 
   async function exportImage() {
-    const { default: html2canvas } = await import('https://cdn.skypack.dev/html2canvas@1.4.1' as any).catch(() => ({ default: null }));
-    if (!html2canvas || !tableRef.current) {
-      // fallback: just export CSV
-      const csv = ['Rank,Nama,Pilar,XP,Level',
-        ...entries.map((e, i) => `${i+1},"${e.username || e.name || ''}","${e.pillar || ''}",${e.xpCache},${e.level || 1}`)
-      ].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `leaderboard-${Date.now()}.csv`; a.click();
-      URL.revokeObjectURL(url);
-      return;
-    }
-    try {
-      const canvas = await html2canvas(tableRef.current, { backgroundColor: '#0f0f1a', scale: 2 });
-      const url = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = url; a.download = `leaderboard-${Date.now()}.png`; a.click();
-    } catch { /* fallback to CSV handled above */ }
+    // Export sebagai CSV — html2canvas CDN diganti agar build tidak gagal
+    const csv = [
+      'Rank,Nama,Pillar,Generasi,XP,Level',
+      ...entries.map((e, i) =>
+        `${i+1},"${e.username || e.name || '-'}","${e.pillar || '-'}","${e.generation || '-'}",${e.xpCache},${e.level || 1}`
+      ),
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leaderboard-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const rankBadge = (i: number) => {
