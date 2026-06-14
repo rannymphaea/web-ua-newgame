@@ -1,140 +1,116 @@
-NEWGAME v0.1.5 — Pending Features
+NEWGAME v0.1.5 -- Pending Features
 UKM Game Development, Universitas Andalas
-Last updated: 15 Juni 2026
+Diperbarui: 15 Juni 2026
 
-Catatan: File ini hanya berisi fitur yang BELUM selesai.
-Fitur yang sudah selesai → lihat CHANGELOG.md
-Tugas manual → lihat MANUAL_TASKS.md
+File ini hanya berisi item yang belum selesai.
+Selesai   -> lihat CHANGELOG.md
+Manual    -> lihat MANUAL_TASKS.md
+Eksternal -> lihat EXTERNAL_SERVICES.md
 
-Status key:
-  [~] = In progress / partially implemented
-  [-] = Planned but not started
+Keterangan:
+  [~] sudah dimulai tapi belum selesai
+  [-] direncanakan, belum dimulai
 
 ---
 
-INFRASTRUKTUR
+infrastruktur
 
   Docker
-    [~] docker-compose.yml ada, tapi belum fully tested end-to-end
-        File: docker-compose.yml, apps/api/Dockerfile, apps/web/Dockerfile
-        Test lokal: docker compose up --build
-        Masalah potensial:
-          - Volume mount path beda di Windows vs Linux
-          - Urutan startup: Redis harus ready sebelum API
-          - Hot reload di Docker membutuhkan watchman atau polling
-        Perlu: testing di environment bersih (WSL2 atau Linux VM)
+    [~] docker-compose.yml dan Dockerfile ada, belum diuji end-to-end
+        file: docker-compose.yml, apps/api/Dockerfile, apps/web/Dockerfile
+        coba: docker compose up --build
+        masalah yang mungkin muncul:
+          - volume mount path beda di Windows vs Linux
+          - urutan startup: Redis harus siap sebelum API jalan
+          - hot reload perlu CHOKIDAR_USEPOLLING=true di container
+        perlu pengujian di WSL2 atau Linux VM yang bersih
 
   Flutter Mobile App
-    [~] Embedded di tools/mobile-simulator, tapi bukan git submodule resmi
-        Status: code ada (Android WebView, bottom nav 5 halaman, drawer 11 halaman)
-        Belum:
-          - Build APK yang bisa didistribusikan
-          - WebSocket support (push notif dari API)
-          - Deep link ke halaman internal
-          - Push notification via Firebase Cloud Messaging
-          - Publish ke Play Store / internal track
-        Perlu (manual): lihat MANUAL_TASKS.md #10
+    [~] ada di tools/mobile-simulator, bukan git submodule resmi
+        sudah ada: Android WebView, navigasi bawah 5 halaman, drawer 11 halaman
+        belum ada:
+          - build APK yang bisa disebarkan
+          - koneksi WebSocket untuk push notif
+          - deep link ke halaman spesifik
+          - Firebase Cloud Messaging
+          - publish ke Play Store
+        detail langkah -> MANUAL_TASKS.md bagian Flutter
 
-  PostgreSQL Migration
-    [~] Schema ada (Prisma), data belum dipindahkan dari Firestore
-        Status: Firestore = sumber data aktif, PostgreSQL = standby
-        Langkah yang tersisa:
-          [-] Jalankan migrasi Prisma di production DB (manual, MANUAL_TASKS.md #3)
-          [-] Update service layer: ganti FirebaseService → PrismaService per modul
-          [-] Update Prisma schema role enum (lama: TRAINEE,ADMIN,OWNER → baru: 8 role)
-          [-] End-to-end testing setelah cutover
-          [-] Dual-write period (tulis ke keduanya) sebelum full cutover
-        Panduan lengkap: MIGRATION.md
+  PostgreSQL
+    [~] schema Prisma sudah ada, data belum dipindahkan dari Firestore
+        Firestore masih aktif sebagai sumber data utama
+        yang perlu dikerjakan:
+          [-] jalankan prisma migrate deploy di database production
+          [-] update service layer: ganti FirebaseService ke PrismaService per modul
+          [-] update enum role di schema Prisma (lama: TRAINEE/ADMIN/OWNER)
+          [-] dual-write period sebelum full cutover
+          [-] testing end-to-end setelah cutover
+        panduan lengkap: MIGRATION.md
 
-  Staging Environment
-    [-] Vercel project terpisah untuk staging (env vars berbeda dari production)
-        Langkah: buat project baru di Vercel, set NEXT_PUBLIC_API_URL ke staging API
-
-
-  Authentication
-    [~] Better Auth session fully replacing Firebase Auth (masih hybrid — dual-write)
-
-  XP & Leaderboard
-    [~] XP history per member (endpoint parsial, belum lengkap)
-
-  News
-    [~] Image upload via Cloudinary untuk cover artikel
-        (endpoint ada di backend, butuh CLOUDINARY env valid — lihat MANUAL_TASKS.md #6)
-
-  Notifications
-    (Semua sudah diimplementasikan. Lihat CHANGELOG.md v0.1.5)
-
-  AI Module
-    [-] Semantic news search via vector similarity (Milvus/Zilliz)
-        Butuh: setup collection di Zilliz, index artikel yang sudah ada
-        Lihat: MANUAL_TASKS.md #11
-    [-] Member recommendation engine (AI/ML)
-        Butuh: data training, model selection, endpoint integration
-
-  Security
-    [-] PQCrypto — post-quantum cryptography
-        Lihat: MANUAL_TASKS.md #13
-    [-] Automated secret rotation via CI/CD
-        Lihat: MANUAL_TASKS.md (bagian infrastruktur)
-    [-] Anomaly alerting via webhook (PagerDuty/OpsGenie)
-        Lihat: MANUAL_TASKS.md #12
+  Staging
+    [-] buat Vercel project terpisah untuk staging dengan env vars berbeda
 
 ---
 
-FRONTEND — NEXT.JS WEB
+backend
 
-  Authentication
-    [~] Better Auth session fully replacing Firebase (masih hybrid)
-    [-] Email verification resend button
-        (perlu Firebase sendEmailVerification + UI di login page)
+  Autentikasi
+    [~] Better Auth belum sepenuhnya menggantikan Firebase Auth, masih hybrid
+    [~] riwayat XP per anggota, endpoint parsial
 
-  Landing Page
-    [-] Internationalization — EN/ID language toggle
+  Cloudinary
+    [~] upload cover artikel sudah ada di backend, butuh env CLOUDINARY valid
+        detail setup: EXTERNAL_SERVICES.md dan MANUAL_TASKS.md
+
+  AI
+    [-] pencarian berita semantik via vector similarity (Milvus/Zilliz)
+        perlu: buat collection di Zilliz, index artikel yang sudah ada
+        detail: MANUAL_TASKS.md dan EXTERNAL_SERVICES.md
+    [-] rekomendasi anggota berbasis kesamaan aktivitas/pilar
+
+  Keamanan
+    [-] post-quantum cryptography (interface sudah ada, butuh library liboqs)
+    [-] rotasi secret otomatis via CI/CD
+    [-] alerting webhook saat anomaly score tinggi (PagerDuty/OpsGenie)
+
+---
+
+frontend
+
+  Autentikasi
+    [-] tombol kirim ulang email verifikasi (Firebase sendEmailVerification)
+    [~] Better Auth belum sepenuhnya menggantikan Firebase (masih hybrid)
 
   Dashboard
-    (Weekly activity heatmap sudah dibuat sebagai komponen ActivityHeatmap.tsx)
-    [-] Integrasikan ActivityHeatmap ke dashboard page — perlu fetch attendance history
+    [-] integrasikan komponen ActivityHeatmap ke halaman dashboard
+        komponen sudah ada di components/profile/ActivityHeatmap.tsx
+        perlu: fetch riwayat absensi dari API
 
-  News
-    [-] Related articles sidebar
-        (logika: ambil artikel dengan tag/kategori serupa, tampilkan di sidebar)
+  Berita
+    [-] sidebar artikel terkait (artikel dengan tag atau kategori yang sama)
 
-  Members
-    [-] Add event form dari Calendar (admin only)
-        (tombol tambah event di kalender → modal form admin)
+  Kalender
+    [-] form tambah event dari halaman kalender (admin only)
 
-  Authentication
-    [-] Email verification resend button (di login/profile page)
-
----
-
-INFRASTRUKTUR
-
-  [-] Staging environment terpisah dari production
-      (buat Vercel project terpisah untuk staging, env vars berbeda)
+  Umum
+    [-] toggle bahasa Indonesia / Inggris
 
 ---
 
-DOKUMENTASI
+catatan sesi
 
-  [-] Internationalization guide (jika fitur i18n diimplementasikan)
+  Sesi 1 (14 Jun): 2FA, export absensi/member, recurring events, GlobalSearch,
+  ToastQueue, ProfileEdit, ProfileCard download, KeyboardShortcuts, halaman
+  admin attendance/import/SIEM. Commit: 0fa4114
 
----
+  Sesi 2 (15 Jun): WebSocket, email Nodemailer, video upload, export XP,
+  Calendar events, Members search+profil, Logs filter+export, Leaderboard filter,
+  AnnouncementBanner, ActivityHeatmap, BadgeDetailModal, SEO, API collection,
+  Deployment runbook. Commit: f170c31
 
-CATATAN SESI
-
-  Sesi 1 (14 Jun 2026): 2FA, attendance export/manual/late, recurring events,
-    GlobalSearch, ToastQueue, ProfileEdit, ProfileCard download, KeyboardShortcuts,
-    Admin attendance/import/SIEM pages. Commit: 0fa4114
-
-  Sesi 2 (14-15 Jun 2026): WebSocket, Nodemailer email, video upload, XP export,
-    Calendar events, Members search+profile, Logs filter+export, Leaderboard gen filter,
-    AnnouncementBanner, ActivityHeatmap, BadgeDetailModal, SEO metadata,
-    API collection generator, Deployment runbook. Commit: f170c31
-
-  Sesi 3 (15 Jun 2026): MANUAL_TASKS.md, TODO cleanup, CHANGELOG update,
-    README update. Commit: [current]
+  Sesi 3 (15 Jun): MANUAL_TASKS.md, EXTERNAL_SERVICES.md, TODO dan CHANGELOG
+  dirapikan, README diperbarui. Commit: current
 
 ---
 
-NEWGAME v0.1.5 — UKM Game Development, Universitas Andalas
+NEWGAME v0.1.5 -- UKM Game Development, Universitas Andalas

@@ -1,393 +1,266 @@
-# MANUAL_TASKS.md — Tugas Wajib Manual
-## NEWGAME UKM Game Development, Universitas Andalas
+MANUAL_TASKS.md
+NEWGAME UKM Game Development, Universitas Andalas
+Diperbarui: 15 Juni 2026
 
-> Dokumen ini berisi **semua tugas yang tidak bisa dikerjakan otomatis oleh AI atau CI/CD**.
-> Setiap item membutuhkan akses manusia langsung: credential, cloud console, distribusi fisik, atau keputusan arsitektur.
->
-> **Siapa yang bertanggung jawab:** Code Commander / Pixel Presiden / DevOps.
+Dokumen ini berisi semua tugas yang tidak bisa dikerjakan otomatis oleh AI atau CI/CD.
+Setiap item butuh akses manusia langsung: credential, cloud console, distribusi fisik,
+atau keputusan arsitektur.
 
----
+Tanggung jawab: Code Commander / Pixel Presiden / DevOps.
 
-## STATUS LEGENDA
+Untuk daftar layanan eksternal beserta cara pakai dan fungsinya, lihat EXTERNAL_SERVICES.md.
 
-```
-[!] URGENT    — Wajib sebelum platform bisa berjalan di production
-[~] PENTING   — Diperlukan untuk fitur tertentu berfungsi
-[-] OPSIONAL  — Bisa dilakukan kapan saja, tidak memblokir core
-```
-
----
-
-## 🔴 URGENT — Wajib Sebelum Go-Live
-
-### [!] 1. SEED FIRESTORE MEMBER DATA
-
-Tanpa ini, tidak ada satupun anggota yang bisa registrasi.
-
-```bash
-# Pastikan service account sudah dikonfigurasi di environment
-FIREBASE_PROJECT_ID=xxx \
-FIREBASE_CLIENT_EMAIL=xxx@xxx.iam.gserviceaccount.com \
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n" \
-  node apps/api/src/scripts/seed-members.js
-```
-
-**Hasil yang diharapkan:** 125 dokumen di koleksi `members` Firestore.
-**Cek:** Buka Firebase Console → Firestore → `members` → pastikan ada 125 dokumen.
+Keterangan:
+  [!] wajib sebelum platform bisa jalan di production
+  [~] perlu untuk fitur tertentu berfungsi
+  [-] opsional, tidak memblokir fitur utama
 
 ---
 
-### [!] 2. ISI DAN DISTRIBUSIKAN MEMBER CREDENTIALS
+wajib sebelum go-live
 
-Setiap anggota butuh **Member ID** dan **Kode Akses (tempPassword)** untuk bisa registrasi.
+  [!] seed data anggota ke Firestore
+      Tanpa ini tidak ada anggota yang bisa registrasi.
 
-1. Buka file `MEMBER_CREDENTIALS.md`
-2. Isi kolom `tempPassword` untuk setiap anggota (atau gunakan yang sudah di-generate oleh seed script)
-3. Distribusikan ke anggota via:
-   - WhatsApp Group angkatan
-   - Discord server NEWGAME
-   - Kertas fisik saat rapat (jika akses digital terbatas)
+      FIREBASE_PROJECT_ID=xxx \
+      FIREBASE_CLIENT_EMAIL=xxx@xxx.iam.gserviceaccount.com \
+      FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n" \
+        node apps/api/src/scripts/seed-members.js
 
-**Format yang diberikan ke anggota:**
-```
-Member ID  : NG11020001PG
-Kode Akses : TempPass123!
-URL Daftar : https://unandnewgame-tan.vercel.app/login
-```
+      Cek: Firebase Console -> Firestore -> koleksi members -> harus ada 125 dokumen.
 
----
+  [!] distribusi kredensial ke anggota
+      Setiap anggota butuh Member ID dan Kode Akses untuk bisa registrasi.
+      1. Buka MEMBER_CREDENTIALS.md
+      2. Isi tempPassword tiap anggota
+      3. Kirim via WhatsApp group, Discord, atau kertas fisik
 
-### [!] 3. JALANKAN PRISMA MIGRATION DI PRODUCTION
+      Format yang dikirim ke anggota:
+        Member ID  : NG11020001PG
+        Kode Akses : TempPass123!
+        URL Daftar : https://unandnewgame-tan.vercel.app/login
 
-Diperlukan sebelum fitur auth berbasis PostgreSQL bisa berjalan.
+  [!] jalankan Prisma migration di database production
+      Tanpa ini fitur yang bergantung PostgreSQL tidak bisa jalan.
 
-```bash
-# Di mesin yang memiliki akses DATABASE_URL production
-cd apps/api
-DATABASE_URL="postgresql://user:pass@host:5432/dbname?sslmode=require" \
-  npx prisma migrate deploy
-```
+      cd apps/api
+      DATABASE_URL="postgresql://user:pass@host:5432/dbname?sslmode=require" \
+        npx prisma migrate deploy
 
-**Platform yang direkomendasikan:** Neon (https://neon.tech) atau Supabase.
-**Cek:** Jalankan `npx prisma db pull` — tidak boleh ada error.
+      Platform: Neon (neon.tech) atau Supabase, free tier cukup untuk awal.
+      Cek: npx prisma db pull -- tidak boleh ada error.
 
----
+  [!] isi environment variables di Vercel
+      Buka: vercel.com/rannymphaea -> Project -> Settings -> Environment Variables
 
-### [!] 4. KONFIGURASI ENVIRONMENT VARIABLES DI VERCEL
+      Frontend (apps/web):
+        NEXT_PUBLIC_API_URL          -> URL backend API
+        NEXT_PUBLIC_FIREBASE_API_KEY -> dari Firebase Console
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+        NEXT_PUBLIC_FIREBASE_APP_ID
+        NEXT_PUBLIC_POSTHOG_KEY      -> dari PostHog dashboard
+        NEXT_PUBLIC_SITE_URL         -> https://unandnewgame-tan.vercel.app
 
-Buka: https://vercel.com/rannymphaea → Project → Settings → Environment Variables
+      Backend (apps/api):
+        FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
+        DATABASE_URL                 -> connection string PostgreSQL
+        CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+        UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN
+        OPENAI_API_KEY               -> untuk fitur AI/embedding
+        ZILLIZ_URI, ZILLIZ_TOKEN     -> untuk semantic search
+        SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
 
-#### Frontend (apps/web)
-| Variable | Nilai |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://api.unandnewgame.vercel.app/api` |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | dari Firebase Console |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | `newgame-xxx.firebaseapp.com` |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | `newgame-xxx` |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | `newgame-xxx.appspot.com` |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | dari Firebase Console |
-| `NEXT_PUBLIC_FIREBASE_APP_ID` | dari Firebase Console |
-| `NEXT_PUBLIC_POSTHOG_KEY` | dari PostHog dashboard |
-| `NEXT_PUBLIC_SITE_URL` | `https://unandnewgame-tan.vercel.app` |
-
-#### Backend (apps/api)
-| Variable | Nilai |
-|---|---|
-| `FIREBASE_PROJECT_ID` | ID project Firebase |
-| `FIREBASE_CLIENT_EMAIL` | email service account |
-| `FIREBASE_PRIVATE_KEY` | private key (sertakan newlines) |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `CLOUDINARY_CLOUD_NAME` | nama cloud Cloudinary |
-| `CLOUDINARY_API_KEY` | API key Cloudinary |
-| `CLOUDINARY_API_SECRET` | API secret Cloudinary |
-| `UPSTASH_REDIS_URL` | Upstash Redis REST URL |
-| `UPSTASH_REDIS_TOKEN` | Upstash Redis token |
-| `OPENAI_API_KEY` | untuk fitur AI/embedding |
-| `ZILLIZ_URI` | Zilliz Cloud URI |
-| `ZILLIZ_TOKEN` | Zilliz Cloud token |
-| `SMTP_HOST` | SMTP server (e.g. smtp.gmail.com) |
-| `SMTP_PORT` | `587` |
-| `SMTP_USER` | email pengirim |
-| `SMTP_PASS` | password / app password |
-| `SMTP_FROM` | `NEWGAME <email@domain.com>` |
+      Detail tiap variabel ada di EXTERNAL_SERVICES.md.
 
 ---
 
-## 🟡 PENTING — Untuk Fitur Tertentu
+penting untuk fitur tertentu
 
-### [~] 5. GOOGLE OAUTH REDIRECT URI
+  [~] Google OAuth redirect URI
+      Tanpa ini tombol Sign in with Google tidak berfungsi.
+      1. Buka console.cloud.google.com
+      2. APIs & Services -> Credentials -> OAuth 2.0 Client IDs
+      3. Edit client, tambahkan Authorized Redirect URIs:
+           http://localhost:3000/api/auth/callback/google
+           https://unandnewgame-tan.vercel.app/api/auth/callback/google
+      4. Save, tunggu beberapa menit untuk propagasi
 
-Tanpa ini, tombol "Sign in with Google" tidak akan berfungsi.
+  [~] Cloudinary account
+      Tanpa ini upload foto, video, dan cover artikel tidak berfungsi.
+      1. Buat akun di cloudinary.com (free tier cukup)
+      2. Dashboard -> Settings -> Access Keys
+      3. Salin Cloud Name, API Key, API Secret ke Vercel env
 
-1. Buka https://console.cloud.google.com
-2. APIs & Services → Credentials → OAuth 2.0 Client IDs
-3. Edit client yang digunakan
-4. Tambahkan **Authorized Redirect URIs**:
-   ```
-   http://localhost:3000/api/auth/callback/google
-   https://unandnewgame-tan.vercel.app/api/auth/callback/google
-   ```
-5. Save dan tunggu beberapa menit untuk propagasi
+      Folder yang dibuat otomatis di Cloudinary:
+        media/avatar/{userId}  -> foto profil
+        media/videos/{userId}  -> video upload
+        media/content          -> gambar konten
 
----
+  [~] SMTP email
+      Tanpa ini email notifikasi, reminder event, dan reset password tidak terkirim.
 
-### [~] 6. CLOUDINARY ACCOUNT SETUP
+      Opsi 1 - Gmail App Password (untuk skala kecil / dev):
+        Aktifkan 2FA di Gmail -> Google Account -> Security -> App Passwords
+        SMTP_HOST=smtp.gmail.com, SMTP_PORT=587
 
-Tanpa ini: upload foto profil, media gallery, cover artikel tidak berfungsi.
+      Opsi 2 - Mailgun atau SendGrid (untuk production):
+        Daftar, verifikasi domain, ambil SMTP credentials dari dashboard.
 
-1. Buat akun di https://cloudinary.com (free tier cukup untuk awal)
-2. Dashboard → Settings → Access Keys
-3. Copy: Cloud Name, API Key, API Secret
-4. Isi di Vercel env (lihat item 4) dan `apps/api/.env.local`
-
-**Folder yang dibuat otomatis:**
-- `media/avatar/{userId}` — foto profil
-- `media/videos/{userId}` — video upload
-- `media/content` — gambar konten
-
----
-
-### [~] 7. SETUP SMTP EMAIL
-
-Tanpa ini: email notification, event reminder, dan password reset email tidak terkirim.
-
-**Opsi 1 — Gmail App Password (development/kecil):**
-1. Aktifkan 2FA di Gmail
-2. Google Account → Security → App Passwords → Buat untuk "Mail"
-3. Gunakan sebagai `SMTP_PASS`
-4. `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`
-
-**Opsi 2 — Mailgun/SendGrid (production):**
-1. Daftar di https://mailgun.com atau https://sendgrid.com
-2. Verifikasi domain
-3. Gunakan SMTP credentials dari dashboard
+  [~] GitHub secret untuk backup otomatis
+      1. Buka github.com/rannymphaea/web-ua-newgame -> Settings -> Secrets -> Actions
+      2. Tambahkan secret DATABASE_URL dengan connection string production
+      Efek: backup jalan otomatis setiap hari 02.00 WIB via backup.yml
 
 ---
 
-### [~] 8. GITHUB SECRET UNTUK AUTO-BACKUP
+opsional
 
-1. Buka: github.com/rannymphaea/web-ua-newgame
-2. Settings → Secrets and variables → Actions
-3. New repository secret:
-   - Name: `DATABASE_URL`
-   - Value: connection string PostgreSQL production
+  [-] migrasi role di Firestore (hanya jika ada user dengan role lama)
+      node scripts/migrate-firestore.mjs --collection users --dry-run
+      Jika hasilnya benar:
+      node scripts/migrate-firestore.mjs --collection users
 
-**Efek:** Backup otomatis berjalan setiap hari jam 02:00 WIB via `.github/workflows/backup.yml`
+      Mapping:
+        superadmin -> code commander
+        presiden   -> pixel presiden
+        pengurus   -> member
 
----
+  [-] Flutter submodule resmi
+      Saat ini embedded biasa, bukan git submodule resmi.
 
-## 🟢 OPSIONAL — Tidak Memblokir Core
+      git rm --cached tools/mobile-simulator
+      git submodule add https://github.com/rannymphaea/newgame-flutter.git tools/mobile-simulator
+      git commit -m "chore: flutter jadi submodule resmi"
 
-### [-] 9. FIRESTORE ROLE MIGRATION
+  [-] setup Zilliz / Milvus untuk AI search
+      1. Buat cluster di zilliz.com
+      2. Buat collection news_embeddings:
+           field: id (varchar), title (varchar), content (varchar),
+                  embedding (float_vector, dim=1536)
+      3. Salin URI dan Token ke env ZILLIZ_URI dan ZILLIZ_TOKEN
+      4. Test via endpoint /ai/test-connection
 
-Hanya perlu jika ada user lama dengan role schema sebelumnya.
+  [-] anomaly alerting via webhook
+      1. Buat webhook di PagerDuty atau OpsGenie
+      2. Tambahkan ALERT_WEBHOOK_URL ke environment
+      3. Update anomaly.service.ts untuk panggil webhook saat score > 0.85
 
-```bash
-# Dry run dulu — lihat apa yang akan diubah
-node scripts/migrate-firestore.mjs --collection users --dry-run
-
-# Jika hasilnya benar, jalankan migrasi
-node scripts/migrate-firestore.mjs --collection users
-```
-
-Mapping:
-- `superadmin` → `code commander`
-- `presiden` → `pixel presiden`
-- `pengurus` → `member`
-
----
-
-### [-] 10. FLUTTER SUBMODULE (TRACKING PROPER)
-
-Flutter app saat ini adalah embedded repo biasa, bukan git submodule resmi.
-
-```bash
-# Hapus tracking lama
-git rm --cached tools/mobile-simulator
-
-# Tambah sebagai submodule resmi
-git submodule add https://github.com/rannymphaea/newgame-flutter.git tools/mobile-simulator
-git commit -m "chore: convert flutter to proper git submodule"
-```
+  [-] post-quantum cryptography
+      Interface placeholder sudah ada. Butuh library liboqs-node dan
+      keputusan arsitektur sebelum implementasi. Tidak urgent untuk v0.x.
 
 ---
 
-### [-] 11. SETUP ZILLIZ / MILVUS (FITUR AI)
+rencana migrasi PostgreSQL (4 fase)
 
-Diperlukan untuk semantic news search dan member recommendation.
+  Panduan lengkap: MIGRATION.md
+  Status: Firestore aktif, PostgreSQL standby (schema ada)
 
-1. Buat cluster di https://zilliz.com
-2. Buat collection `news_embeddings`:
-   - Field: `id` (varchar), `title` (varchar), `content` (varchar), `embedding` (float_vector, dim=1536)
-3. Copy URI dan Token ke Vercel env (`ZILLIZ_URI`, `ZILLIZ_TOKEN`)
-4. Test koneksi via `/ai/test-connection` endpoint
+  Fase 1 -- persiapan (manual):
+    1. Buat database di Neon.tech atau Supabase
+    2. Tambahkan DATABASE_URL ke Vercel env dan GitHub secrets
+    3. Jalankan npx prisma migrate deploy
 
----
+  Fase 2 -- dual-write (bisa dibantu AI):
+    4. Update service layer tulis ke Firestore DAN PostgreSQL sekaligus
+    5. Verifikasi data konsisten selama 1-2 minggu
 
-### [-] 12. ANOMALY ALERTING
+  Fase 3 -- cutover (butuh approval manual):
+    6. Tandai Firestore sebagai read-only
+    7. Ganti primary source ke PostgreSQL
+    8. Update semua query FirebaseService -> PrismaService
+    9. Testing end-to-end
 
-Diperlukan untuk mendapat notifikasi saat ada aktivitas mencurigakan.
-
-**Opsi:** PagerDuty, OpsGenie, atau email sederhana via webhook.
-
-1. Buat webhook di PagerDuty/OpsGenie
-2. Tambahkan `ALERT_WEBHOOK_URL` ke environment
-3. Update `anomaly.service.ts` untuk memanggil webhook saat score > 0.85
-
----
-
-### [-] 13. POST-QUANTUM CRYPTOGRAPHY (FUTURE)
-
-Interface placeholder sudah ada di codebase. Implementasi perlu:
-1. Library: `liboqs-node` atau implementasi manual lattice-based crypto
-2. Keputusan arsitektur: encrypt apa? (session tokens? user vault?)
-3. Migration plan untuk data yang sudah ada
-
-**Estimasi:** 2-3 sprint, tidak urgent untuk v0.x
+  Fase 4 -- cleanup:
+    10. Hapus FirebaseService dari modul yang sudah dimigrasi
+    11. Update enum role di schema Prisma ke 8 level baru
+    12. Archive koleksi Firestore
 
 ---
 
-## CHECKLIST PRE-LAUNCH
+rencana Flutter production
 
-```
-[ ] Seed Firestore (125 member)
-[ ] Distribusi credentials ke semua anggota
-[ ] Prisma migrate deploy di production DB
-[ ] Semua env variables terisi di Vercel
-[ ] Google OAuth redirect URI terdaftar
-[ ] Cloudinary credentials valid (test upload foto)
-[ ] SMTP email terkonfigurasi (test kirim email)
-[ ] GitHub secret DATABASE_URL ada (untuk backup otomatis)
-[ ] Test login semua metode (email, MemberID, Google)
-[ ] Test QR scan dari HP (buka /scan)
-[ ] Test admin panel (create event, import member, lihat SIEM)
-[ ] Monitor Vercel logs 30 menit pertama setelah deploy
-```
+  Status: code ada di tools/mobile-simulator, belum siap distribusi
 
----
+  1. Buat repo terpisah di GitHub (newgame-flutter)
+     git init tools/mobile-simulator
+     git remote add origin https://github.com/rannymphaea/newgame-flutter.git
+     git push -u origin main
 
-## CHECKLIST INFRA LANJUTAN (Tidak Urgent, Tapi Perlu)
+  2. Register sebagai submodule di repo utama
+     git submodule add https://github.com/rannymphaea/newgame-flutter.git tools/mobile-simulator
 
-```
-[ ] Docker: uji docker compose up --build di WSL2 / Linux
-[ ] Flutter: build APK debug, install di HP anggota, tes fitur dasar
-[ ] Flutter: pindah ke git submodule resmi
-[ ] PostgreSQL: jalankan migrasi data Firestore → PostgreSQL (lihat MIGRATION.md)
-[ ] PostgreSQL: update role enum di schema Prisma
-[ ] PostgreSQL: dual-write period sebelum full cutover
-[ ] Staging: buat Vercel project terpisah untuk testing
-[ ] Zilliz: setup collection news_embeddings untuk semantic search
-[ ] WebSocket: pastikan deploy ke server persistent (Railway/Fly.io, bukan Vercel serverless)
-```
+  3. Tambahkan Firebase ke Flutter:
+     Download google-services.json dari Firebase Console
+     Letakkan di tools/mobile-simulator/android/app/
+
+  4. Build APK debug untuk testing:
+     cd tools/mobile-simulator
+     flutter pub get
+     flutter build apk --debug
+     Hasil: build/app/outputs/flutter-apk/app-debug.apk
+
+  5. Aktifkan WebSocket (push notif):
+     Tambahkan socket_io_client: ^2.0.3 ke pubspec.yaml
+     Koneksi ke wss://api.unandnewgame.vercel.app
+     Handle event notification dari NotificationsGateway
+
+  6. FCM (opsional):
+     Setup di Firebase Console, tambahkan firebase_messaging ke Flutter
+     Register token di backend saat login
 
 ---
 
-## RENCANA MIGRASI POSTGRESQL (Detail)
+rencana Docker production
 
-> Panduan lengkap: [MIGRATION.md](./MIGRATION.md)
-> Status saat ini: Firestore = aktif, PostgreSQL = standby (schema ada)
+  Status: Dockerfile dan docker-compose.yml ada, belum diuji end-to-end
 
-### Urutan yang aman:
+  Testing di WSL2 (Windows):
+    Buka WSL2, masuk ke folder proyek
+    docker compose up --build
+    Cek: API port 3001, Web port 3000, Redis port 6379
 
-**Fase 1 — Persiapan (butuh dilakukan manual):**
-1. Buat database di Neon.tech atau Supabase (free tier cukup)
-2. Tambahkan `DATABASE_URL` ke Vercel env dan GitHub secrets
-3. Jalankan `npx prisma migrate deploy` (lihat item #3 di atas)
+  Masalah yang mungkin muncul:
+    - Volume mount: path adjustment perlu di Windows
+    - Hot reload: tambah CHOKIDAR_USEPOLLING=true di Dockerfile Web
+    - Startup: depends_on: redis harus ada di docker-compose.yml
 
-**Fase 2 — Dual-write (AI bisa bantu coding):**
-4. Update service layer untuk menulis ke KEDUANYA (Firestore + PostgreSQL)
-5. Verifikasi data konsisten selama 1-2 minggu
-
-**Fase 3 — Cutover (butuh approval manual):**
-6. Tandai Firestore sebagai read-only
-7. Switch primary source ke PostgreSQL
-8. Update semua query dari FirebaseService ke PrismaService
-9. End-to-end testing
-
-**Fase 4 — Cleanup:**
-10. Hapus FirebaseService dari modul yang sudah dimigrasi
-11. Update Prisma schema role enum ke 8 level baru
-12. Archive Firestore collections
+  Untuk production (Railway via Docker):
+    railway login
+    railway init
+    railway up --dockerfile apps/api/Dockerfile
 
 ---
 
-## RENCANA FLUTTER PRODUCTION
+checklist sebelum go-live
 
-> Status saat ini: code ada di `tools/mobile-simulator`, belum production-ready
+  [ ] seed Firestore (125 anggota)
+  [ ] distribusi kredensial ke semua anggota
+  [ ] prisma migrate deploy di database production
+  [ ] semua env variables terisi di Vercel
+  [ ] Google OAuth redirect URI terdaftar
+  [ ] Cloudinary credentials valid (test upload foto)
+  [ ] SMTP email berfungsi (test kirim email)
+  [ ] GitHub secret DATABASE_URL untuk backup
+  [ ] test login semua metode (email, Member ID, Google)
+  [ ] test QR scan dari HP (buka /scan)
+  [ ] test panel admin (buat event, import member, cek SIEM)
+  [ ] monitor Vercel logs 30 menit pertama
 
-### Yang harus dilakukan (manual):
+checklist infra lanjutan
 
-1. **Buat repo terpisah** untuk Flutter app:
-   ```bash
-   # Di GitHub: buat repo baru newgame-flutter
-   # Lalu di lokal:
-   git init tools/mobile-simulator
-   git remote add origin https://github.com/rannymphaea/newgame-flutter.git
-   git push -u origin main
-   ```
-
-2. **Register sebagai submodule:**
-   ```bash
-   git submodule add https://github.com/rannymphaea/newgame-flutter.git tools/mobile-simulator
-   ```
-
-3. **Tambahkan Firebase ke Flutter:**
-   - Download `google-services.json` dari Firebase Console
-   - Letakkan di `tools/mobile-simulator/android/app/`
-
-4. **Build APK untuk testing:**
-   ```bash
-   cd tools/mobile-simulator
-   flutter pub get
-   flutter build apk --debug
-   # Output: build/app/outputs/flutter-apk/app-debug.apk
-   ```
-
-5. **Aktifkan WebSocket (push notif):**
-   - Tambahkan package `socket_io_client: ^2.0.3` ke pubspec.yaml
-   - Implementasikan koneksi ke `wss://api.unandnewgame.vercel.app`
-   - Handle event `notification` dari NotificationsGateway
-
-6. **Firebase Cloud Messaging (opsional):**
-   - Setup FCM di Firebase Console
-   - Tambahkan `firebase_messaging` ke Flutter
-   - Register token di backend saat login
+  [ ] Docker: uji di WSL2 atau Linux
+  [ ] Flutter: build APK debug, install di HP
+  [ ] Flutter: pindah ke submodule resmi
+  [ ] PostgreSQL: jalankan migrasi data (lihat MIGRATION.md)
+  [ ] PostgreSQL: update role enum di schema Prisma
+  [ ] Staging: buat Vercel project terpisah
+  [ ] Zilliz: setup collection untuk semantic search
+  [ ] WebSocket: deploy ke server persistent (Railway/Fly.io, bukan Vercel)
 
 ---
 
-## RENCANA DOCKER PRODUCTION
-
-> Status saat ini: Dockerfile dan docker-compose.yml ada, belum fully tested
-
-### Testing yang perlu dilakukan (manual):
-
-1. **Test di WSL2 (Windows):**
-   ```bash
-   # Buka WSL2
-   cd /mnt/c/Users/lenovo/web-ua-newgame
-   docker compose up --build
-   ```
-   Cek: API port 3001, Web port 3000, Redis port 6379
-
-2. **Known issues yang mungkin muncul:**
-   - Volume mount: `./apps/api:/app` mungkin perlu path adjustment di Windows
-   - Hot reload: tambahkan `CHOKIDAR_USEPOLLING=true` di Dockerfile Web
-   - Startup order: pastikan `depends_on: redis` sudah ada di docker-compose.yml
-
-3. **Untuk production Docker:**
-   - Gunakan multi-stage build untuk image kecil
-   - Set `NODE_ENV=production`
-   - Jangan mount volume di production (copy only)
-
-4. **Deploy ke Railway via Docker:**
-   ```bash
-   railway login
-   railway init
-   railway up --dockerfile apps/api/Dockerfile
-   ```
-
----
-
-*NEWGAME v0.1.5 — UKM Game Development, Universitas Andalas*
-*Dibuat: 15 Juni 2026*
-*Perbarui dokumen ini setiap kali ada tugas manual baru.*
+NEWGAME v0.1.5 -- UKM Game Development, Universitas Andalas
