@@ -1,225 +1,363 @@
 <div align="center">
-  <img src="apps/web/public/logo.png" alt="NEWGAME" width="72" />
-  <h3>NEWGAME v0.1.5</h3>
-  <p>Platform Web UKM Game Development -- Universitas Andalas</p>
-  <p>
-    <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" alt="Next.js" />
-    <img src="https://img.shields.io/badge/NestJS-10-red?logo=nestjs" alt="NestJS" />
-    <img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/Firebase-Aktif-orange?logo=firebase" alt="Firebase" />
-    <img src="https://img.shields.io/badge/Versi-0.1.5-6366f1" alt="Versi" />
-    <a href="https://unandnewgame-tan.vercel.app"><img src="https://img.shields.io/badge/Live-unandnewgame--tan.vercel.app-black?logo=vercel" alt="Live" /></a>
-  </p>
+
+<img src="apps/web/public/logo.png" alt="NEWGAME Logo" width="96" />
+
+# ✦ NEWGAME Platform
+
+**Platform terpadu UKM Game Development — Universitas Andalas**
+
+*Learn · Create · Play*
+
+---
+
+[![Next.js](https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
+[![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript)](https://typescriptlang.org)
+[![Firebase](https://img.shields.io/badge/Firebase-Aktif-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Flutter](https://img.shields.io/badge/Flutter-Simulator-02569B?style=for-the-badge&logo=flutter)](tools/mobile-simulator)
+[![Vercel](https://img.shields.io/badge/Live%20Demo-unandnewgame.vercel.app-000000?style=for-the-badge&logo=vercel)](https://unandnewgame-tan.vercel.app)
+
+[![Version](https://img.shields.io/badge/Versi-0.1.5-6366f1?style=flat-square)](CHANGELOG.md)
+[![Members](https://img.shields.io/badge/Anggota-125%20orang-22c55e?style=flat-square)](#)
+[![License](https://img.shields.io/badge/License-MIT-fdcf41?style=flat-square)](LICENSE)
+
 </div>
 
 ---
 
-NEWGAME adalah platform web terpadu UKM Game Development Universitas Andalas.
-Monorepo dengan dua aplikasi: NestJS API (port 3001) dan Next.js Web (port 3000).
+## ✦ Apa itu NEWGAME?
 
-Anggota terdaftar : 125 orang (GEN 1 + GEN 2)
-Firebase project  : qr-absensi-unandnewgame
-Production URL    : https://unandnewgame-tan.vercel.app
+NEWGAME adalah platform web internal untuk mengelola seluruh ekosistem UKM Game Development Universitas Andalas. Dari presensi QR hingga leaderboard XP, dari manajemen event hingga koleksi badge — semuanya dalam satu platform.
 
----
-
-Status Infrastruktur (Juni 2026)
-
-  Firebase Firestore  aktif    -- sumber data utama production
-  Firebase Auth       aktif    -- autentikasi semua anggota
-  Upstash Redis       aktif    -- rate limiting + cache leaderboard TTL 60 detik
-  Vercel              aktif    -- hosting frontend + API serverless
-  PostHog             aktif    -- analytics penggunaan
-
-  Cloudinary          butuh env  -- upload gambar/video, perlu CLOUDINARY_* env diisi
-  SMTP Email          butuh env  -- notifikasi email, perlu SMTP_* env diisi
-  Google OAuth        butuh setup -- perlu tambah redirect URI di Google Console
-
-  PostgreSQL          direncanakan -- schema Prisma ada, data belum dipindah dari Firestore
-  Docker              parsial      -- Dockerfile ada, belum diuji end-to-end
-  Flutter             parsial      -- code ada di tools/mobile-simulator, belum production
-  WebSocket           implemented  -- butuh server persistent, tidak bisa di Vercel serverless
-  Zilliz / Milvus     direncanakan -- untuk semantic search, collection belum dibuat
-  OpenAI API          direncanakan -- untuk text embedding, perlu API key
-
-Detail tiap layanan, fungsi, cara pakai, dan env yang dibutuhkan: lihat EXTERNAL_SERVICES.md
+> **125 anggota aktif** dari dua generasi, tiga pilar (Game Logic, Game Design, Game Sound), dikelola dalam satu sistem terpadu.
 
 ---
 
-Fitur yang sudah berjalan
+## ✦ Fitur Utama
 
-  Backend API (NestJS):
-    autentikasi via Firebase, Member ID, Google OAuth, 2FA TOTP RFC 6238
-    CRUD member, bulk import CSV/JSON, search, export CSV
-    QR scan idempotent, manual input kehadiran, penalti terlambat (-2 XP / 15 menit)
-    event recurring (weekly/biweekly/monthly), reminder email + notif
-    XP level, leaderboard Redis cache, season reset, bonus streak 4 tier
-    WebSocket real-time (socket.io) + email Nodemailer
-    upload media Cloudinary (gambar dan video 100MB)
-    artikel, tutorial per pilar, YouTube embed, pencarian
-    badge definisi + award manual/otomatis
-    rate limiting (Upstash + fallback memory), anomaly detection
+<table>
+<tr>
+<td width="50%">
 
-  Frontend (Next.js 14):
-    landing page dengan animasi HeroTypewriter dan PirateMap Framer Motion
-    login 2-tab (Login + Daftar), forgot password inline, 2FA TOTP
-    dashboard dengan XP wave bar, stat cards, event upcoming
-    leaderboard dengan filter generasi (GEN 1/2) dan pilar
-    kalender bulan dengan titik event, sidebar detail, legenda warna
-    direktori anggota dengan search, card grid, halaman profil klik-through
-    pencarian artikel news dengan debounce
-    edit profil (bio/skills/links), avatar, download profile card PNG
-    koleksi badge dengan modal detail (rarity glow, progress bar)
-    log aktivitas dengan filter tipe + tanggal + export CSV
-    QR scanner dengan antrian offline (sync saat koneksi pulih)
-    panel admin lengkap (member, event, berita, media, SIEM)
-    GlobalSearch Cmd+K, dark mode, keyboard shortcuts
+**🎮 Gamifikasi & Progres**
+- Sistem XP dengan level, streak, dan seasonal reset
+- Leaderboard real-time (Redis cache, filter gen & pilar)
+- Koleksi badge dengan rarity & progress bar
+- Bonus streak 4 tier + penalti keterlambatan
+- Activity Heatmap (GitHub-style)
 
----
+**📱 Presensi Digital**
+- QR scan idempotent (satu scan = satu absen)
+- Antrian offline — sync otomatis saat koneksi pulih
+- Input manual kehadiran oleh admin
+- Penalti telat otomatis (-2 XP / 15 menit)
 
-Format Member ID
+**📅 Event & Kalender**
+- Kalender bulan dengan titik event berwarna
+- Recurring event (weekly / biweekly / monthly)
+- Reminder email otomatis + notifikasi web
 
-  NG + [kode gen+batch] + [nomor urut] + [suffix pilar]
+</td>
+<td width="50%">
 
-  Suffix pilar:
-    PG -> Game Logic
-    GD -> Game Design
-    SF -> Game Sound
+**👤 Member & Profil**
+- Direktori anggota — search, card grid, profil klik-through
+- Edit bio, skills, GitHub, LinkedIn, avatar
+- Download profile card sebagai PNG
+- Format Member ID unik: `NG11020125SF`
 
-  Contoh: NG11020125SF = GEN 1, nomor 125, Game Sound
+**📰 Konten & Berita**
+- Artikel & tutorial per pilar (Logic / Design / Sound)
+- YouTube embed, pencarian dengan debounce
+- NewsSlider di dashboard
 
----
+**🔐 Keamanan & Akses**
+- 8 level role — NPC hingga Pixel Presiden
+- Login via email, Member ID, atau Google OAuth
+- 2FA TOTP (RFC 6238), forgot password inline
+- Rate limiting (Upstash Redis + memory fallback)
+- Anomaly detection + SIEM panel admin
 
-Sistem Role (8 level)
-
-  npc           (0) -> belum diverifikasi, akses publik saja
-  member        (1) -> dashboard, presensi, profil
-  inventori     (2) -> + manajemen inventori
-  admin         (3) -> + kelola member, event, berita
-  quest keeper  (4) -> + ekspor data, laporan
-  gold guardian (5) -> + manajemen keuangan
-  code commander(6) -> + kelola role, buat admin
-  pixel presiden(7) -> akses penuh
+</td>
+</tr>
+</table>
 
 ---
 
-Cara Login
+## ✦ Struktur Proyek
 
-  Halaman /login punya 2 tab:
-
-  Tab Login:
-    - email + password Firebase
-    - Member ID + password (backend lookup ke Firestore, lalu Firebase sign in)
-    - Google OAuth
-    - forgot password inline (tanpa pindah halaman)
-
-  Tab Daftar:
-    - verifikasi Member ID + Kode Akses
-    - buat akun Firebase
-    - profil dibuat otomatis
-
----
-
-Setup Lokal
-
-  Prasyarat:
-    Node.js 20+
-    file apps/api/serviceAccountKey.json (Firebase service account)
-    PostgreSQL lokal atau connection string Neon/Supabase (opsional)
-
-  Install dependencies:
-    cd apps/api && npm install
-    cd apps/web && npm install
-
-  Konfigurasi env -- apps/api/.env:
-    PORT=3001
-    FRONTEND_URL=http://localhost:3000
-    FIREBASE_PROJECT_ID=qr-absensi-unandnewgame
-    FIREBASE_CLIENT_EMAIL=...
-    FIREBASE_PRIVATE_KEY=...
-    DATABASE_URL=postgresql://user:pass@localhost:5432/newgame
-    UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
-    UPSTASH_REDIS_REST_TOKEN=your-token
-    CLOUDINARY_CLOUD_NAME=your-name
-    CLOUDINARY_API_KEY=your-key
-    CLOUDINARY_API_SECRET=your-secret
-    SMTP_HOST=smtp.gmail.com
-    SMTP_PORT=587
-    SMTP_USER=your-email@gmail.com
-    SMTP_PASS=your-app-password
-    SMTP_FROM=NEWGAME <your-email@gmail.com>
-    OPENAI_API_KEY=sk-...
-    ZILLIZ_URI=https://...
-    ZILLIZ_TOKEN=...
-
-  Konfigurasi env -- apps/web/.env.local:
-    NEXT_PUBLIC_API_URL=http://localhost:3001/api
-    NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=qr-absensi-unandnewgame.firebaseapp.com
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID=qr-absensi-unandnewgame
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-    NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
-    NEXT_PUBLIC_POSTHOG_KEY=phc_your_key
-    NEXT_PUBLIC_SITE_URL=http://localhost:3000
-
-  Jalankan:
-    Terminal 1: cd apps/api && npm run dev
-    Terminal 2: cd apps/web && npm run dev
-    Buka: http://localhost:3000/landing
-
-  Via Docker (eksperimental, belum fully tested):
-    docker compose up --build
+```
+web-ua-newgame/
+│
+├── apps/
+│   ├── api/                   ← NestJS REST API (port 3001)
+│   │   ├── src/modules/       ← 21 modul bisnis
+│   │   │   ├── auth/          ← Firebase, OAuth, 2FA TOTP
+│   │   │   ├── members/       ← CRUD, bulk import CSV/JSON
+│   │   │   ├── attendance/    ← QR scan, kehadiran, penalti
+│   │   │   ├── events/        ← Recurring, reminder
+│   │   │   ├── xp/            ← Level, streak, seasonal reset
+│   │   │   ├── leaderboard/   ← Redis cache TTL 60s
+│   │   │   ├── badges/        ← Award manual & otomatis
+│   │   │   ├── news/          ← Artikel, tutorial, embed
+│   │   │   ├── media/         ← Cloudinary upload
+│   │   │   ├── admin/         ← Panel admin + SIEM
+│   │   │   └── ...
+│   │   └── prisma/            ← Schema PostgreSQL (standby)
+│   │
+│   └── web/                   ← Next.js 14 Frontend (port 3000)
+│       └── src/
+│           ├── app/
+│           │   ├── landing/          ← Landing page + animasi
+│           │   ├── login/            ← 2-tab auth (Login + Daftar)
+│           │   └── (dashboard)/
+│           │       ├── dashboard/    ← XP wave, stat cards, event
+│           │       ├── leaderboard/  ← Filter gen & pilar, export CSV
+│           │       ├── members/      ← Direktori + profil anggota
+│           │       ├── calendar/     ← Kalender event berwarna
+│           │       ├── badges/       ← Koleksi badge + modal detail
+│           │       ├── scan/         ← QR scanner + antrian offline
+│           │       ├── logs/         ← Activity log + filter + export
+│           │       ├── news/         ← Artikel & pencarian
+│           │       ├── profile/      ← Edit profil + download card
+│           │       ├── pirate-map/   ← Pirate Map Framer Motion
+│           │       └── admin/        ← Panel admin lengkap + SIEM
+│           ├── components/
+│           │   ├── ui/               ← Design system components
+│           │   └── layout/           ← Sidebar, navbar, shell
+│           └── lib/
+│               ├── api.ts            ← HTTP client + error handling
+│               ├── auth-store.ts     ← Zustand auth state
+│               └── attendance-sync.ts← Offline queue sync
+│
+├── tools/
+│   └── mobile-simulator/      ← Flutter app — preview web di HP/emulator
+│
+├── scripts/                   ← backup.mjs, migrate-firestore.mjs
+└── .github/workflows/         ← CI (typecheck, audit), Backup cron
+```
 
 ---
 
-Rencana Migrasi PostgreSQL
+## ✦ Tech Stack
 
-  Status: Firestore aktif, PostgreSQL standby (schema.prisma sudah ada).
-  Migrasi dijadwalkan setelah platform stabil di production.
-  Panduan lengkap: MIGRATION.md
-  Langkah manual: MANUAL_TASKS.md bagian PostgreSQL
-
----
-
-Struktur Proyek (ringkas)
-
-  apps/api/         -> NestJS REST API
-    prisma/         -> schema dan migration PostgreSQL
-    src/modules/    -> 21 modul bisnis (auth, members, attendance, events, xp, ...)
-    src/scripts/    -> seed-members.js, generate-api-collection.ts
-
-  apps/web/         -> Next.js 14 frontend
-    src/app/        -> halaman (login, landing, dashboard dan sub-halaman)
-    src/components/ -> BadgeDetailModal, ActivityHeatmap, AnnouncementBanner, ...
-    src/lib/        -> api.ts, errors.ts, attendance-sync.ts
-
-  tools/            -> Flutter mobile simulator (parsial)
-  scripts/          -> backup.mjs, migrate-firestore.mjs
-  .github/workflows -> ci.yml, backup.yml
+| Layer | Teknologi | Keterangan |
+|---|---|---|
+| Frontend | Next.js 14 + TypeScript | App Router, RSC, dynamic imports |
+| Styling | Vanilla CSS (globals.css) | Design system custom, dark mode |
+| State | Zustand | Auth store, UI state |
+| Animation | Framer Motion | Hero, PirateMap, card transitions |
+| Backend | NestJS 10 | Modular, Guard, Interceptor |
+| Database | Firebase Firestore | Production aktif |
+| Database (rencana) | PostgreSQL + Prisma | Schema siap, migrasi direncanakan |
+| Auth | Firebase Auth + JWT | + Google OAuth + 2FA TOTP |
+| Cache | Upstash Redis | Leaderboard TTL 60s, rate limiting |
+| Storage | Cloudinary | Gambar + video hingga 100MB |
+| Email | Nodemailer (SMTP) | Reminder event, notifikasi |
+| Realtime | Socket.io | WebSocket (butuh server persistent) |
+| Analytics | PostHog | Page views, event tracking |
+| Hosting | Vercel | Frontend + API serverless |
+| Simulator | Flutter | Android emulator + Windows frame |
 
 ---
 
-Dokumen Pendukung
+## ✦ Sistem Role
 
-  CHANGELOG.md         -> riwayat perubahan dari awal sampai sekarang
-  TODO.md              -> fitur yang belum selesai
-  MANUAL_TASKS.md      -> tugas wajib manual (credential, cloud, infra)
-  EXTERNAL_SERVICES.md -> semua layanan eksternal, fungsi, env, dan status
-  DEPLOYMENT_RUNBOOK.md-> panduan deploy ke production
-  DEVELOPER_GUIDE.md   -> standar kode dan Git workflow
-  SECURITY.md          -> arsitektur keamanan
-  MIGRATION.md         -> panduan cutover Firestore ke PostgreSQL
-  DESIGN.md            -> arsitektur dan design system platform
-  MEMBER_CREDENTIALS.md-> RAHASIA -- 125 anggota + kode akses
-
----
-
-CI/CD
-
-  Push ke main     -> ci.yml -> TypeScript typecheck, npm audit, ESLint
-  Cron 19.00 UTC   -> backup.yml -> pg_dump -> artifact retensi 30 hari
-  Manual dispatch  -> backup.yml -> backup on-demand
+```
+Pixel Presiden  (7) ━━━━━━━━━━━━━━━━  Akses penuh
+Code Commander  (6) ━━━━━━━━━━━━━━    Kelola role + buat admin
+Gold Guardian   (5) ━━━━━━━━━━━━      Manajemen keuangan
+Quest Keeper    (4) ━━━━━━━━━━━       Ekspor data + laporan
+Admin           (3) ━━━━━━━━━         Kelola member, event, berita
+Inventori       (2) ━━━━━━            Manajemen inventori
+Member          (1) ━━━━              Dashboard, presensi, profil
+NPC             (0) ━━               Akses publik — belum terverifikasi
+```
 
 ---
 
-MIT License -- 2026 NEWGAME, UKM Game Development Universitas Andalas
+## ✦ Format Member ID
+
+```
+NG  +  [Gen+Batch]  +  [Nomor Urut]  +  [Pilar]
+
+Contoh:  NG 1 1 020 125 SF
+              │ │  │   │  └── SF = Game Sound
+              │ │  │   └───── nomor urut: 125
+              │ │  └───────── 020 = kode batch
+              │ └──────────── 1 = GEN 1
+              └────────────── NG = NEWGAME
+```
+
+| Suffix | Pilar |
+|---|---|
+| `PG` | Game Logic |
+| `GD` | Game Design |
+| `SF` | Game Sound |
+
+---
+
+## ✦ Cara Login
+
+```
+/login memiliki dua tab:
+
+  [ LOGIN ]                          [ DAFTAR ]
+  ─────────────────────────          ─────────────────────────
+  • Email + Password Firebase        • Verifikasi Member ID
+  • Member ID + Password             • + Kode Akses
+  • Google OAuth                     • Buat akun Firebase
+  • Forgot password (inline)         • Profil dibuat otomatis
+  • 2FA TOTP (jika diaktifkan)
+```
+
+---
+
+## ✦ Setup Lokal
+
+### Prasyarat
+
+- Node.js 20+
+- `apps/api/serviceAccountKey.json` (Firebase service account)
+- PostgreSQL lokal / Neon / Supabase (opsional)
+
+### Install
+
+```bash
+# API
+cd apps/api && npm install
+
+# Web
+cd apps/web && npm install
+```
+
+### Environment — `apps/api/.env`
+
+```env
+PORT=3001
+FRONTEND_URL=http://localhost:3000
+FIREBASE_PROJECT_ID=qr-absensi-unandnewgame
+FIREBASE_CLIENT_EMAIL=...
+FIREBASE_PRIVATE_KEY=...
+DATABASE_URL=postgresql://user:pass@localhost:5432/newgame
+UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your@gmail.com
+SMTP_PASS=your-app-password
+OPENAI_API_KEY=sk-...   # opsional
+ZILLIZ_URI=...          # opsional
+```
+
+### Environment — `apps/web/.env.local`
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=qr-absensi-unandnewgame.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=qr-absensi-unandnewgame
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_POSTHOG_KEY=phc_...
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+### Jalankan
+
+```bash
+# Terminal 1 — API
+cd apps/api && npm run dev
+
+# Terminal 2 — Web
+cd apps/web && npm run dev
+
+# Buka browser
+http://localhost:3000/landing
+```
+
+```bash
+# Docker (eksperimental)
+docker compose up --build
+```
+
+---
+
+## ✦ Mobile Simulator (Flutter)
+
+Preview tampilan web NEWGAME di dalam emulator Android dari desktop:
+
+```bash
+cd tools/mobile-simulator
+
+# Jalankan emulator dulu (Android Studio → Device Manager)
+# Lalu:
+flutter run -d emulator-5554
+
+# Atau pakai script otomatis:
+.\run_simulator.ps1
+```
+
+Lihat panduan lengkap di [`tools/mobile-simulator/README.md`](tools/mobile-simulator/README.md).
+
+---
+
+## ✦ Infrastruktur
+
+| Layanan | Status | Keterangan |
+|---|---|---|
+| Firebase Firestore | ✅ Aktif | Sumber data utama production |
+| Firebase Auth | ✅ Aktif | Autentikasi semua anggota |
+| Upstash Redis | ✅ Aktif | Cache leaderboard + rate limiting |
+| Vercel | ✅ Aktif | Hosting frontend + serverless |
+| PostHog | ✅ Aktif | Analytics penggunaan |
+| Cloudinary | ⚙️ Perlu env | Upload gambar/video |
+| SMTP Email | ⚙️ Perlu env | Notifikasi reminder |
+| Google OAuth | ⚙️ Perlu setup | Tambah redirect URI di Google Console |
+| PostgreSQL | 🔜 Direncanakan | Schema Prisma siap, migrasi pending |
+| Docker | 🔧 Parsial | Dockerfile ada, belum diuji penuh |
+| WebSocket | 🔧 Parsial | Butuh server persistent (bukan Vercel) |
+| OpenAI / Zilliz | 🔜 Direncanakan | Semantic search (belum aktif) |
+
+---
+
+## ✦ CI/CD
+
+```
+Push ke main ──→ ci.yml ──→ TypeScript check + npm audit + ESLint
+Cron 19.00 UTC ─→ backup.yml ──→ pg_dump → artifact (retensi 30 hari)
+Manual dispatch ─→ backup.yml ──→ backup on-demand
+```
+
+---
+
+## ✦ Dokumen Pendukung
+
+| Dokumen | Isi |
+|---|---|
+| [`CHANGELOG.md`](CHANGELOG.md) | Riwayat perubahan — dari awal sampai sekarang |
+| [`TODO.md`](TODO.md) | Fitur & perbaikan yang belum selesai |
+| [`MANUAL_TASKS.md`](MANUAL_TASKS.md) | Tugas wajib manual (credential, cloud, infra) |
+| [`EXTERNAL_SERVICES.md`](EXTERNAL_SERVICES.md) | Semua layanan eksternal, fungsi, env, status |
+| [`DEPLOYMENT_RUNBOOK.md`](DEPLOYMENT_RUNBOOK.md) | Panduan deploy ke production |
+| [`DEVELOPER_GUIDE.md`](DEVELOPER_GUIDE.md) | Standar kode dan Git workflow |
+| [`SECURITY.md`](SECURITY.md) | Arsitektur keamanan platform |
+| [`MIGRATION.md`](MIGRATION.md) | Panduan cutover Firestore → PostgreSQL |
+| [`DESIGN.md`](DESIGN.md) | Arsitektur dan design system |
+
+---
+
+<div align="center">
+
+**NEWGAME — UKM Game Development, Universitas Andalas**
+
+*v0.1.5 · Firebase + Next.js + NestJS · 125 anggota*
+
+[![Live](https://img.shields.io/badge/🌐%20Buka%20Platform-unandnewgame--tan.vercel.app-6366f1?style=for-the-badge)](https://unandnewgame-tan.vercel.app)
+
+MIT License © 2026 NEWGAME
+
+</div>
