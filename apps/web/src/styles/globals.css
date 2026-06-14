@@ -2,8 +2,7 @@
    NEWGAME — Global Design System v2
    Canonical token map. Dark mode total. GPU motion. Responsive lockdown.
    ═══════════════════════════════════════════════════════════════════════════ */
-
-@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+/* Fonts loaded via next/font in layout.tsx — no CDN import needed here */
 
 @import "tailwindcss";
 
@@ -292,7 +291,7 @@ html {
   box-sizing: border-box;
   /* Only color/shadow transitions globally — NOT transform (breaks animations) */
   transition-property: background-color, border-color, color, box-shadow, opacity;
-  transition-duration: var(--t-slow);
+  transition-duration: var(--t-base); /* was t-slow (350ms) — reduced to 220ms */
   transition-timing-function: ease;
 }
 
@@ -524,22 +523,23 @@ input, textarea, select {
    ══════════════════════════════════════════════════════════════════════════ */
 .card {
   background: var(--clr-bg-surface);
+  /* backdrop-filter only on desktop — too expensive on low-end mobile */
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   position: relative;
-  /* Separate transition for transform */
+  contain: layout style; /* reduce layout recalculation cost */
 }
 .card-hover {
-  transition: transform 280ms var(--t-smooth), box-shadow 280ms var(--t-smooth) !important;
+  transition: transform 200ms var(--t-smooth), box-shadow 200ms var(--t-smooth) !important;
 }
 .card-hover:hover {
   background: var(--clr-bg-hover);
   border-color: var(--clr-border-gold);
-  transform: translateY(-4px) !important;
-  box-shadow: var(--shadow-lg), 0 0 30px var(--clr-gold-subtle);
+  transform: translateY(-3px) !important; /* reduced from -4px */
+  box-shadow: var(--shadow-lg), 0 0 20px var(--clr-gold-subtle);
 }
 
 .stat-card { text-align: center; }
@@ -1878,10 +1878,11 @@ input, textarea, select {
 .animate-spring-modal { animation: springModal 0.5s var(--t-spring) forwards; }
 .cursor-blink       { animation: blink 1s step-end infinite; color: var(--clr-gold); }
 
-/* Parallax */
+/* Parallax — will-change only active during scroll, not always */
 .parallax-container { overflow: hidden; position: relative; }
-.parallax-slow      { will-change: transform; }
-.parallax-fast      { will-change: transform; }
+.parallax-slow      { will-change: auto; }
+.parallax-fast      { will-change: auto; }
+.parallax-active    { will-change: transform; } /* add via JS only during scroll */
 
 /* ══════════════════════════════════════════════════════════════════════════
    RETRO-MODERN GAME DASHBOARD — TOKEN EXTENSIONS
@@ -2106,6 +2107,95 @@ input, textarea, select {
 .threat-medium   { color: var(--clr-threat-medium); }
 .threat-high     { color: var(--clr-threat-high); }
 .threat-critical { color: var(--clr-threat-critical); }
+
+/* Kurangi padding main content agar konten tidak terlalu mepet */
+main {
+  padding: var(--space-md) var(--space-sm) !important;
+}
+
+/* Welcome hero: kurangi min-height & teks agar muat di layar kecil */
+.card {
+  padding: var(--space-md);
+}
+}
+
+/* Tablet — stat cards tetap 2 col */
+@media (min-width: 641px) and (max-width: 900px) {
+.stat-cards-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ MOBILE PERFORMANCE — disable expensive properties on small screens
+ ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+/* backdrop-filter adalah salah satu properti CSS paling berat di GPU mobile */
+.card,
+.glass,
+.glass-static,
+.glow-card,
+.retro-panel,
+.security-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  /* Ganti dengan warna solid agar tetap terbaca */
+  background: var(--clr-bg-surface-solid, #FFFFFF) !important;
+}
+.dark .card,
+.dark .glass,
+.dark .glass-static,
+.dark .glow-card,
+.dark .retro-panel,
+.dark .security-panel {
+  background: var(--clr-bg-surface-solid, #111827) !important;
+}
+
+/* Kurangi intensitas glow agar tidak memberatkan compositing */
+.glow-card:hover,
+.card-hover:hover {
+  box-shadow: var(--shadow-md) !important;
+  transform: none !important; /* disable lift di mobile — sering memicu jank */
+}
+
+/* Nonaktifkan orb/ambient animasi besar di mobile */
+[class*="orb"],
+[class*="ambient"] {
+  display: none !important;
+}
+
+/* Pastikan tidak ada elemen yang overflow horizontal */
+.grid-cards,
+.grid-members,
+[class*="grid"] {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Stabilkan zoom — elemen interaktif punya touch target cukup besar */
+.btn, button, a, input, select, textarea {
+  touch-action: manipulation; /* disable double-tap-zoom pada tombol */
+}
+
+/* Font besar terlalu besar di mobile kecil */
+.stat-value { font-size: 1.5rem !important; }
+.news-title { font-size: 1.6rem !important; }
+}
+
+/* Sangat kecil (320px — HP lama) */
+@media (max-width: 400px) {
+:root {
+  --space-lg: 16px;
+  --space-xl: 24px;
+}
+.card {
+  border-radius: var(--radius-md);
+}
+.btn {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    STAT CARDS — NEON ACCENT TOPS
@@ -2360,7 +2450,8 @@ input, textarea, select {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   GLOBAL KEYFRAMES — used throughout app
+   GLOBAL KEYFRAMES — canonical definitions (deduplicated)
+   Earlier duplicate @keyframes blocks are intentionally overridden here.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* Accent bar, gradient-text, progress bar */
@@ -2402,36 +2493,46 @@ input, textarea, select {
   100% { opacity: 0; transform: translateY(-90px) scale(0.8); }
 }
 
-/* Toast slide up */
+/* Toast / page transitions */
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes animate-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Progress bar glow pulse */
 @keyframes progressGlow {
-  0%, 100% { box-shadow: 0 0 8px rgba(253,207,65,0.3); }
-  50%       { box-shadow: 0 0 16px rgba(253,207,65,0.6); }
+  0%, 100% { box-shadow: 0 0 6px rgba(253,207,65,0.25); }
+  50%       { box-shadow: 0 0 12px rgba(253,207,65,0.5); }
 }
 
-/* Animate fade-in for pages */
-@keyframes animate-fade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: animate-fade-in 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-
-/* Animate glow for CTA cards */
+/* Glow for CTA cards */
 @keyframes animate-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(253,207,65,0.1); }
-  50%       { box-shadow: 0 0 40px rgba(253,207,65,0.25), 0 0 80px rgba(185,166,206,0.1); }
+  0%, 100% { box-shadow: 0 0 16px rgba(253,207,65,0.08); }
+  50%       { box-shadow: 0 0 32px rgba(253,207,65,0.2), 0 0 60px rgba(185,166,206,0.08); }
 }
 
-.animate-glow {
-  animation: animate-glow 4s ease-in-out infinite;
+.animate-fade-in { animation: animate-fade-in 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+.animate-glow    { animation: animate-glow 5s ease-in-out infinite; } /* was 4s — slower = less GPU */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY — Reduced Motion
+   Disable animations for users who prefer reduced motion (accessibility).
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .accent-bar { animation: none; }
+  .animate-float, .animate-glow, .animate-pulse-css { animation: none; }
+  .xp-shimmer-overlay { display: none; }
+  .xp-bubble { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
