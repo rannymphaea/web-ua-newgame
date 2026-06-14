@@ -12,7 +12,7 @@ Banner pengumuman darurat untuk admin. Heatmap mingguan analisis kehadiran.
 
 ---
 
-17 Mei 2026
+14 Mei 2026
 
 Migrasi dari sistem lama berbasis HTML/JS mandiri ke monorepo terpadu.
 Lebih dari 12.000 file konfigurasi lama dihapus.
