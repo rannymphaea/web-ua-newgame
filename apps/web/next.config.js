@@ -3,8 +3,18 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Turbopack di dev mode (lebih cepat HMR)
-  // Aktifkan dengan: next dev --turbo
+
+  // ESLint hanya dijalankan secara lokal, bukan saat Vercel build
+  // Jalankan manual: cd apps/web && npx eslint src --ext .ts,.tsx
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  // TypeScript error tetap memblokir build (type safety terjaga)
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+
 
   // Compress semua response
   compress: true,

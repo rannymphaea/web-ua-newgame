@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 
 interface ProfileEditForm {
