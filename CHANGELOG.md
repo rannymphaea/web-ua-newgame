@@ -254,4 +254,53 @@ Sesi 3 -- 15 Juni, dokumentasi dan cleanup:
 
 ---
 
+v0.1.5 patch -- 15 Juni 2026 -- Performa & Responsivitas (berdasarkan umpan balik pengguna)
+
+Perbaikan ini langsung merespons kritik: website terasa berat di mobile, tata letak
+tidak stabil saat zoom, ada elemen duplikat, dan terlalu fokus pada efek visual
+daripada stabilitas penggunaan.
+
+Yang diperbaiki di globals.css:
+
+  Performa loading: hapus @import Google Fonts dari CSS. Font sudah diload via
+  next/font di layout.tsx sehingga tidak perlu dua kali. Ini menghilangkan satu
+  network request blocking per halaman.
+
+  Kecepatan interaksi: global transition dikurangi dari 350ms ke 220ms. Semua
+  tombol, link, dan elemen interaktif kini terasa lebih responsif saat diklik.
+
+  Performa GPU: backdrop-filter (blur) dinonaktifkan di semua kartu dan panel
+  pada layar mobile (max-width: 768px). Ini adalah properti CSS paling mahal
+  di GPU mobile generasi lama, penyebab utama lag saat scroll.
+
+  Duplikasi dihapus: keyframes gradientShift, shimmer, xpFloat, scanLine, dan
+  progressGlow masing-masing muncul dua kali di file CSS. Kini dikonsolidasi
+  ke satu definisi kanonik di bagian bawah file.
+
+  Animasi lift kartu dikurangi: translateY dari -4px ke -3px, durasi dari 280ms
+  ke 200ms. Di mobile, animasi lift kartu dinonaktifkan sepenuhnya karena sering
+  memicu layout jank.
+
+  Aksesibilitas: ditambahkan @media (prefers-reduced-motion). Semua animasi dan
+  transisi dinonaktifkan untuk pengguna yang mengaktifkan opsi ini di sistem
+  operasi mereka. Ini juga membantu performa di HP low-end yang mengaktifkan
+  mode hemat baterai.
+
+  Stabilitas zoom: touch-action: manipulation diterapkan ke semua tombol dan
+  elemen interaktif untuk menghilangkan delay double-tap-zoom yang membuat
+  UI terasa lambat merespons di iOS dan Android.
+
+  Layar sangat kecil (320px): spacing dan ukuran komponen dikurangi agar tidak
+  ada elemen yang keluar dari kontainer di HP lama.
+
+  Orb/ambient background: dinonaktifkan di mobile. Animasi besar ini tidak
+  terlihat di layar kecil tapi tetap memakan CPU/GPU.
+
+Apa yang belum diperbaiki di patch ini (direncana ke v0.1.6):
+  Gambar raster (PNG/JPG) belum dikonversi ke SVG atau format WebP -- ditunda
+  karena butuh regenerasi aset. Saat ini gambar sudah punya max-width:100%
+  dan height:auto dari global CSS baseline.
+
+---
+
 NEWGAME UKM Game Development, Universitas Andalas

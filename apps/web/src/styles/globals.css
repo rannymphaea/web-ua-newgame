@@ -2117,13 +2117,12 @@ main {
 .card {
   padding: var(--space-md);
 }
-}
 
 /* Tablet — stat cards tetap 2 col */
 @media (min-width: 641px) and (max-width: 900px) {
-.stat-cards-grid {
-  grid-template-columns: repeat(2, 1fr) !important;
-}
+  .stat-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
