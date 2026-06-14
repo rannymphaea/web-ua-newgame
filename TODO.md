@@ -1,6 +1,6 @@
 NEWGAME v0.1.5 — Project Task List
 UKM Game Development, Universitas Andalas
-Last updated: 14 Juni 2026
+Last updated: 14 Juni 2026 (sesi 2 selesai)
 
 This file tracks the development status of all features across the platform.
 Update this file whenever a task is started, completed, or reprioritized.
@@ -131,7 +131,7 @@ BACKEND — NESTJS API
   Export and Import (apps/api/src/modules/export, import)
     [x] Import members from JSON payload
     [x] Firestore → PostgreSQL migration script (NEW)
-    [-] Export attendance report as CSV
+    [x] Export attendance report as CSV (NEW — via /attendance/export/csv)
     [-] Export XP history as spreadsheet
 
   Other Modules
@@ -219,8 +219,8 @@ FRONTEND — NEXT.JS WEB
     [x] Activity history timeline
     [x] Avatar selection (including Yua avatar)
     [x] Cloudinary photo upload
-    [-] Profile edit form (bio, GitHub, LinkedIn, skills)
-    [-] Download profile card as image
+    [x] Profile edit form (bio, GitHub, LinkedIn, skills) (NEW)
+    [x] Download profile card as image (NEW — canvas PNG export)
 
   Admin Panel (apps/web/src/app/(dashboard)/admin)
     [x] Member management table
@@ -228,10 +228,10 @@ FRONTEND — NEXT.JS WEB
     [x] News management (create, edit, delete, publish toggle)
     [x] Media gallery management
     [x] Analytics dashboard (PostHog-powered)
-    [-] Attendance report view and export
-    [-] Event creation form
-    [-] Bulk member import UI
-    [-] SIEM log viewer for anomaly events
+    [x] Attendance report view and export (NEW — /admin/attendance)
+    [x] Event creation form (ALREADY IN ADMIN)
+    [x] Bulk member import UI (NEW — /admin/import, CSV+JSON)
+    [x] SIEM log viewer for anomaly events (NEW — /admin/siem)
 
   Members Directory (apps/web/src/app/(dashboard)/members)
     [x] Member list with pillar filter
@@ -278,7 +278,7 @@ FRONTEND — NEXT.JS WEB
         [x] Framer Motion animated dialog
     [x] Toast queue system (multiple stacked toasts) (NEW)
     [x] Global search component (Cmd+K / Ctrl+K) (NEW)
-    [-] Keyboard shortcut system
+    [x] Keyboard shortcut system (NEW — KeyboardShortcuts component + useKeyboardShortcuts hook + ShortcutHelpOverlay)
 
 ---
 

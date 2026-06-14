@@ -59,12 +59,21 @@ export default function AdminPage() {
     <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-lg" style={{flexWrap:'wrap',gap:12}}>
         <h1 className="font-display text-2xl">Admin Panel</h1>
-        <div className="flex gap-sm">
+        <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
           <Link href="/admin/news" className="btn btn-secondary btn-sm btn-depth">
-            <i className="ri-newspaper-line" aria-hidden="true" /> Manage News
+            <i className="ri-newspaper-line" aria-hidden="true" /> News
           </Link>
           <Link href="/admin/media" className="btn btn-secondary btn-sm btn-depth">
             <i className="ri-image-2-line" aria-hidden="true" /> Media
+          </Link>
+          <Link href="/admin/attendance" className="btn btn-secondary btn-sm btn-depth">
+            <i className="ri-calendar-check-line" aria-hidden="true" /> Absensi
+          </Link>
+          <Link href="/admin/import" className="btn btn-secondary btn-sm btn-depth">
+            <i className="ri-upload-2-line" aria-hidden="true" /> Import
+          </Link>
+          <Link href="/admin/siem" className="btn btn-secondary btn-sm btn-depth" style={{ color: 'var(--clr-danger)' }}>
+            <i className="ri-shield-keyhole-line" aria-hidden="true" /> SIEM
           </Link>
           <button className="btn btn-primary btn-sm btn-depth" onClick={() => setShowCreate(!showCreate)}>
             <i className="ri-add-line" aria-hidden="true" /> Create Event

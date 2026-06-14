@@ -182,11 +182,14 @@ Total anggota terdaftar: **125 orang** (GEN 1 + GEN 2)
 
 ## Cara Login
 
-Halaman `/login` memiliki **3 tab**:
+Halaman `/login` memiliki **2 tab** (diperbarui v0.1.5):
 
-1. **Email** â€” email + password Firebase
-2. **Member ID** â€” masukkan `NG11020125SF` + password â†’ backend lookup email â†’ Firebase sign in
-3. **Daftar** â€” verifikasi Member ID + Kode Akses â†’ buat akun Firebase
+1. **Login** — pilih metode:
+   - 📧 Email + password Firebase
+   - 🎮 Member ID (`NG11020125SF`) + password → backend lookup → Firebase sign in
+   - 🔑 Google OAuth (tombol Sign in with Google)
+   - 🔐 Forgot password → email reset link (inline, tanpa pindah halaman)
+2. **Daftar** — verifikasi Member ID + Kode Akses → buat akun Firebase → profil dibuat otomatis
 
 ---
 
