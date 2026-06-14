@@ -13,33 +13,65 @@ export class EventsService {
     description?: string;
     xpReward?: number;
     xpPenalty?: number;
+    recurring?: { type: 'weekly' | 'biweekly' | 'monthly'; dayOfWeek?: number; endDate?: string };
+    scheduledDate?: string;
   }) {
     const db = this.firebaseService.firestore;
     const eventRef = db.collection('events').doc();
 
-    await eventRef.set({
+    const eventData: Record<string, any> = {
       name: data.name,
       description: data.description || '',
       xpReward: data.xpReward || 10,
       xpPenalty: data.xpPenalty || 5,
       status: 'active',
       createdBy: creatorId,
-      startTime: this.firebaseService.timestamp,
+      startTime: data.scheduledDate ? new Date(data.scheduledDate) : this.firebaseService.timestamp,
       endTime: null,
       closedBy: null,
       xpDistributed: false,
+      isRecurring: !!data.recurring,
+      recurrence: data.recurring || null,
       createdAt: this.firebaseService.timestamp,
-    });
+    };
+
+    await eventRef.set(eventData);
+
+    // If recurring, generate future event instances (max 12)
+    const generatedIds: string[] = [eventRef.id];
+    if (data.recurring) {
+      const intervalDays = data.recurring.type === 'weekly' ? 7 : data.recurring.type === 'biweekly' ? 14 : 30;
+      const endDate = data.recurring.endDate ? new Date(data.recurring.endDate) : new Date(Date.now() + 90 * 86400000);
+      const baseDate = data.scheduledDate ? new Date(data.scheduledDate) : new Date();
+      
+      for (let i = 1; i <= 12; i++) {
+        const nextDate = new Date(baseDate.getTime() + i * intervalDays * 86400000);
+        if (nextDate > endDate) break;
+        
+        const recurRef = db.collection('events').doc();
+        await recurRef.set({
+          ...eventData,
+          startTime: nextDate,
+          parentEventId: eventRef.id,
+          recurrenceIndex: i,
+          name: `${data.name} #${i + 1}`,
+          createdAt: this.firebaseService.timestamp,
+        });
+        generatedIds.push(recurRef.id);
+      }
+    }
 
     await db.collection('logs').add({
       userId: creatorId,
       eventId: eventRef.id,
       action: 'create_event',
       result: 'success',
+      recurring: !!data.recurring,
+      generatedCount: generatedIds.length,
       timestamp: this.firebaseService.timestamp,
     });
 
-    return { success: true, eventId: eventRef.id };
+    return { success: true, eventId: eventRef.id, generatedIds };
   }
 
   /**

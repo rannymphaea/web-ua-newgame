@@ -60,4 +60,27 @@ export class AttendanceController {
   async getEventAttendance(@Param('eventId') eventId: string) {
     return this.attendanceService.getEventAttendance(eventId);
   }
+
+  /** GET /api/attendance/export/csv — Export attendance as CSV (admin+) */
+  @Get('export/csv')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async exportCsv(
+    @Query('eventId') eventId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.attendanceService.exportCsv({ eventId, from, to });
+  }
+
+  /** POST /api/attendance/manual — Manual attendance input by trainer (admin+) */
+  @Post('manual')
+  @UseGuards(RolesGuard)
+  @Roles('quest keeper')
+  async manualInput(
+    @CurrentUser() user: any,
+    @Body() body: { userId: string; eventId: string; status?: string; notes?: string },
+  ) {
+    return this.attendanceService.manualInput(body.userId, body.eventId, user.uid, body.status, body.notes);
+  }
 }

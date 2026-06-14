@@ -250,5 +250,112 @@ export class AttendanceService {
     } catch (error) {
       console.error('Check anomaly error:', error);
     }
+  /**
+   * Export attendance as CSV
+   */
+  async exportCsv(opts: { eventId?: string; from?: string; to?: string }) {
+    const db = this.firebaseService.firestore;
+    let q: FirebaseFirestore.Query = db.collection('attendance');
+    if (opts.eventId) q = q.where('eventId', '==', opts.eventId);
+    q = q.orderBy('attendedAt', 'desc');
+
+    const snap = await q.get();
+    let docs = snap.docs.map(d => ({ id: d.id, ...d.data() as Record<string, any> }));
+
+    // Date range filter
+    if (opts.from || opts.to) {
+      docs = docs.filter(d => {
+        const ts = d.attendedAt?.toDate?.()?.toISOString() || '';
+        if (opts.from && ts < opts.from) return false;
+        if (opts.to && ts > opts.to) return false;
+        return true;
+      });
+    }
+
+    const headers = ['Event', 'User ID', 'Status', 'XP Gained', 'Streak Bonus', 'Date'];
+    const rows = docs.map(d => [
+      d.eventName || d.eventId || '', d.userId || '', d.status || 'present',
+      d.xpChange || 0, d.streakBonus || 0,
+      d.attendedAt?.toDate?.()?.toISOString() || '',
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+    return { csv: [headers.join(','), ...rows].join('\n'), count: docs.length };
+  }
+
+  /**
+   * Manual attendance input by trainer/admin
+   */
+  async manualInput(userId: string, eventId: string, adminId: string, status = 'present', notes?: string) {
+    const db = this.firebaseService.firestore;
+
+    // Validate user and event exist
+    const [userSnap, eventSnap] = await Promise.all([
+      db.collection('users').doc(userId).get(),
+      db.collection('events').doc(eventId).get(),
+    ]);
+    if (!userSnap.exists) throw new BadRequestException('User tidak ditemukan');
+    if (!eventSnap.exists) throw new BadRequestException('Event tidak ditemukan');
+
+    const event = eventSnap.data();
+    const user = userSnap.data();
+    const attendanceId = `${eventId}_${userId}`;
+    const existingSnap = await db.collection('attendance').doc(attendanceId).get();
+    if (existingSnap.exists) {
+      return { success: true, alreadyRecorded: true, message: 'Sudah tercatat hadir' };
+    }
+
+    // Late penalty check: if event has startTime, check if late
+    const now = this.firebaseService.timestampNow;
+    let latePenalty = 0;
+    let isLate = false;
+    if (event.startTime && status === 'present') {
+      const eventStart = event.startTime.toDate ? event.startTime.toDate() : new Date(event.startTime);
+      const lateMinutes = Math.floor((now.toDate().getTime() - eventStart.getTime()) / 60000);
+      if (lateMinutes > 15) {
+        isLate = true;
+        latePenalty = Math.min(Math.floor(lateMinutes / 15) * 2, 10); // -2 XP per 15min late, max -10
+        status = 'late';
+      }
+    }
+
+    const xpReward = Math.max((event.xpReward || 10) - latePenalty, 0);
+    const currentXP = user.xpCache || 0;
+
+    const batch = db.batch();
+
+    batch.set(db.collection('attendance').doc(attendanceId), {
+      eventId,
+      eventName: event.name || '',
+      userId,
+      status,
+      xpChange: xpReward,
+      isLate,
+      latePenalty,
+      notes: notes || '',
+      inputBy: adminId,
+      inputType: 'manual',
+      attendedAt: this.firebaseService.timestamp,
+    });
+
+    batch.update(db.collection('users').doc(userId), {
+      xpCache: currentXP + xpReward,
+      attendanceCount: (user.attendanceCount || 0) + 1,
+    });
+
+    batch.set(db.collection('logs').doc(), {
+      userId: adminId,
+      targetUserId: userId,
+      action: 'manual_attendance',
+      result: 'success',
+      eventId,
+      isLate,
+      latePenalty,
+      notes,
+      timestamp: this.firebaseService.timestamp,
+    });
+
+    await batch.commit();
+
+    return { success: true, xpGained: xpReward, isLate, latePenalty, status };
   }
 }

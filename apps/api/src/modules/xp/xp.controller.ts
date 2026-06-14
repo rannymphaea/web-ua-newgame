@@ -29,4 +29,23 @@ export class XpController {
   ) {
     return this.xpService.getXPHistory(userId, parseInt(limit) || 30);
   }
+
+  /** POST /api/xp/season-reset — Reset XP semua user (code commander only) */
+  @Post('season-reset')
+  @UseGuards(RolesGuard)
+  @Roles('code commander')
+  async seasonReset(
+    @CurrentUser() user: any,
+    @Body() body: { decayPercent: number },
+  ) {
+    return this.xpService.seasonReset(body.decayPercent || 30, user.uid);
+  }
+
+  /** POST /api/xp/streak-bonus/:userId — Award streak bonus manually */
+  @Post('streak-bonus/:userId')
+  @UseGuards(RolesGuard)
+  @Roles('quest keeper')
+  async streakBonus(@Param('userId') userId: string) {
+    return this.xpService.awardStreakBonus(userId);
+  }
 }

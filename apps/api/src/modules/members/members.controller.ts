@@ -16,8 +16,18 @@ export class MembersController {
     @Query('page') page = '1', @Query('limit') limit = '20',
     @Query('search') search?: string, @Query('division') division?: string,
     @Query('role') role?: string, @Query('status') status?: string,
+    @Query('generation') generation?: string,
   ) {
-    return this.svc.list({ page: +page, limit: +limit, search, division, role, status });
+    return this.svc.list({ page: +page, limit: +limit, search, division, role, status, generation });
+  }
+
+  @Get('export/csv')
+  async exportCsv(
+    @Query('division') division?: string,
+    @Query('status') status?: string,
+    @Query('generation') generation?: string,
+  ) {
+    return this.svc.exportCsv({ division, status, generation });
   }
 
   @Get(':uid') getOne(@Param('uid') uid: string) { return this.svc.getOne(uid); }

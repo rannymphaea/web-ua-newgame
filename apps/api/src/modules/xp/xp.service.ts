@@ -73,4 +73,113 @@ export class XpService {
 
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   }
+
+  /**
+   * XP Decay / Season Reset
+   * Reduces all active users' XP by a percentage (default 30%).
+   * Called at the start of a new season by admin.
+   * Records history for each affected user.
+   */
+  async seasonReset(decayPercent: number, executedBy: string) {
+    if (decayPercent < 0 || decayPercent > 100) {
+      throw new BadRequestException('Decay percent harus antara 0-100');
+    }
+
+    const db = this.firebaseService.firestore;
+    const usersSnap = await db.collection('users')
+      .where('status', '==', 'active')
+      .get();
+
+    const decayFactor = 1 - (decayPercent / 100);
+    let affected = 0;
+
+    for (const doc of usersSnap.docs) {
+      const oldXP = doc.data().xpCache || 0;
+      if (oldXP <= 0) continue;
+
+      const newXP = Math.floor(oldXP * decayFactor);
+
+      await doc.ref.update({ xpCache: newXP });
+      await db.collection('xpHistory').add({
+        userId: doc.id,
+        oldXP,
+        newXP,
+        change: newXP - oldXP,
+        reason: `Season reset (${decayPercent}% decay)`,
+        changedBy: executedBy,
+        changedByRole: 'system',
+        type: 'season_reset',
+        timestamp: this.firebaseService.timestamp,
+      });
+      affected++;
+    }
+
+    // Log the season reset event
+    await db.collection('logs').add({
+      userId: executedBy,
+      action: 'season_reset',
+      result: 'success',
+      decayPercent,
+      affectedUsers: affected,
+      timestamp: this.firebaseService.timestamp,
+    });
+
+    return { success: true, affected, decayPercent };
+  }
+
+  /**
+   * Bonus XP for Attendance Streaks
+   * Awards bonus XP based on consecutive attendance days.
+   * Streak thresholds:
+   *   3 consecutive  → +10 XP
+   *   7 consecutive  → +25 XP
+   *  14 consecutive  → +50 XP
+   *  30 consecutive  → +100 XP
+   */
+  async awardStreakBonus(userId: string) {
+    const db = this.firebaseService.firestore;
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) return { awarded: false, reason: 'User not found' };
+
+    const streak = userSnap.data().streak || 0;
+    const currentXP = userSnap.data().xpCache || 0;
+
+    // Define streak bonus tiers
+    const tiers = [
+      { threshold: 30, bonus: 100, label: '30 hari berturut-turut' },
+      { threshold: 14, bonus: 50,  label: '14 hari berturut-turut' },
+      { threshold: 7,  bonus: 25,  label: '7 hari berturut-turut' },
+      { threshold: 3,  bonus: 10,  label: '3 hari berturut-turut' },
+    ];
+
+    // Find the highest applicable tier
+    const applicableTier = tiers.find(t => streak > 0 && streak % t.threshold === 0);
+    if (!applicableTier) return { awarded: false, streak, reason: 'Belum mencapai milestone streak' };
+
+    const newXP = currentXP + applicableTier.bonus;
+    await userRef.update({ xpCache: newXP });
+
+    await db.collection('xpHistory').add({
+      userId,
+      oldXP: currentXP,
+      newXP,
+      change: applicableTier.bonus,
+      reason: `Streak bonus: ${applicableTier.label} (+${applicableTier.bonus} XP)`,
+      changedBy: 'system',
+      changedByRole: 'system',
+      type: 'streak_bonus',
+      timestamp: this.firebaseService.timestamp,
+    });
+
+    return {
+      awarded: true,
+      streak,
+      bonus: applicableTier.bonus,
+      label: applicableTier.label,
+      oldXP: currentXP,
+      newXP,
+    };
+  }
 }

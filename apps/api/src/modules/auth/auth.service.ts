@@ -135,6 +135,7 @@ export class AuthService {
   /**
    * Setelah user berhasil register di Firebase Auth (client-side),
    * buat dokumen user di Firestore.
+   * Includes duplicate detection for uid and memberId.
    */
   async createUserProfile(uid: string, data: {
     memberId: string;
@@ -144,6 +145,19 @@ export class AuthService {
     team?: string;
   }) {
     const db = this.firebaseService.firestore;
+
+    // Check if user already has a profile (duplicate registration attempt)
+    const existingUser = await db.collection('users').doc(uid).get();
+    if (existingUser.exists) {
+      throw new BadRequestException('Akun sudah terdaftar. Silakan login dengan akun yang ada.');
+    }
+
+    // Check if memberId is already registered by another user
+    const memberDoc = await db.collection('members').doc(data.memberId).get();
+    if (memberDoc.exists && memberDoc.data()?.isRegistered) {
+      throw new BadRequestException('Member ID ini sudah digunakan untuk registrasi oleh akun lain.');
+    }
+
     const batch = db.batch();
 
     // Buat dokumen user

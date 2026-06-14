@@ -83,11 +83,13 @@ export class MediaController {
     @Query('usage') usage?: string,
     @Query('mimeType') mimeType?: string,
     @Query('limit') limit?: string,
+    @Query('page') page?: string,
   ) {
     return this.mediaService.getAll({
       usage,
       mimeType,
       limit: limit ? parseInt(limit, 10) : undefined,
+      page: page ? parseInt(page, 10) : 1,
     });
   }
 

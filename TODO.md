@@ -1,6 +1,6 @@
-NEWGAME v0.1.4 — Project Task List
+NEWGAME v0.1.5 — Project Task List
 UKM Game Development, Universitas Andalas
-Last updated: 13 Juni 2026
+Last updated: 14 Juni 2026
 
 This file tracks the development status of all features across the platform.
 Update this file whenever a task is started, completed, or reprioritized.
@@ -25,7 +25,7 @@ INFRASTRUCTURE AND DEVOPS
   [x] Vercel deployment with vercel.json rewrites
   [x] Environment variable structure documented (README.md)
   [x] .gitignore configured — .env, node_modules, .next, serviceAccountKey
-  [-] Docker Compose setup for local full-stack development
+  [x] Docker Compose setup for local full-stack development (NEW)
   [-] Staging environment separate from production
 
 ---
@@ -44,8 +44,8 @@ BACKEND — NESTJS API
     [x] Google OAuth login support
     [x] Login via NEWGAME Member ID (tab 3 in login page) (NEW)
     [~] Better Auth session fully replacing Firebase Auth
-    [-] Password reset via email flow
-    [-] Two-factor authentication (2FA) for admin accounts
+    [x] Password reset via email flow (NEW — Firebase sendPasswordResetEmail)
+    [x] Two-factor authentication (2FA) for admin accounts (NEW — TOTP RFC 6238)
 
   Member Management (apps/api/src/modules/members)
     [x] GET /api/members — paginated member list with filters
@@ -56,38 +56,38 @@ BACKEND — NESTJS API
     [x] DELETE /api/members/:uid — soft delete (status → inactive)
     [x] seed-members.js — seeds all 125 members to Firestore with bcrypt hash
     [x] add-member.js — interactive/CLI script to add one member at a time
-    [-] Member search by name, pillar, or generation
-    [-] Export member list to CSV from admin panel
+    [x] Member search by name, pillar, or generation (NEW)
+    [x] Export member list to CSV from admin panel (NEW)
 
   XP and Leaderboard (apps/api/src/modules/xp)
     [x] XP calculation and increment endpoint
     [x] Level computation from XP total
     [x] Leaderboard query with Redis caching (TTL 60s)
     [~] XP history per member
-    [-] XP decay / season reset logic
-    [-] Bonus XP for event attendance streaks
+    [x] XP decay / season reset logic (NEW — configurable %)
+    [x] Bonus XP for event attendance streaks (NEW — 4 tiers)
 
   Attendance (apps/api/src/modules/attendance)
     [x] QR code scan endpoint (idempotent — safe for retry) (UPDATED)
     [x] Attendance record creation
     [x] Attendance history per member
-    [-] Attendance report export (PDF or CSV)
-    [-] Manual attendance input by trainer
-    [-] Late check-in penalty logic
+    [x] Attendance report export (CSV) (NEW)
+    [x] Manual attendance input by trainer (NEW)
+    [x] Late check-in penalty logic (NEW — -2 XP per 15min late)
 
   Events (apps/api/src/modules/events)
     [x] Event creation and listing
     [x] Event detail and attendance linking
     [-] Event reminder notification (push/email)
-    [-] Recurring event support
+    [x] Recurring event support (NEW — weekly/biweekly/monthly)
 
   News (apps/api/src/modules/news)
     [x] Article creation, update, delete
     [x] Published/draft toggle
     [x] Slug generation
     [~] Image upload via Cloudinary for article cover
-    [-] Article categories and tags
-    [-] Search articles by keyword
+    [x] Article categories and tags (ALREADY IMPLEMENTED)
+    [x] Search articles by keyword (ALREADY IMPLEMENTED)
 
   Notifications (apps/api/src/modules/notifications)
     [x] Notification creation endpoint
@@ -98,7 +98,7 @@ BACKEND — NESTJS API
   Media (apps/api/src/modules/media)
     [x] Upload to Cloudinary via upload_stream
     [x] Delete media from Cloudinary
-    [-] Media gallery paginated listing
+    [x] Media gallery paginated listing (NEW)
     [-] Video upload support
 
   Badges (apps/api/src/modules/badges)
@@ -140,7 +140,7 @@ BACKEND — NESTJS API
     [x] User History — event and activity timeline
     [x] Pillar Levels — per-pillar XP level tracking
     [x] Cyber Defense module structure
-    [-] Leave request system (izin tidak hadir)
+    [x] Leave request system (izin tidak hadir) (ALREADY IMPLEMENTED)
 
 ---
 
@@ -167,15 +167,15 @@ FRONTEND — NEXT.JS WEB
   Authentication (apps/web/src/app/login)
     [x] Login page with Firebase Auth
     [x] Login via NEWGAME Member ID (NEW)
-    [x] 3-tab login: Email / Member ID / Daftar (NEW)
-    [x] Registration tab with member verification flow
+    [x] 2-tab login: Login (Email+MemberID+Google) / Daftar (UPDATED v0.1.5)
+    [x] Registration tab with member verification flow + duplicate detection (UPDATED)
     [x] Google OAuth login button
     [x] Zustand auth store with IndexedDB cache (instant session restore)
     [x] Fix post-login redirect (ng-just-logged-in sessionStorage flag)
     [x] Dashboard layout debounced redirect (1.2–2.5s) → /login not /landing
     [x] Root page Firebase timeout extended 600ms → 1500ms
     [~] Better Auth session fully replacing Firebase on frontend
-    [-] Forgot password page
+    [x] Forgot password inline flow (NEW — in login tab)
     [-] Email verification resend button
 
   Dashboard (apps/web/src/app/(dashboard)/dashboard)
@@ -276,8 +276,8 @@ FRONTEND — NEXT.JS WEB
         [x] SVG countdown ring (gold→red color shift)
         [x] AbortController cleanup, tab visibility handling
         [x] Framer Motion animated dialog
-    [-] Toast queue system (multiple stacked toasts)
-    [-] Global search component (Cmd+K / Ctrl+K)
+    [x] Toast queue system (multiple stacked toasts) (NEW)
+    [x] Global search component (Cmd+K / Ctrl+K) (NEW)
     [-] Keyboard shortcut system
 
 ---
@@ -329,4 +329,4 @@ PENDING FROM PREVIOUS SESSIONS
 
 ---
 
-NEWGAME v0.1.4 — UKM Game Development, Universitas Andalas
+NEWGAME v0.1.5 — UKM Game Development, Universitas Andalas

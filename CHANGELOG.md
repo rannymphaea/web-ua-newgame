@@ -4,6 +4,45 @@ Catatan lengkap perjalanan pengembangan platform NEWGAME UKM Game Development Un
 
 ---
 
+### v0.1.5 — 14 Juni 2026
+
+#### Login & Auth
+- **Login tabs merged**: 3 tabs (Email/MemberID/Daftar) → 2 tabs (Login/Daftar)
+- Login tab now has Email/Member ID toggle + Google sign-in in one view
+- **Forgot password flow** — inline Firebase sendPasswordResetEmail
+- **Duplicate registration guard** — detects email-already-in-use and memberId already registered
+- **2FA for admin accounts** — TOTP RFC 6238, setup/verify/validate/disable endpoints
+  - Pure Node.js crypto implementation (no external TOTP library)
+  - QR code otpauth URI generation for Google Authenticator
+
+#### Backend Features
+- **Member search** — search by name, pillar, or generation (query params)
+- **Generation filter** — NG1xxx = GEN 1, NG2xxx = GEN 2
+- **Export members CSV** — `GET /members/export/csv` with division/status/generation filters
+- **XP season reset** — `POST /xp/season-reset` with configurable decay percentage
+- **XP streak bonus** — `POST /xp/streak-bonus/:userId` with 4 tiers (3/7/14/30 days)
+- **Attendance export CSV** — `GET /attendance/export/csv` with event/date filters
+- **Manual attendance input** — `POST /attendance/manual` for trainers (quest keeper+)
+- **Late check-in penalty** — automatic -2 XP per 15min late (max -10)
+- **Recurring events** — weekly/biweekly/monthly with auto-generation of future instances
+- **Media gallery pagination** — `GET /media?page=&limit=` support
+
+#### Frontend Features
+- **Global search (Cmd+K)** — full-page search modal with arrow key navigation
+- **Toast queue system** — stacked toasts (max 5), auto-dismiss, slide-in animation
+- **ToastProvider** context — `useToast()` hook with `showError()` / `showSuccess()`
+
+#### Infrastructure
+- **Docker Compose** — full-stack local dev setup (API + Web + Redis)
+- **Dockerfiles** — separate Dockerfiles for API (NestJS) and Web (Next.js)
+
+#### Documentation
+- **DESIGN.md** — comprehensive platform design document
+  - Architecture diagram, design system tokens, page inventory
+  - Role hierarchy, auth flow diagram, 4-batch implementation plan
+
+---
+
 ### v0.1.4 -- 13 Juni 2026
 
 #### Fix Registrasi & Login

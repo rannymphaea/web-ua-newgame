@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { TwoFactorService } from './two-factor.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -8,7 +9,10 @@ import { RateLimitGuard, RateLimit } from '../../common/guards/rate-limit.guard'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private twoFactorService: TwoFactorService,
+  ) {}
 
   /** POST /api/auth/verify-member — verifikasi Member ID + kode akses sebelum registrasi */
   @Post('verify-member')
@@ -87,5 +91,45 @@ export class AuthController {
     @Body() body: { email: string; password: string; displayName: string; division?: string },
   ) {
     return this.authService.registerAdmin(body);
+  }
+
+  // ── 2FA Endpoints ─────────────────────────────────────────
+
+  /** POST /api/auth/2fa/setup — Generate TOTP secret */
+  @Post('2fa/setup')
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('admin')
+  async twoFactorSetup(@CurrentUser() user: any) {
+    return this.twoFactorService.setup(user.uid);
+  }
+
+  /** POST /api/auth/2fa/verify — Verify code and enable 2FA */
+  @Post('2fa/verify')
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('admin')
+  async twoFactorVerify(@CurrentUser() user: any, @Body() body: { code: string }) {
+    return this.twoFactorService.verify(user.uid, body.code);
+  }
+
+  /** POST /api/auth/2fa/validate — Validate TOTP on login */
+  @Post('2fa/validate')
+  @UseGuards(FirebaseAuthGuard)
+  async twoFactorValidate(@CurrentUser() user: any, @Body() body: { code: string }) {
+    return this.twoFactorService.validate(user.uid, body.code);
+  }
+
+  /** POST /api/auth/2fa/disable — Disable 2FA */
+  @Post('2fa/disable')
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('admin')
+  async twoFactorDisable(@CurrentUser() user: any, @Body() body: { code: string }) {
+    return this.twoFactorService.disable(user.uid, body.code);
+  }
+
+  /** GET /api/auth/2fa/status — Check if 2FA enabled */
+  @Get('2fa/status')
+  @UseGuards(FirebaseAuthGuard)
+  async twoFactorStatus(@CurrentUser() user: any) {
+    return this.twoFactorService.status(user.uid);
   }
 }

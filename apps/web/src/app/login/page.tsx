@@ -213,7 +213,16 @@ export default function LoginPage() {
       setSuccess('Pendaftaran berhasil! Cek email kamu untuk verifikasi sebelum login.');
       setMode('login');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Pendaftaran gagal');
+      const msg = err instanceof Error ? err.message : 'Pendaftaran gagal';
+      if (msg.includes('email-already-in-use')) {
+        setError('Email ini sudah terdaftar. Gunakan email lain atau login dengan akun yang ada.');
+      } else if (msg.includes('sudah terdaftar')) {
+        setError('Member ID ini sudah digunakan untuk registrasi. Jika ini akun kamu, silakan login.');
+      } else if (msg.includes('weak-password')) {
+        setError('Password terlalu lemah. Gunakan minimal 6 karakter.');
+      } else {
+        setError(msg);
+      }
     } finally { setLoading(false); }
   }
 

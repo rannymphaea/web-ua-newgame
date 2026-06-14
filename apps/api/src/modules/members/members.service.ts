@@ -16,7 +16,7 @@ export class MembersService {
     private readonly vault:    UserVaultService,
   ) {}
 
-  async list(opts: { page: number; limit: number; search?: string; division?: string; role?: string; status?: string }) {
+  async list(opts: { page: number; limit: number; search?: string; division?: string; role?: string; status?: string; generation?: string }) {
     try {
       const db = this.firebase.firestore;
       let q: FirebaseFirestore.Query = db.collection('users');
@@ -27,6 +27,15 @@ export class MembersService {
 
       const snap = await q.get();
       let docs   = snap.docs.slice(0, opts.limit).map(d => ({ uid: d.id, ...d.data() }));
+
+      // Generation filter — NG1xxxx = GEN 1, NG2xxxx = GEN 2
+      if (opts.generation) {
+        const genPrefix = opts.generation === 'GEN 1' ? 'NG1' : opts.generation === 'GEN 2' ? 'NG2' : '';
+        if (genPrefix) {
+          docs = docs.filter(d => (d as any).memberId?.startsWith(genPrefix));
+        }
+      }
+
       if (opts.search) {
         const s = opts.search.toLowerCase();
         docs = docs.filter(d => JSON.stringify(d).toLowerCase().includes(s));
@@ -36,6 +45,32 @@ export class MembersService {
       this.logger.error('Members list failed', err);
       return { ok: false, error: String(err), data: [], page: opts.page, limit: opts.limit, hasMore: false };
     }
+  }
+
+  async exportCsv(opts: { division?: string; status?: string; generation?: string }) {
+    const db = this.firebase.firestore;
+    let q: FirebaseFirestore.Query = db.collection('users');
+    if (opts.division) q = q.where('division', '==', opts.division);
+    if (opts.status)   q = q.where('status',   '==', opts.status);
+    q = q.orderBy('name', 'asc');
+
+    const snap = await q.get();
+    let docs = snap.docs.map(d => ({ uid: d.id, ...d.data() as Record<string, any> }));
+
+    // Generation filter
+    if (opts.generation) {
+      const genPrefix = opts.generation === 'GEN 1' ? 'NG1' : opts.generation === 'GEN 2' ? 'NG2' : '';
+      if (genPrefix) docs = docs.filter(d => d.memberId?.startsWith(genPrefix));
+    }
+
+    const headers = ['Member ID', 'Name', 'Email', 'Division', 'Role', 'Status', 'XP', 'Attendance'];
+    const rows = docs.map(d => [
+      d.memberId || '', d.name || d.displayName || '', d.email || '',
+      d.division || '', d.role || 'member', d.status || 'active',
+      d.xpCache || 0, d.attendanceCount || 0,
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+    return { csv: [headers.join(','), ...rows].join('\n'), count: docs.length };
   }
 
   async getOne(uid: string) {
