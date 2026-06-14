@@ -200,30 +200,101 @@ TODO.md (file ini), MIGRATION.md, DESIGN.md.
 
 ---
 
-ACTION ITEMS — WAJIB DILAKUKAN MANUAL
+ITEM PENDING — BISA DIKERJAKAN AI (v0.1.6+)
 
-  [!] Jalankan seed-members.js sekali di Firestore production sebelum anggota bisa registrasi
-      Command: node apps/api/src/scripts/seed-members.js
+  Backend:
+    [-] WebSocket push notifications (real-time)
+    [-] Email notification integration (SendGrid/Nodemailer)
+    [-] Event reminder notification (push/email, terjadwal)
+    [-] Video upload support (Cloudinary video)
+    [-] Automatic badge trigger logic (streak absensi, XP milestone)
+    [-] Semantic news search via vector similarity (Milvus)
+    [-] Member recommendation engine (AI/ML)
+    [-] Export XP history sebagai spreadsheet (CSV/XLSX)
+    [-] Staging environment terpisah dari production (vercel env)
 
-  [!] Isi dan distribusikan MEMBER_CREDENTIALS.md ke semua anggota yang belum registrasi
+  Frontend:
+    [-] Article search UI (backend sudah ada, tinggal frontend)
+    [-] Related articles sidebar
+    [-] Member search by name UI + click-through profile
+    [-] Calendar: event display on dates + add event (admin)
+    [-] Logs: filter by type/date + export CSV
+    [-] Weekly activity heatmap (dashboard)
+    [-] Emergency announcement banner (admin broadcast)
+    [-] Leaderboard: generation filter + season filter + export image
+    [-] Badge detail modal + progress indicator
+    [-] Email verification resend button
+    [-] Internationalization (EN/ID toggle)
+    [-] SEO meta tags + Open Graph images
+    [-] API Postman/Insomnia collection export
+    [-] Deployment runbook (Vercel + Neon + Upstash)
 
-  [!] Pastikan Cloudinary credentials di apps/api/.env valid sebelum upload/media berfungsi
+---
 
-  [!] Tambahkan Google OAuth redirect URIs di Google Cloud Console:
-      - http://localhost:3000/api/auth/callback/google (development)
-      - https://unandnewgame-tan.vercel.app/api/auth/callback/google (production)
+ITEM PENDING — HARUS DILAKUKAN MANUAL (Tidak Bisa Otomatis)
 
-  [!] Jalankan Prisma migration di production database
-      Command: npx prisma migrate deploy
+  Alasan: butuh akses credential, Google Cloud Console, database production,
+  atau distribusi fisik ke anggota. AI tidak bisa melakukan ini.
 
-  [!] Tambahkan DATABASE_URL sebagai GitHub Repository Secret untuk backup otomatis
+  [!] SEED FIRESTORE
+      Jalankan SEKALI di komputer dengan akses service account production:
+      > node apps/api/src/scripts/seed-members.js
+      Tanpa ini, tidak ada anggota yang bisa registrasi.
 
-  [!] Update role names di Firestore: superadmin → code commander, presiden → pixel presiden
-      Command: node scripts/migrate-firestore.mjs --collection users --dry-run
+  [!] MEMBER CREDENTIALS
+      Isi MEMBER_CREDENTIALS.md dengan data tiap anggota lalu distribusikan
+      secara fisik atau via grup WA/Discord. Setiap anggota butuh Member ID + Kode Akses.
 
-  [~] Flutter submodule masih embedded repo — pertimbangkan:
-      git rm --cached flutter && tambahkan sebagai git submodule resmi
+  [!] CLOUDINARY ENV
+      Isi di apps/api/.env (dan Vercel environment variables):
+        CLOUDINARY_CLOUD_NAME=...
+        CLOUDINARY_API_KEY=...
+        CLOUDINARY_API_SECRET=...
+      Tanpa ini: upload foto, media gallery, dan cover artikel tidak berfungsi.
+
+  [!] GOOGLE OAUTH REDIRECT URI
+      Buka Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client
+      Tambahkan Authorized redirect URIs:
+        http://localhost:3000/api/auth/callback/google      (development)
+        https://unandnewgame-tan.vercel.app/api/auth/callback/google  (production)
+
+  [!] PRISMA MIGRATION (production DB)
+      Jalankan di mesin dengan DATABASE_URL production:
+      > npx prisma migrate deploy
+      Wajib sebelum fitur yang bergantung pada PostgreSQL bisa berjalan.
+
+  [!] GITHUB SECRET — DATABASE_URL
+      Buka: github.com/rannymphaea/web-ua-newgame → Settings → Secrets → Actions
+      Tambahkan: DATABASE_URL = (connection string Neon/Supabase production)
+      Mengaktifkan backup otomatis via .github/workflows/backup.yml
+
+  [!] FIRESTORE ROLE MIGRATION
+      Update role lama ke nama baru di dokumen user Firestore:
+        superadmin    → code commander
+        presiden      → pixel presiden
+        pengurus      → member
+      Lakukan dry-run dulu:
+      > node scripts/migrate-firestore.mjs --collection users --dry-run
+      Lalu jalankan tanpa --dry-run jika hasilnya benar.
+
+  [!] FLUTTER SUBMODULE (opsional)
+      Flutter app saat ini embedded repo (bukan submodule resmi).
+      Jika ingin tracking yang benar:
+      > git rm --cached tools/mobile-simulator
+      > git submodule add <url> tools/mobile-simulator
+
+  [-] PQCrypto — post-quantum cryptography
+      Interface placeholder sudah ada. Implementasi butuh library eksternal
+      (liboqs atau serupa) dan keputusan arsitektur — diskusikan sebelum implementasi.
+
+  [-] Automated secret rotation via CI/CD
+      Butuh akses ke Vault/AWS Secrets Manager/GCP Secret Manager dan
+      integrasi pipeline CI/CD — konfigurasi manual di cloud provider.
+
+  [-] Anomaly alerting threshold
+      Butuh integrasi PagerDuty/OpsGenie/email alert — konfigurasi di platform monitoring.
 
 ---
 
 NEWGAME v0.1.5 — UKM Game Development, Universitas Andalas
+Last updated: 15 Juni 2026
