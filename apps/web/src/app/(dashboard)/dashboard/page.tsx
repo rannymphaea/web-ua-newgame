@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import { api } from '@/lib/api';
-import { AnnouncementBanner } from '@/components/ui/AnnouncementBanner';
+import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 
 /* Lazy-load berat â€” tidak block first paint */
 const NewsSlider = dynamic(
