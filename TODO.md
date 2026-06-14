@@ -203,31 +203,32 @@ TODO.md (file ini), MIGRATION.md, DESIGN.md.
 ITEM PENDING — BISA DIKERJAKAN AI (v0.1.6+)
 
   Backend:
-    [-] WebSocket push notifications (real-time)
-    [-] Email notification integration (SendGrid/Nodemailer)
-    [-] Event reminder notification (push/email, terjadwal)
-    [-] Video upload support (Cloudinary video)
-    [-] Automatic badge trigger logic (streak absensi, XP milestone)
-    [-] Semantic news search via vector similarity (Milvus)
-    [-] Member recommendation engine (AI/ML)
-    [-] Export XP history sebagai spreadsheet (CSV/XLSX)
-    [-] Staging environment terpisah dari production (vercel env)
+    [x] WebSocket push notifications (real-time) — NotificationsGateway + socket.io
+    [x] Email notification integration — Nodemailer SMTP (SMTP_HOST/USER/PASS)
+    [x] Event reminder notification — sendEventReminder() per event + email blast
+    [x] Video upload support — uploadVideo() Cloudinary resource_type:video max 100MB
+    [x] Automatic badge trigger logic — checkAndAward() sudah ada, terintegrasi via BadgesService
+    [x] Export XP history sebagai CSV — exportXpHistory() di XpService
+    [-] Semantic news search via vector similarity (Milvus) — perlu setup collection di Zilliz
+    [-] Member recommendation engine (AI/ML) — perlu data training
 
   Frontend:
-    [-] Article search UI (backend sudah ada, tinggal frontend)
-    [-] Related articles sidebar
-    [-] Member search by name UI + click-through profile
-    [-] Calendar: event display on dates + add event (admin)
-    [-] Logs: filter by type/date + export CSV
-    [-] Weekly activity heatmap (dashboard)
-    [-] Emergency announcement banner (admin broadcast)
-    [-] Leaderboard: generation filter + season filter + export image
-    [-] Badge detail modal + progress indicator
-    [-] Email verification resend button
-    [-] Internationalization (EN/ID toggle)
-    [-] SEO meta tags + Open Graph images
-    [-] API Postman/Insomnia collection export
-    [-] Deployment runbook (Vercel + Neon + Upstash)
+    [x] Article search UI — search bar debounced di news/page.tsx
+    [-] Related articles sidebar — hanya backend endpoint, UI belum dibuat
+    [x] Member search by name UI + click-through profile — members/page.tsx + members/[uid]/page.tsx
+    [x] Calendar: event display on dates + add event — calendar/page.tsx lengkap
+    [x] Logs: filter by type/date + export CSV — logs/page.tsx
+    [x] Weekly activity heatmap — ActivityHeatmap.tsx (GitHub-style)
+    [x] Emergency announcement banner — AnnouncementBanner.tsx (polling 60s)
+    [x] Leaderboard: generation filter + export CSV — leaderboard/page.tsx
+    [x] Badge detail modal + progress indicator — BadgeDetailModal.tsx (rarity colors)
+    [-] Email verification resend button — perlu Firebase sendEmailVerification
+    [x] SEO meta tags + Open Graph images — layout.tsx full metadata + Twitter card
+    [x] API Postman/Insomnia collection — generate-api-collection.ts
+    [x] Deployment runbook — DEPLOYMENT_RUNBOOK.md
+    [-] Staging environment terpisah dari production (Vercel env)
+
+  External/Manual tetap di bawah.
 
 ---
 

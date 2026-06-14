@@ -1,137 +1,145 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 
-interface Log {
-  id?: string;
-  timestamp: unknown;
+interface LogEntry {
+  id: string;
+  userId: string;
   action: string;
-  userId?: string;
-  eventName?: string;
-  result?: string;
-  targetUserId?: string;
+  result: string;
+  timestamp: { _seconds: number };
+  details?: Record<string, unknown>;
 }
 
-const ACTION_LABELS: Record<string, string> = {
-  attend:         '📋 Attendance',
-  login:          '🔑 Login',
-  leave_approved: '✅ Leave Approved',
-  leave_rejected: '❌ Leave Rejected',
-  xp_edit:        '⚡ XP Edit',
-  role_change:    '🛡️ Role Change',
-  event_created:  '📅 Event Created',
-  event_closed:   '🔒 Event Closed',
-};
-
-function formatTime(ts: unknown): string {
-  if (!ts) return '-';
-  const d = (ts as {toDate?:()=>Date}).toDate
-    ? (ts as {toDate:()=>Date}).toDate()
-    : (ts as {_seconds?:number})._seconds
-      ? new Date((ts as {_seconds:number})._seconds * 1000)
-      : new Date(ts as string);
-  return d.toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-}
+const ACTION_TYPES = [
+  '', 'scan_qr', 'login', 'register', 'create_event', 'close_event',
+  'manual_attendance', 'edit_xp', 'set_role', 'upload_media', 'award_badge',
+];
 
 export default function LogsPage() {
-  const [logs, setLogs]               = useState<Log[]>([]);
-  const [loading, setLoading]          = useState(true);
-  const [actionFilter, setActionFilter] = useState('');
-  const [dateFrom, setDateFrom]        = useState('');
-  const [dateTo, setDateTo]            = useState('');
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState({ action: '', from: '', to: '' });
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
-  useEffect(() => { loadLogs(); }, [actionFilter, dateFrom, dateTo]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function loadLogs() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (actionFilter) params.set('action', actionFilter);
-      if (dateFrom)     params.set('startDate', dateFrom);
-      if (dateTo)       params.set('endDate', dateTo);
-      const qs  = params.toString();
-      const res = await api.get(`/logs${qs ? '?' + qs : ''}`);
-      setLogs((res as {logs?:Log[]})?.logs || (Array.isArray(res) ? res as Log[] : []));
+      const params = new URLSearchParams({ limit: '200' });
+      if (filter.action) params.set('action', filter.action);
+      const res = await api.get(`/logs?${params}`) as LogEntry[] | { logs: LogEntry[] };
+      let data = Array.isArray(res) ? res : (res as any).logs || [];
+
+      // date filter client-side
+      if (filter.from || filter.to) {
+        data = data.filter((l: LogEntry) => {
+          const ts = l.timestamp?._seconds ? new Date(l.timestamp._seconds * 1000).toISOString() : '';
+          if (filter.from && ts < filter.from) return false;
+          if (filter.to && ts > filter.to + 'T23:59:59') return false;
+          return true;
+        });
+      }
+      setLogs(data);
+      setPage(1);
     } catch { /* ignore */ } finally { setLoading(false); }
+  }, [filter]);
+
+  useEffect(() => { load(); }, []);
+
+  function downloadCsv() {
+    const headers = ['Action', 'User ID', 'Result', 'Timestamp'];
+    const rows = logs.map(l => [
+      l.action, l.userId, l.result,
+      l.timestamp?._seconds ? new Date(l.timestamp._seconds * 1000).toISOString() : '',
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `logs-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
   }
 
-  async function exportLogs() {
-    try {
-      const params = new URLSearchParams();
-      if (actionFilter) params.set('action', actionFilter);
-      if (dateFrom)     params.set('startDate', dateFrom);
-      if (dateTo)       params.set('endDate', dateTo);
-      const qs   = params.toString();
-      const data = await api.get(`/logs/export${qs ? '?' + qs : ''}`);
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url; a.download = `logs-${new Date().toISOString().split('T')[0]}.json`;
-      a.click(); URL.revokeObjectURL(url);
-    } catch (err: unknown) { alert(err instanceof Error ? err.message : 'Export failed'); }
-  }
+  const paginated = logs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(logs.length / PAGE_SIZE);
 
-  const actions = Object.keys(ACTION_LABELS);
+  function fmt(ts?: { _seconds: number }) {
+    if (!ts?._seconds) return '—';
+    return new Date(ts._seconds * 1000).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+  }
 
   return (
     <div className="animate-fade-in">
-      <div className="flex justify-between items-center mb-lg" style={{flexWrap:'wrap',gap:12}}>
-        <h1 className="font-display text-2xl">System Logs</h1>
-        <button className="btn btn-secondary btn-sm btn-depth" onClick={exportLogs}>
-          <i className="ri-download-2-line" aria-hidden="true" /> Export JSON
+      <div className="flex justify-between items-center mb-lg" style={{ flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 className="font-display text-2xl">Riwayat Aktivitas</h1>
+          <p className="text-muted text-sm">{logs.length} entri log ditemukan</p>
+        </div>
+        <button className="btn btn-secondary btn-sm btn-depth" onClick={downloadCsv} disabled={logs.length === 0}>
+          <i className="ri-download-2-line" /> Export CSV
         </button>
       </div>
 
-      {/* Filters */}
+      {/* Filter */}
       <div className="card mb-lg">
-        <div className="grid-3" style={{gap:12}}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 10 }}>
           <div>
-            <label className="label" htmlFor="log-action">Action</label>
-            <select id="log-action" className="input select" value={actionFilter} onChange={e => setActionFilter(e.target.value)}>
-              <option value="">All actions</option>
-              {actions.map(a => <option key={a} value={a}>{ACTION_LABELS[a] || a}</option>)}
+            <label className="label" htmlFor="log-action">Tipe Aksi</label>
+            <select id="log-action" className="input" value={filter.action} onChange={e => setFilter(f => ({ ...f, action: e.target.value }))}>
+              {ACTION_TYPES.map(a => <option key={a} value={a}>{a || 'Semua'}</option>)}
             </select>
           </div>
           <div>
-            <label className="label" htmlFor="log-from">From</label>
-            <input id="log-from" type="date" className="input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+            <label className="label" htmlFor="log-from">Dari</label>
+            <input id="log-from" type="date" className="input" value={filter.from} onChange={e => setFilter(f => ({ ...f, from: e.target.value }))} />
           </div>
           <div>
-            <label className="label" htmlFor="log-to">To</label>
-            <input id="log-to" type="date" className="input" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            <label className="label" htmlFor="log-to">Sampai</label>
+            <input id="log-to" type="date" className="input" value={filter.to} onChange={e => setFilter(f => ({ ...f, to: e.target.value }))} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button className="btn btn-secondary btn-depth w-full" onClick={load} disabled={loading}>
+              {loading ? <span className="spinner spinner-sm" /> : <i className="ri-filter-line" />} Filter
+            </button>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      {loading ? (
-        <div className="card">{[1,2,3,4,5].map(i => <div key={i} className="skeleton mb-md" style={{height:40}} />)}</div>
-      ) : (
-        <div className="card" style={{padding:0}}>
-          <div className="table-container" style={{border:'none'}}>
-            <table className="table">
-              <thead><tr><th>Time</th><th>Action</th><th>User</th><th>Details</th></tr></thead>
-              <tbody>
-                {logs.map((log, i) => (
-                  <tr key={log.id || i}>
-                    <td><span className="text-xs text-muted">{formatTime(log.timestamp)}</span></td>
-                    <td><span className="badge badge-gray">{ACTION_LABELS[log.action] || log.action}</span></td>
-                    <td><span className="text-sm">{log.userId?.substring(0, 8)}...</span></td>
-                    <td>
-                      <span className="text-xs text-muted">
-                        {log.eventName && `Event: ${log.eventName}`}
-                        {log.result && ` | ${log.result}`}
-                        {log.targetUserId && ` | Target: ${log.targetUserId.substring(0,8)}...`}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {logs.length === 0 && <tr><td colSpan={4} className="text-center text-muted p-lg">No logs found</td></tr>}
-              </tbody>
-            </table>
-          </div>
+      <div className="card" style={{ padding: 0 }}>
+        <div className="table-container" style={{ border: 'none' }}>
+          <table className="table">
+            <thead>
+              <tr><th>Aksi</th><th>User</th><th>Result</th><th>Waktu</th></tr>
+            </thead>
+            <tbody>
+              {paginated.length === 0 && !loading && (
+                <tr><td colSpan={4} className="text-center text-muted p-xl">Tidak ada log</td></tr>
+              )}
+              {paginated.map(l => (
+                <tr key={l.id}>
+                  <td><code className="text-xs">{l.action}</code></td>
+                  <td><code className="text-xs">{l.userId?.slice(0, 8)}…</code></td>
+                  <td><span className={l.result === 'success' ? 'text-green text-sm' : 'text-red text-sm'}>{l.result}</span></td>
+                  <td className="text-xs text-muted">{fmt(l.timestamp)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+        {totalPages > 1 && (
+          <div className="flex gap-sm p-md" style={{ justifyContent: 'center', borderTop: '1px solid var(--clr-border)' }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+              <i className="ri-arrow-left-s-line" />
+            </button>
+            <span className="text-sm text-muted" style={{ padding: '6px 12px' }}>{page}/{totalPages}</span>
+            <button className="btn btn-ghost btn-sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+              <i className="ri-arrow-right-s-line" />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

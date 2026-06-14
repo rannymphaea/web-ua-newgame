@@ -182,4 +182,33 @@ export class XpService {
       newXP,
     };
   }
+  /**
+   * Export XP history per user as CSV
+   */
+  async exportXpHistory(opts: { userId?: string; from?: string; to?: string }) {
+    const db = this.firebaseService.firestore;
+    let q: FirebaseFirestore.Query = db.collection('xpHistory').orderBy('timestamp', 'desc');
+    if (opts.userId) q = q.where('userId', '==', opts.userId);
+
+    const snap = await q.limit(500).get();
+    let docs = snap.docs.map(d => ({ id: d.id, ...d.data() as Record<string, any> }));
+
+    if (opts.from || opts.to) {
+      docs = docs.filter(d => {
+        const ts = d.timestamp?.toDate?.()?.toISOString() || '';
+        if (opts.from && ts < opts.from) return false;
+        if (opts.to && ts > opts.to) return false;
+        return true;
+      });
+    }
+
+    const headers = ['User ID', 'Event ID', 'Change', 'Reason', 'Changed By', 'Timestamp'];
+    const rows = docs.map(d => [
+      d.userId || '', d.eventId || '', d.change || 0,
+      d.reason || '', d.changedBy || '',
+      d.timestamp?.toDate?.()?.toISOString() || '',
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+    return { csv: [headers.join(','), ...rows].join('\n'), count: docs.length };
+  }
 }

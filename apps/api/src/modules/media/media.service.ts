@@ -195,17 +195,28 @@ export class MediaService {
     };
   }
 
-  /** Ambil semua media dengan filter opsional (admin). */
-  async getAll(filters?: { usage?: string; mimeType?: string; limit?: number }) {
+  /** Ambil semua media dengan filter + paginasi (admin). */
+  async getAll(filters?: { usage?: string; mimeType?: string; limit?: number; page?: number }) {
     const db  = this.firebase.getFirestore();
     let   ref: FirebaseFirestore.Query = db.collection('media');
 
     if (filters?.usage) ref = ref.where('usage', '==', filters.usage);
+    if (filters?.mimeType) ref = ref.where('mimeType', '==', filters.mimeType);
 
-    ref = ref.orderBy('createdAt', 'desc').limit(filters?.limit || 50);
+    const limit = filters?.limit || 20;
+    const page  = Math.max(1, filters?.page || 1);
+    const offset = (page - 1) * limit;
+
+    ref = ref.orderBy('createdAt', 'desc').limit(limit);
+    if (offset > 0) ref = ref.offset(offset);
 
     const snap = await ref.get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return {
+      data: snap.docs.map(d => ({ id: d.id, ...d.data() })),
+      page,
+      limit,
+      hasMore: snap.size === limit,
+    };
   }
 
   /** Hapus media dari Cloudinary dan Firestore. */
@@ -239,5 +250,55 @@ export class MediaService {
 
     await ref.update({ ...data, updatedAt: new Date() });
     return { id: mediaId, ...data };
+  }
+
+  /**
+   * Upload video ke Cloudinary (multipart).
+   * Mendukung mp4, webm, mov — max 100MB.
+   */
+  async uploadVideo(
+    uploaderId: string,
+    file: Express.Multer.File,
+    meta?: { title?: string; tags?: string[] },
+  ) {
+    const ALLOWED_VIDEO = ['video/mp4', 'video/webm', 'video/quicktime', 'video/mpeg'];
+    const VIDEO_MAX = 100 * 1024 * 1024; // 100MB
+
+    if (!ALLOWED_VIDEO.includes(file.mimetype)) {
+      throw new BadRequestException(`Tipe video tidak didukung: ${file.mimetype}`);
+    }
+    if (file.size > VIDEO_MAX) {
+      throw new BadRequestException('Ukuran video melebihi batas 100MB');
+    }
+
+    const url = await new Promise<string>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: `media/videos/${uploaderId}`,
+          resource_type: 'video',
+          chunk_size: 6 * 1024 * 1024, // 6MB chunks
+        },
+        (err, result) => err ? reject(err) : resolve(result.secure_url),
+      );
+      const { Readable: R } = require('stream');
+      R.from(file.buffer).pipe(stream);
+    });
+
+    const db  = this.firebase.getFirestore();
+    const ref = db.collection('media').doc();
+    const doc = {
+      url,
+      filename:   file.originalname,
+      mimeType:   file.mimetype,
+      size:       file.size,
+      usage:      'video' as const,
+      title:      meta?.title || file.originalname,
+      tags:       meta?.tags || [],
+      altText:    '',
+      uploadedBy: uploaderId,
+      createdAt:  new Date(),
+    };
+    await ref.set(doc);
+    return { id: ref.id, ...doc };
   }
 }

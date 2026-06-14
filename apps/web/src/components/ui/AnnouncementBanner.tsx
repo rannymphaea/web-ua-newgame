@@ -1,74 +1,77 @@
 'use client';
 import { useState, useEffect } from 'react';
-
-// ============================================================
-// ANNOUNCEMENT BANNER
-// ============================================================
-// Untuk mengubah pengumuman:
-// 1. Buat dokumen di Firestore collection "announcements"
-//    dengan field: title, message, type (info/warning/urgent), active (boolean)
-// 2. Atau ubah fallback text di bawah ini
-// ============================================================
-
-type AnnouncementType = 'info' | 'warning' | 'urgent';
+import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/lib/api';
 
 interface Announcement {
+  id: string;
   title: string;
-  message: string;
-  type: AnnouncementType;
+  body: string;
+  adminId: string;
+  createdAt: { _seconds: number };
 }
 
-const FALLBACK_ANNOUNCEMENT: Announcement = {
-  title:   'Selamat datang di NEWGAME Portal',
-  message: 'Platform digital organisasi game development Universitas Andalas.',
-  type:    'info',
-};
-
-const BANNER_COLORS: Record<AnnouncementType, { bg: string; border: string; text: string; icon: string }> = {
-  info:    { bg: 'var(--clr-info-bg)',    border: 'var(--clr-info)',    text: 'var(--clr-info)',    icon: 'ri-information-fill' },
-  warning: { bg: 'var(--clr-warning-bg)', border: 'var(--clr-warning)', text: 'var(--clr-warning)', icon: 'ri-alert-fill' },
-  urgent:  { bg: 'var(--clr-danger-bg)',  border: 'var(--clr-danger)',  text: 'var(--clr-danger)',  icon: 'ri-error-warning-fill' },
-};
-
-export function AnnouncementBanner() {
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [dismissed, setDismissed]       = useState(false);
+export default function AnnouncementBanner() {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // TODO: Replace with API call to /api/announcements once collection is set up
-    setAnnouncement(FALLBACK_ANNOUNCEMENT);
+    const load = async () => {
+      try {
+        const res = await api.get('/notifications/broadcasts') as Announcement[];
+        setAnnouncements(Array.isArray(res) ? res : []);
+      } catch { /* ignore */ }
+    };
+    load();
+    const iv = setInterval(load, 60000);
+    return () => clearInterval(iv);
   }, []);
 
-  if (!announcement || dismissed) return null;
+  async function dismiss(id: string) {
+    setDismissed(prev => new Set([...prev, id]));
+    try { await api.post(`/notifications/broadcasts/${id}/dismiss`, {}); } catch { /* ignore */ }
+  }
 
-  const c = BANNER_COLORS[announcement.type] || BANNER_COLORS.info;
+  const visible = announcements.filter(a => !dismissed.has(a.id));
+  if (visible.length === 0) return null;
 
   return (
-    <div
-      role="banner"
-      aria-label="Pengumuman"
-      style={{
-        padding:'12px 20px', marginBottom:20, borderRadius:10,
-        background: c.bg, borderLeft:`3px solid ${c.border}`,
-        display:'flex', alignItems:'center', gap:12,
-      }}
-    >
-      <i className={c.icon} style={{ fontSize:18, color: c.border, flexShrink:0 }} aria-hidden="true" />
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize:13, fontWeight:600, color: c.text, fontFamily:'var(--font-inter)', marginBottom:2 }}>
-          {announcement.title}
-        </p>
-        <p style={{ fontSize:12, color:'var(--clr-text-secondary)', fontFamily:'var(--font-inter)' }}>
-          {announcement.message}
-        </p>
-      </div>
-      <button
-        onClick={() => setDismissed(true)}
-        aria-label="Tutup pengumuman"
-        style={{ background:'none', border:'none', color:'var(--clr-text-secondary)', cursor:'pointer', padding:0, lineHeight:1 }}
-      >
-        <i className="ri-close-line" style={{fontSize:16}} aria-hidden="true" />
-      </button>
+    <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 8000, width: '100%', maxWidth: 600, padding: '0 16px', pointerEvents: 'none' }}>
+      <AnimatePresence>
+        {visible.slice(0, 2).map(ann => (
+          <motion.div
+            key={ann.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            style={{
+              marginBottom: 8, pointerEvents: 'auto',
+              background: 'rgba(15,10,40,0.95)',
+              border: '1px solid var(--clr-danger)',
+              borderRadius: 12, padding: '12px 16px',
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              display: 'flex', gap: 12, alignItems: 'flex-start',
+            }}
+          >
+            <i className="ri-megaphone-fill" style={{ fontSize: 20, color: 'var(--clr-danger)', flexShrink: 0, marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--font-inter)', fontSize: 13, fontWeight: 700, color: 'var(--clr-text-primary)', marginBottom: 2 }}>
+                {ann.title}
+              </div>
+              <div style={{ fontFamily: 'var(--font-inter)', fontSize: 12, color: 'var(--clr-text-secondary)' }}>
+                {ann.body}
+              </div>
+            </div>
+            <button
+              onClick={() => dismiss(ann.id)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--clr-text-secondary)', padding: 4 }}
+            >
+              <i className="ri-close-line" style={{ fontSize: 16 }} />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 }

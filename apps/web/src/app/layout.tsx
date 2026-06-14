@@ -36,26 +36,64 @@ const spaceGrotesk = Space_Grotesk({
   preload: true,
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://unandnewgame-tan.vercel.app';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'NEWGAME',
-    template: '%s | NEWGAME',
+    default: 'NEWGAME — UKM Game Development Unand',
+    template: '%s | NEWGAME Unand',
   },
   description:
-    'NEWGAME Unand — Platform komunitas game development. Absensi, leaderboard, tutorial, dan manajemen anggota.',
-  keywords: ['newgame', 'unand', 'game development', 'community', 'attendance'],
-  authors: [{ name: 'NEWGAME Dev Team' }],
+    'NEWGAME UKM Game Development Universitas Andalas — Platform komunitas gamedev dengan absensi QR, leaderboard XP, tutorial, berita, dan manajemen anggota.',
+  keywords: [
+    'NEWGAME', 'UKM Game Development', 'Universitas Andalas', 'Unand',
+    'game development', 'gamedev', 'komunitas game', 'absensi QR', 'leaderboard',
+    'coding', 'Unity', 'Godot', 'game design', 'Padang',
+  ],
+  authors: [{ name: 'NEWGAME Dev Team', url: SITE_URL }],
+  creator: 'NEWGAME UKM Game Development',
+  publisher: 'Universitas Andalas',
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   manifest: '/manifest.json',
-  icons: { icon: '/logo.png', apple: '/logo.png' },
+  icons: {
+    icon: [
+      { url: '/logo.png', type: 'image/png' },
+    ],
+    apple: '/logo.png',
+    shortcut: '/logo.png',
+  },
   appleWebApp: {
+    capable: true,
     statusBarStyle: 'black-translucent',
     title: 'NEWGAME',
   },
   openGraph: {
-    title: 'NEWGAME',
-    description: 'Platform komunitas game development Universitas Andalas',
     type: 'website',
+    locale: 'id_ID',
+    url: SITE_URL,
+    siteName: 'NEWGAME Unand',
+    title: 'NEWGAME — UKM Game Development Universitas Andalas',
+    description: 'Platform komunitas gamedev dengan absensi QR, leaderboard XP, tutorial game design & programming.',
+    images: [
+      {
+        url: `${SITE_URL}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: 'NEWGAME UKM Game Development Unand',
+      },
+    ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NEWGAME — UKM Game Development Unand',
+    description: 'Platform absensi, leaderboard, dan tutorial gamedev UKM Universitas Andalas.',
+    images: [`${SITE_URL}/og-image.png`],
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+  category: 'education',
 };
 
 export const viewport: Viewport = {

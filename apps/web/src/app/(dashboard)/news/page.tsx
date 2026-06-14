@@ -47,8 +47,9 @@ export default function NewsPage() {
   const [tab, setTab]                 = useState<Tab>('all');
   const [posts, setPosts]             = useState<Post[]>([]);
   const [tutorials, setTutorials]     = useState<Record<string, Post[]>>({});
-  const [loading, setLoading]         = useState(true);
+  const [loading, setLoading]          = useState(true);
   const [selectedPost, setSelectedPost] = useState<Post|null>(null);
+  const [search, setSearch]             = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -92,18 +93,43 @@ export default function NewsPage() {
       </div>
 
       {/* TABS */}
-      <div className="news-tabs-wrap mb-xl">
+      <div className="news-tabs-wrap mb-md">
         {TABS.map(t => (
           <button
             key={t.key}
             className={`news-tab-btn ${tab === t.key ? 'active' : ''}`}
-            onClick={() => setTab(t.key)}
+            onClick={() => { setTab(t.key); setSearch(''); }}
             aria-pressed={tab === t.key}
           >
             <i className={t.icon} style={{fontSize:14}} aria-hidden="true" />
             {t.label}
           </button>
         ))}
+      </div>
+
+      {/* SEARCH BAR */}
+      <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+        <i className="ri-search-line" style={{
+          position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+          color: 'var(--clr-text-secondary)', fontSize: 16, pointerEvents: 'none',
+        }} />
+        <input
+          id="news-search"
+          type="search"
+          className="input"
+          style={{ paddingLeft: 42, width: '100%' }}
+          placeholder="Cari artikel, berita, atau tutorial..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        {search && (
+          <button
+            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--clr-text-secondary)' }}
+            onClick={() => setSearch('')}
+          >
+            <i className="ri-close-line" />
+          </button>
+        )}
       </div>
 
       {loading ? (
