@@ -303,4 +303,63 @@ Apa yang belum diperbaiki di patch ini (direncana ke v0.1.6):
 
 ---
 
+v0.1.5 hotfix -- 15 Juni 2026 -- CSS syntax error + duplikat route
+
+Dua bug diperbaiki:
+
+  CSS syntax error: brace gantung di globals.css baris 2120. Muncul karena
+  editan sebelumnya menyisipkan kode tanpa wrapper media query yang benar.
+  Diperbaiki dengan menghapus brace orphan dan merapikan indentasi blok
+  media query yang berkaitan.
+
+  Build Vercel gagal: error "You cannot use different slug names for the
+  same dynamic path (id !== uid)". Root cause: ada dua folder dynamic route
+  di path yang sama yaitu members/[id] dan members/[uid]. Yang dihapus
+  adalah members/[id] (versi lama, tidak ada interface TypeScript, tidak
+  ada back button, tidak ada XP bar). Dipertahankan members/[uid] yang lebih
+  lengkap. Link di members/page.tsx sudah pakai m.uid || m.id sehingga
+  tidak ada breaking change.
+
+  Duplikat tools simulator: tools/android-demo dan tools/mobile-simulator-web
+  dihapus. Satu-satunya yang dipertahankan adalah tools/mobile-simulator
+  (Flutter multi-platform).
+
+---
+
+v0.1.5 fitur -- 15 Juni 2026 -- Mobile Simulator upgrade
+
+tools/mobile-simulator sepenuhnya dirombak:
+
+  Arsitektur baru: main.dart sekarang menjadi entry point yang mendeteksi
+  platform secara otomatis. Android menjalankan simulator_android.dart
+  (WebView full-screen). Windows desktop menjalankan simulator_windows.dart
+  (phone frame grafis dengan EdgeChromium WebView).
+
+  simulator_android.dart: refaktor dari main.dart lama. Fitur tetap sama:
+  WebView dengan bottom nav 5 item, hamburger drawer seluruh halaman,
+  progress indicator loading, error state dengan retry, server URL dialog
+  untuk ganti IP jika pakai HP fisik via WiFi.
+
+  simulator_windows.dart (baru): jendela desktop berukuran HP. Menampilkan
+  web dalam bingkai phone yang digambar dengan CustomPainter. Sidebar nav
+  di kiri, dropdown device preset (Pixel 7, Galaxy S23, Redmi Note 12,
+  iPhone 14, dll), tombol back/forward/reload, status bar dengan indikator
+  koneksi dan URL path saat ini. Butuh Visual Studio Build Tools untuk
+  dikompilasi.
+
+  window_manager dan webview_windows ditambahkan ke pubspec.yaml.
+
+  run_simulator.ps1 (baru): script PowerShell satu klik yang menjalankan
+  dev server di background, meluncurkan emulator, lalu menjalankan app
+  Flutter. Mendukung parameter -Device dan -NoDevServer.
+
+  README.md diperbarui dengan panduan lengkap: cara install emulator via
+  Android Studio, cara install system image via sdkmanager, cara menjalankan
+  di emulator vs HP fisik, troubleshooting, dan instruksi mode Windows.
+
+  Catatan: flutter run -d windows butuh Visual Studio 2022 dengan workload
+  Desktop development with C++. Tanpa itu, gunakan emulator Android.
+
+---
+
 NEWGAME UKM Game Development, Universitas Andalas

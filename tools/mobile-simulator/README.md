@@ -1,83 +1,109 @@
-# NEWGAME Mobile — Flutter App
+# NEWGAME Mobile Simulator
 
-Aplikasi mobile untuk platform NEWGAME. Menampilkan web app (`localhost:3000`) dalam WebView native Android dengan desain dark theme yang sama.
+Simulator untuk melihat tampilan web NEWGAME di dalam bingkai HP Android langsung dari komputer.
 
-## Fitur
+---
 
-| Fitur | Keterangan |
-|---|---|
-| WebView Android | Menampilkan web app NEWGAME dalam WebView native |
-| Bottom Nav | 5 halaman utama: Landing, Dashboard, Scan, Berita, Profil |
-| Drawer | Menu lengkap semua 11 halaman |
-| Error Handling | Tampilan error jika server tidak berjalan + tombol retry |
-| Server Config | Dialog untuk ganti URL server (emulator vs HP fisik) |
-| Dark Theme | Palet warna sama dengan web (kBg, kGold, kPurple, dsb) |
-| Loading Bar | Progress indicator saat halaman loading |
-
-## Cara Pakai
+## Cara menjalankan (Windows, tanpa install Visual Studio)
 
 ### Prasyarat
 
-1. Flutter SDK 3.16+ terinstall
-2. Android SDK / emulator
+1. Flutter SDK sudah ada (bundled di `../../flutter/`)
+2. Android Studio sudah terinstall
 3. Dev server berjalan: `cd apps/web && npm run dev`
 
-### Jalankan di Emulator Android
+### Langkah 1 — Buat Android Emulator (sekali saja)
+
+Buka **Android Studio → Device Manager → Create Device**:
+
+- Hardware: Pixel 7
+- System Image: API 35, Google APIs, x86_64
+- AVD Name: `Pixel_7_API35`
+- RAM: 2048 MB, Storage: 8 GB
+- Graphics: Hardware - GLES 2.0
+
+Atau via terminal (jika sdkmanager sudah di PATH):
+
+```
+sdkmanager "system-images;android-35;google_apis;x86_64"
+avdmanager create avd -n Pixel_7_API35 -k "system-images;android-35;google_apis;x86_64" -d pixel_7
+```
+
+### Langkah 2 — Jalankan simulator
 
 ```bash
 cd tools/mobile-simulator
 
-# Install dependencies
-flutter pub get
+# Lihat emulator yang tersedia
+flutter emulators
 
-# Jalankan
-flutter run
+# Jalankan emulator
+flutter emulators --launch Pixel_7_API35
+
+# Tunggu emulator muncul di layar (~30 detik)
+# Lalu jalankan app
+flutter run -d emulator-5554
 ```
 
-Emulator menggunakan `10.0.2.2:3000` untuk mengakses `localhost` PC.
+Dev server harus berjalan di `http://localhost:3000`.
+Emulator otomatis menggunakan `10.0.2.2` sebagai alamat localhost PC.
 
-### Jalankan di HP Fisik (via USB)
+### Langkah 3 — Navigasi
 
-1. Aktifkan **Developer Mode** dan **USB Debugging** di HP
-2. Hubungkan HP ke PC via USB
-3. Cari IP PC: `ipconfig` → cari IPv4 di WiFi yang sama
-4. Jalankan:
+Setelah app muncul di emulator:
+
+- **Bottom nav**: Landing, Dashboard, Scan QR, Berita, Profil
+- **Hamburger (≡)**: semua halaman tersedia
+- **Settings (⚙)**: ganti IP jika pakai HP fisik via WiFi
+
+---
+
+## Struktur file
+
+```
+lib/
+  main.dart              - Entry point, routing per platform
+  simulator_android.dart - Full-screen WebView untuk Android/Emulator
+  simulator_windows.dart - Phone-frame window untuk Windows desktop*
+```
+
+*Windows desktop butuh Visual Studio Build Tools untuk di-build.
+Gunakan Android emulator sebagai alternatif yang lebih mudah.
+
+---
+
+## Troubleshooting
+
+**App tidak bisa connect ke web:**
+- Pastikan `npm run dev` sudah jalan di `apps/web`
+- Emulator gunakan `10.0.2.2:3000` (bukan localhost)
+- HP fisik via WiFi: buka Settings di app → ganti ke IP PC kamu
+
+**Emulator sangat lambat:**
+- Aktifkan HAXM / Hyper-V di BIOS
+- Atau gunakan x86_64 image (bukan ARM)
+- Turunkan RAM emulator ke 1024 MB jika PC low-end
+
+**`flutter run` tidak menemukan device:**
+```bash
+flutter devices   # lihat device yang terdeteksi
+flutter emulators # lihat emulator yang tersedia
+```
+
+---
+
+## Mode Windows desktop (opsional)
+
+Butuh **Visual Studio 2022** dengan workload "Desktop development with C++".
 
 ```bash
-flutter run
+flutter build windows --debug
+flutter run -d windows
 ```
 
-5. Di app, tekan ikon gear (⚙️) → ganti URL ke `http://[IP_PC]:3000`
+Menampilkan jendela berukuran HP dengan phone frame grafis dan sidebar navigasi.
+Menggunakan EdgeChromium WebView (butuh Microsoft Edge WebView2 Runtime).
 
-### Preview di Chrome (Web Simulator)
+---
 
-Versi web simulator lama masih bisa dijalankan terpisah jika dibutuhkan.
-
-## Struktur
-
-```
-tools/mobile-simulator/
-├── lib/
-│   └── main.dart          # App utama (WebView + navigation)
-├── android/               # Platform Android
-│   └── app/src/main/
-│       └── AndroidManifest.xml  # Internet + cleartext permission
-├── pubspec.yaml           # Dependencies (webview_flutter, connectivity_plus)
-└── README.md              # Dokumen ini
-```
-
-## Konfigurasi URL
-
-| Skenario | URL |
-|---|---|
-| Emulator Android | `http://10.0.2.2:3000` (default) |
-| HP fisik di WiFi yang sama | `http://[IP_PC]:3000` |
-| Production | `https://unandnewgame-tan.vercel.app` |
-
-URL bisa diubah via dialog Settings (ikon gear) di app bar.
-
-## Catatan
-
-- `android:usesCleartextTraffic="true"` diperlukan untuk akses HTTP localhost
-- WebView memblokir navigasi ke URL eksternal (hanya localhost/LAN)
-- Dark mode otomatis di-inject via `localStorage.setItem('ng-theme', 'dark')`
+versi: 0.1.5 | NEWGAME UKM Game Development, Universitas Andalas
