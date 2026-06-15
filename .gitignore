@@ -109,3 +109,21 @@ flutter/
 
 # ── Misc internal ─────────────────────────────────────
 security/internal/
+MEMBER_CREDENTIALS.md
+
+# ── Backup files ──────────────────────────────────────
+backups/
+*.sql.gz
+*.dump
+
+# ── Docker secrets & SSL ──────────────────────────────
+nginx/ssl/
+.docker/secrets/
+docker-compose.override.yml
+
+# ── Private keys & certificates ───────────────────────
+*.pem
+*.p12
+*.pfx
+*.key
+!apps/web/public/*.pem    # public cert boleh jika ada

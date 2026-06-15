@@ -263,4 +263,118 @@ checklist infra lanjutan
 
 ---
 
+security hardening -- tindakan eksternal (15 Juni 2026)
+
+Semua item di bagian ini adalah tindak lanjut dari hardening kode yang sudah
+dilakukan. Kode sudah disiapkan -- hanya perlu aksi manual di console/server.
+
+  [!] npm audit fix -- apps/web dan apps/api
+
+      15 vulnerability terdeteksi di apps/web (10 moderate, 5 high).
+      Jalankan saat ada waktu (bukan saat production sedang ramai):
+
+        cd apps/web && npm audit fix
+        cd apps/api && npm audit fix
+
+      Jika ada breaking change: npm audit fix --force, lalu test lokal dulu.
+      Setelah fix, commit dan push agar Vercel ikut terupdate.
+
+  [!] SSL certificate untuk Docker/VPS (jika pindah dari Vercel ke VPS sendiri)
+
+      Let's Encrypt gratis via Certbot:
+        sudo apt install certbot python3-certbot-nginx
+        sudo certbot --nginx -d unandnewgame.com -d www.unandnewgame.com
+
+      Letakkan hasil cert di: nginx/ssl/fullchain.pem dan nginx/ssl/privkey.pem
+      File ini sudah ada di .gitignore -- JANGAN pernah commit cert ke git.
+
+      Auto-renew (tambah ke crontab):
+        0 3 * * * certbot renew --quiet && nginx -s reload
+
+  [!] Google OAuth -- tambah redirect URI production
+
+      Firebase Console -> Authentication -> Sign-in method -> Google
+      Tambahkan URI:
+        https://unandnewgame-tan.vercel.app/login
+        https://unandnewgame.com/login (jika pakai domain custom)
+
+      Tanpa ini Google OAuth tidak berfungsi di production.
+
+  [~] Wajibkan 2FA untuk role admin ke atas
+
+      Saat ini 2FA opsional untuk semua user. Untuk keamanan lebih:
+      Edit apps/api/src/modules/auth/guards/ -- tambah pengecekan twoFactorEnabled
+      untuk request dari user dengan role >= 3 (Admin).
+
+      Atau: buat halaman notifikasi di dashboard yang mengingatkan admin
+      untuk mengaktifkan 2FA sebelum bisa akses fitur admin.
+
+  [~] Vercel environment variables -- pastikan semua terisi
+
+      Vercel Dashboard -> Project -> Settings -> Environment Variables
+      Cek variabel berikut sudah diisi (bukan placeholder):
+
+        DATABASE_URL
+        FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
+        UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+        NEXT_PUBLIC_FIREBASE_API_KEY (dan semua NEXT_PUBLIC_FIREBASE_*)
+        CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+        SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+
+  [~] HSTS Preload -- daftarkan domain ke daftar preload browser
+
+      Setelah HTTPS stabil minimal 2-4 minggu tanpa masalah:
+      Kunjungi: https://hstspreload.org/
+      Submit domain: unandnewgame.com
+
+      Setelah disetujui, browser akan selalu paksa HTTPS bahkan sebelum
+      request pertama -- level keamanan tertinggi untuk HSTS.
+
+  [-] fail2ban + ufw -- jika deploy ke VPS sendiri (bukan Vercel)
+
+      Di server Ubuntu/Debian:
+        sudo apt install fail2ban ufw
+
+        # UFW: hanya buka port yang perlu
+        ufw default deny incoming
+        ufw default allow outgoing
+        ufw allow 2222/tcp     # SSH (port custom, ganti dari 22)
+        ufw allow 80/tcp       # HTTP (nginx redirect ke HTTPS)
+        ufw allow 443/tcp      # HTTPS
+        ufw enable
+
+        # fail2ban: blokir IP setelah 3x gagal SSH
+        # /etc/fail2ban/jail.local:
+        [sshd]
+        enabled = true
+        port = 2222
+        maxretry = 3
+        bantime = 86400   # ban 24 jam
+
+      Database dan Redis tidak perlu dibuka di ufw karena sudah dalam
+      Docker internal network (docker-compose.yml: backend_net internal: true).
+
+  [-] Ganti port SSH default di VPS
+
+      /etc/ssh/sshd_config:
+        Port 2222
+        PermitRootLogin no
+        PasswordAuthentication no
+        PubkeyAuthentication yes
+        MaxAuthTries 3
+
+      systemctl restart sshd
+
+  [-] Pantau log Nginx secara berkala
+
+      Saat docker berjalan:
+        docker compose logs -f nginx    # live nginx access log
+        docker compose logs -f api      # live API log
+
+      Cari anomali: banyak 404 ke /wp-admin, /phpmyadmin, /xmlrpc.php
+      adalah tanda scanner bot aktif. Nginx sudah dikonfigurasi
+      mengembalikan 404 untuk path tersebut -- tidak perlu khawatir.
+
+---
+
 NEWGAME v0.1.5 -- UKM Game Development, Universitas Andalas

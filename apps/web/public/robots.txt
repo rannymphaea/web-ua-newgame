@@ -1,0 +1,22 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /scan
+Disallow: /profile
+Disallow: /badges
+Disallow: /leaderboard
+Disallow: /calendar
+Disallow: /logs
+Disallow: /members
+Disallow: /news
+Disallow: /pirate-map
+Disallow: /change-password
+Disallow: /api/
+Disallow: /dev-tools
+Disallow: /dev-profile
+
+Allow: /
+Allow: /landing
+Allow: /login
+
+Sitemap: https://unandnewgame-tan.vercel.app/sitemap.xml
