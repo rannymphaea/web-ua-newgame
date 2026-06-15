@@ -14,8 +14,13 @@ export class AuthController {
     private twoFactorService: TwoFactorService,
   ) {}
 
-  /** POST /api/auth/verify-member — verifikasi Member ID + kode akses sebelum registrasi */
+  /**
+   * POST /api/auth/verify-member — verifikasi Member ID + kode akses sebelum registrasi.
+   * Rate limit ketat: 5 percobaan / 15 menit per IP untuk cegah enumerasi kredensial.
+   */
   @Post('verify-member')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 5, windowSeconds: 900, keyPrefix: 'verify-member' })
   async verifyMember(@Body() body: { memberId: string; tempPassword: string }) {
     return this.authService.verifyMember(body.memberId, body.tempPassword);
   }
@@ -35,7 +40,8 @@ export class AuthController {
 
   /** POST /api/auth/register — buat profil Firestore setelah Firebase Auth registration */
   @Post('register')
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(RateLimitGuard, FirebaseAuthGuard)
+  @RateLimit({ limit: 3, windowSeconds: 3600, keyPrefix: 'register' })
   async register(
     @CurrentUser() user: any,
     @Body() body: { memberId: string; displayName: string; division: string; team?: string },
