@@ -24,11 +24,15 @@ wajib sebelum go-live
       Idempotent — aman dijalankan berulang kali.
 
       cd apps/api
-      npm run db:push         ← buat tabel Member (jika belum ada migration)
-      npm run db:seed         ← seed 125 anggota dengan tempPassword bcrypt
+      npm run db:push         ← sync schema ke Neon (pakai DATABASE_URL)
+      npm run db:seed         ← seed 125 anggota ke Neon
 
-      Cek: npx prisma studio -> tabel members -> harus ada 125 baris.
-      Atau: SELECT COUNT(*) FROM members; -> harus 125.
+      ⚠️  PENTING: DATABASE_URL (.env) harus menunjuk ke Neon (cloud).
+          DIRECT_URL hanya untuk Prisma Studio lokal (localhost:5432).
+          db:push dan db:seed selalu pakai DATABASE_URL.
+
+      Cek: npx prisma studio -> tabel members -> harus ada ~125 baris.
+      Atau: SELECT COUNT(*) FROM members; -> harus ~125 (125 minus duplikat).
 
       Kredensial plain-text tampil di console saat pertama kali seed.
       Simpan sekarang — tidak akan muncul lagi jika seed diulang.

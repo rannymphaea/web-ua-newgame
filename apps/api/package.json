@@ -11,12 +11,12 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "db:push": "prisma db push",
-    "db:seed": "ts-node --project tsconfig.json -e 'require(\"dotenv\").config()' prisma/seed.ts",
+    "db:seed": "npx ts-node --project tsconfig.json prisma/seed.ts",
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio"
   },
   "prisma": {
-    "seed": "ts-node --project tsconfig.json prisma/seed.ts"
+    "seed": "npx ts-node --project tsconfig.json prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
