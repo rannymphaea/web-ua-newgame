@@ -1,242 +1,249 @@
-import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
+import {
+  Injectable, Logger, NotFoundException, ConflictException, BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../../database/prisma.service';
 import { UserHistoryService } from '../user-history/user-history.service';
 import { UserVaultService } from '../user-vault/user-vault.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
-import { diffKeys } from '../../common/utils/hash.util';
+import { MemberPillar, MemberGeneration, MemberStatus } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
+
+/** Generate kode akses default — sama dengan script seed */
+function generateTempPassword(memberId: string, memberNo: number): string {
+  const suffix   = memberId.slice(-5).toLowerCase();
+  const noPadded = String(memberNo).padStart(3, '0');
+  return `ng${noPadded}${suffix}`;
+}
+
+const PILLAR_MAP: Record<string, MemberPillar> = {
+  'Game Logic':  MemberPillar.GAME_LOGIC,
+  'Game Design': MemberPillar.GAME_DESIGN,
+  'Game Sound':  MemberPillar.GAME_SOUND,
+  'GAME_LOGIC':  MemberPillar.GAME_LOGIC,
+  'GAME_DESIGN': MemberPillar.GAME_DESIGN,
+  'GAME_SOUND':  MemberPillar.GAME_SOUND,
+};
+const GEN_MAP: Record<string, MemberGeneration> = {
+  'GEN 1': MemberGeneration.GEN_1, 'GEN 2': MemberGeneration.GEN_2,
+  'GEN_1': MemberGeneration.GEN_1, 'GEN_2': MemberGeneration.GEN_2,
+};
+const STATUS_MAP: Record<string, MemberStatus> = {
+  ACTIVE: MemberStatus.ACTIVE, AFK: MemberStatus.AFK,
+  RESIGN: MemberStatus.RESIGN, GLORY: MemberStatus.GLORY, NPC: MemberStatus.NPC,
+};
+
+// Fields yang boleh dikembalikan ke client (tanpa tempPassword)
+const SAFE_SELECT = {
+  id: true, memberId: true, memberNo: true, name: true,
+  pillar: true, generation: true, team: true, status: true,
+  isRegistered: true, registeredAt: true, xpCache: true, level: true,
+  userId: true, createdAt: true, updatedAt: true,
+} as const;
 
 @Injectable()
 export class MembersService {
   private readonly logger = new Logger(MembersService.name);
 
   constructor(
-    private readonly firebase: FirebaseService,
+    private readonly prisma:   PrismaService,
     private readonly history:  UserHistoryService,
     private readonly vault:    UserVaultService,
   ) {}
 
-  async list(opts: { page: number; limit: number; search?: string; division?: string; role?: string; status?: string; generation?: string }) {
-    try {
-      const db = this.firebase.firestore;
-      let q: FirebaseFirestore.Query = db.collection('users');
-      if (opts.division) q = q.where('division', '==', opts.division);
-      if (opts.role)     q = q.where('role',     '==', opts.role);
-      if (opts.status)   q = q.where('status',   '==', opts.status);
-      q = q.orderBy('name', 'asc').limit(opts.limit + 1).offset((opts.page - 1) * opts.limit);
+  // ── LIST ────────────────────────────────────────────────────────────────────
+  async list(opts: {
+    page: number; limit: number; search?: string;
+    division?: string; status?: string; generation?: string;
+  }) {
+    const { page, limit, search, division, status, generation } = opts;
+    const where: any = {};
 
-      const snap = await q.get();
-      let docs   = snap.docs.slice(0, opts.limit).map(d => ({ uid: d.id, ...d.data() }));
-
-      // Generation filter — NG1xxxx = GEN 1, NG2xxxx = GEN 2
-      if (opts.generation) {
-        const genPrefix = opts.generation === 'GEN 1' ? 'NG1' : opts.generation === 'GEN 2' ? 'NG2' : '';
-        if (genPrefix) {
-          docs = docs.filter(d => (d as any).memberId?.startsWith(genPrefix));
-        }
-      }
-
-      if (opts.search) {
-        const s = opts.search.toLowerCase();
-        docs = docs.filter(d => JSON.stringify(d).toLowerCase().includes(s));
-      }
-      return { data: docs, page: opts.page, limit: opts.limit, hasMore: snap.docs.length > opts.limit };
-    } catch (err) {
-      this.logger.error('Members list failed', err);
-      return { ok: false, error: String(err), data: [], page: opts.page, limit: opts.limit, hasMore: false };
-    }
-  }
-
-  async exportCsv(opts: { division?: string; status?: string; generation?: string }) {
-    const db = this.firebase.firestore;
-    let q: FirebaseFirestore.Query = db.collection('users');
-    if (opts.division) q = q.where('division', '==', opts.division);
-    if (opts.status)   q = q.where('status',   '==', opts.status);
-    q = q.orderBy('name', 'asc');
-
-    const snap = await q.get();
-    let docs = snap.docs.map(d => ({ uid: d.id, ...d.data() as Record<string, any> }));
-
-    // Generation filter
-    if (opts.generation) {
-      const genPrefix = opts.generation === 'GEN 1' ? 'NG1' : opts.generation === 'GEN 2' ? 'NG2' : '';
-      if (genPrefix) docs = docs.filter(d => d.memberId?.startsWith(genPrefix));
+    if (division)   where.pillar     = PILLAR_MAP[division]  ?? division;
+    if (status)     where.status     = STATUS_MAP[(status || '').toUpperCase()] ?? status;
+    if (generation) where.generation = GEN_MAP[generation]   ?? generation;
+    if (search) {
+      where.OR = [
+        { name:     { contains: search, mode: 'insensitive' } },
+        { memberId: { contains: search, mode: 'insensitive' } },
+        { team:     { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    const headers = ['Member ID', 'Name', 'Email', 'Division', 'Role', 'Status', 'XP', 'Attendance'];
-    const rows = docs.map(d => [
-      d.memberId || '', d.name || d.displayName || '', d.email || '',
-      d.division || '', d.role || 'member', d.status || 'active',
-      d.xpCache || 0, d.attendanceCount || 0,
-    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    const [data, total] = await Promise.all([
+      this.prisma.member.findMany({
+        where, skip: (page - 1) * limit, take: limit + 1,
+        orderBy: { memberNo: 'asc' },
+        select: SAFE_SELECT,
+      }),
+      this.prisma.member.count({ where }),
+    ]);
 
-    return { csv: [headers.join(','), ...rows].join('\n'), count: docs.length };
+    const hasMore = data.length > limit;
+    return { data: data.slice(0, limit), page, limit, total, hasMore };
   }
 
-  async getOne(uid: string) {
-    try {
-      const snap = await this.firebase.firestore.collection('users').doc(uid).get();
-      if (!snap.exists) throw new NotFoundException(`Member ${uid} not found`);
-      const [recentHistory, latestVault] = await Promise.all([
-        this.history.getByUser(uid, 5),
-        this.vault.getLatest(uid),
-      ]);
-      return { ok: true, uid: snap.id, ...snap.data(), recentHistory, latestVault };
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      return { ok: false, error: String(err) };
-    }
+  // ── GET ONE ─────────────────────────────────────────────────────────────────
+  async getOne(memberId: string) {
+    const member = await this.prisma.member.findUnique({
+      where: { memberId },
+      select: SAFE_SELECT,
+    });
+    if (!member) throw new NotFoundException(`Member ${memberId} tidak ditemukan`);
+    return { ok: true, ...member };
   }
 
+  // ── CREATE — Admin tambah anggota baru ───────────────────────────────────────
   async create(dto: CreateMemberDto, createdBy: string) {
-    try {
-      const db  = this.firebase.firestore;
-      const dup = await db.collection('users').where('email', '==', dto.email).get();
-      if (!dup.empty) throw new ConflictException(`Email ${dto.email} already exists`);
-      const now  = new Date().toISOString();
-      const data = {
-        name: dto.name, email: dto.email,
-        username: dto.username || '', division: dto.division || '',
-        role: dto.role || 'member', memberId: dto.memberId || '',
-        status: dto.status || 'active', notes: dto.notes || '',
-        xpCache: 0, streak: 0, attendanceCount: 0,
-        createdAt: now, updatedAt: now, createdBy,
-      };
-      const ref = await db.collection('users').add({ ...data, serverTs: this.firebase.timestamp });
-      await Promise.all([
-        this.history.write({ userId: ref.id, changedBy: createdBy, action: 'create_member', before: {}, after: data, changedFields: Object.keys(data) }),
-        this.vault.saveVersion(ref.id, data, createdBy),
-      ]);
-      return { ok: true, uid: ref.id };
-    } catch (err) {
-      if (err instanceof ConflictException) throw err;
-      this.logger.error('Members create failed', err);
-      return { ok: false, error: String(err) };
-    }
+    const existing = await this.prisma.member.findUnique({ where: { memberId: dto.memberId! } });
+    if (existing) throw new ConflictException(`Member ID ${dto.memberId} sudah ada`);
+
+    const plain  = (dto as any).tempPassword || generateTempPassword(dto.memberId!, dto.memberNo!);
+    const hashed = await bcrypt.hash(plain, 10);
+
+    const member = await this.prisma.member.create({
+      data: {
+        memberId:     dto.memberId!,
+        memberNo:     dto.memberNo!,
+        name:         dto.name,
+        pillar:       PILLAR_MAP[dto.pillar!]    ?? MemberPillar.GAME_LOGIC,
+        generation:   GEN_MAP[dto.generation!]   ?? MemberGeneration.GEN_1,
+        team:         dto.team || '',
+        status:       STATUS_MAP[(dto.status || 'ACTIVE').toUpperCase()] ?? MemberStatus.ACTIVE,
+        tempPassword: hashed,
+        isRegistered: false,
+      },
+    });
+
+    await this.history.write({
+      userId: createdBy, changedBy: createdBy, action: 'create_member',
+      before: {}, after: { memberId: member.memberId, name: member.name },
+      changedFields: ['memberId', 'name', 'pillar', 'generation', 'team', 'status'],
+    }).catch(() => {});
+
+    return { ok: true, id: member.id, memberId: member.memberId, tempPasswordPlain: plain };
   }
 
-  async update(uid: string, dto: UpdateMemberDto, updatedBy: string) {
-    try {
-      const ref  = this.firebase.firestore.collection('users').doc(uid);
-      const snap = await ref.get();
-      if (!snap.exists) throw new NotFoundException(`Member ${uid} not found`);
-      const before = snap.data() as Record<string, unknown>;
-      const patch: Record<string, unknown> = {};
-      const dtoKeys = Object.keys(dto) as Array<keyof CreateMemberDto>;
-      for (const k of dtoKeys) {
-        if (dto[k] !== undefined) patch[k] = dto[k];
-      }
-      if (!Object.keys(patch).length) return { ok: true, message: 'No changes' };
-      patch.updatedAt = new Date().toISOString();
-      patch.updatedBy = updatedBy;
-      await ref.set({ ...patch, serverTs: this.firebase.timestamp }, { merge: true });
-      const after = { ...before, ...patch };
-      delete after['serverTs'];
-      await Promise.all([
-        this.history.write({ userId: uid, changedBy: updatedBy, action: 'update_member', before, after, changedFields: diffKeys(before, after) }),
-        this.vault.saveVersion(uid, after, updatedBy),
-      ]);
-      return { ok: true };
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      return { ok: false, error: String(err) };
-    }
+  // ── UPDATE ───────────────────────────────────────────────────────────────────
+  async update(memberId: string, dto: UpdateMemberDto, updatedBy: string) {
+    const existing = await this.prisma.member.findUnique({ where: { memberId } });
+    if (!existing) throw new NotFoundException(`Member ${memberId} tidak ditemukan`);
+
+    const patch: any = {};
+    if (dto.name)   patch.name   = dto.name;
+    if (dto.team)   patch.team   = dto.team;
+    if (dto.status) patch.status = STATUS_MAP[(dto.status).toUpperCase()] ?? existing.status;
+
+    if (!Object.keys(patch).length) return { ok: true, message: 'Tidak ada perubahan' };
+
+    await this.prisma.member.update({ where: { memberId }, data: patch });
+    await this.history.write({
+      userId: updatedBy, changedBy: updatedBy, action: 'update_member',
+      before: existing as any, after: { ...existing, ...patch },
+      changedFields: Object.keys(patch),
+    }).catch(() => {});
+
+    return { ok: true };
   }
 
-  async remove(uid: string, deletedBy: string) {
-    try {
-      const ref  = this.firebase.firestore.collection('users').doc(uid);
-      const snap = await ref.get();
-      if (!snap.exists) throw new NotFoundException(`Member ${uid} not found`);
-      const before = snap.data() as Record<string, unknown>;
-      await ref.update({ status: 'inactive', deletedAt: new Date().toISOString(), deletedBy, serverTs: this.firebase.timestamp });
-      await this.history.write({ userId: uid, changedBy: deletedBy, action: 'soft_delete', before, after: { ...before, status: 'inactive' }, changedFields: ['status'] });
-      return { ok: true };
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      return { ok: false, error: String(err) };
+  // ── RESET PASSWORD — Admin generate ulang kode akses ─────────────────────────
+  async resetPassword(memberId: string, adminUid: string) {
+    const member = await this.prisma.member.findUnique({ where: { memberId } });
+    if (!member) throw new NotFoundException(`Member ${memberId} tidak ditemukan`);
+    if (member.isRegistered) {
+      throw new BadRequestException(
+        'Anggota sudah registrasi. Untuk reset password akun, gunakan Firebase Console.',
+      );
     }
+
+    const plain  = generateTempPassword(member.memberId, member.memberNo);
+    const hashed = await bcrypt.hash(plain, 10);
+    await this.prisma.member.update({ where: { memberId }, data: { tempPassword: hashed } });
+
+    await this.history.write({
+      userId: adminUid, changedBy: adminUid, action: 'reset_temp_password',
+      before: {}, after: { memberId }, changedFields: ['tempPassword'],
+    }).catch(() => {});
+
+    return { ok: true, memberId, tempPasswordPlain: plain };
   }
 
+  // ── REMOVE (ubah status jadi RESIGN) ────────────────────────────────────────
+  async remove(memberId: string, deletedBy: string) {
+    const member = await this.prisma.member.findUnique({ where: { memberId } });
+    if (!member) throw new NotFoundException(`Member ${memberId} tidak ditemukan`);
+
+    await this.prisma.member.update({
+      where: { memberId },
+      data:  { status: MemberStatus.RESIGN },
+    });
+    await this.history.write({
+      userId: deletedBy, changedBy: deletedBy, action: 'soft_delete_member',
+      before: member as any, after: { ...member, status: MemberStatus.RESIGN },
+      changedFields: ['status'],
+    }).catch(() => {});
+
+    return { ok: true };
+  }
+
+  // ── EXPORT CSV ───────────────────────────────────────────────────────────────
+  async exportCsv(opts: { division?: string; status?: string; generation?: string }) {
+    const where: any = {};
+    if (opts.division)   where.pillar     = PILLAR_MAP[opts.division]   ?? opts.division;
+    if (opts.status)     where.status     = STATUS_MAP[(opts.status || '').toUpperCase()] ?? opts.status;
+    if (opts.generation) where.generation = GEN_MAP[opts.generation]    ?? opts.generation;
+
+    const members = await this.prisma.member.findMany({
+      where, orderBy: { memberNo: 'asc' }, select: SAFE_SELECT,
+    });
+
+    const headers = ['Member ID', 'No', 'Nama', 'Pillar', 'Generasi', 'Tim', 'Status', 'Registrasi', 'XP', 'Level'];
+    const rows = members.map(m => [
+      m.memberId, m.memberNo, m.name, m.pillar, m.generation,
+      m.team, m.status, m.isRegistered ? 'Ya' : 'Belum', m.xpCache, m.level,
+    ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+
+    return { csv: [headers.join(','), ...rows].join('\n'), count: members.length };
+  }
+
+  // ── IMPORT ───────────────────────────────────────────────────────────────────
   async import(format: 'csv' | 'json', data: string, importedBy: string) {
+    const dtos: CreateMemberDto[] = [];
+
     try {
-      const db = this.firebase.firestore;
-      const members: CreateMemberDto[] = [];
-
       if (format === 'json') {
-        const parsed = JSON.parse(data);
-        const arr = Array.isArray(parsed) ? parsed : [parsed];
+        const arr = Array.isArray(JSON.parse(data)) ? JSON.parse(data) : [JSON.parse(data)];
         for (const item of arr) {
-          if (item.name && item.email) {
-            members.push({
-              name: item.name,
-              email: item.email,
-              username: item.username,
-              division: item.division,
-              role: item.role,
-              memberId: item.memberId,
-              status: item.status,
-              notes: item.notes,
-            });
-          }
+          if (item.memberId && item.name) dtos.push(item as CreateMemberDto);
         }
-      } else if (format === 'csv') {
-        const lines = data.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      } else {
+        const lines   = data.trim().split('\n');
+        const headers = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
         for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',').map(v => v.trim());
+          const values = lines[i].split(',').map((v: string) => v.trim().replace(/^"|"$/g, ''));
           const obj: Record<string, string> = {};
-          headers.forEach((h, idx) => obj[h] = values[idx] || '');
-          if (obj.name && obj.email) {
-            members.push({
-              name: obj.name,
-              email: obj.email,
-              username: obj.username,
-              division: obj.division,
-              role: obj.role,
-              memberId: obj.memberid,
-              status: obj.status,
-              notes: obj.notes,
-            });
-          }
+          headers.forEach((h: string, idx: number) => (obj[h] = values[idx] || ''));
+          if (obj.memberid && obj.name) dtos.push({
+            memberId: obj.memberid, memberNo: +(obj.no || 0), name: obj.name,
+            pillar: obj.pillar, generation: obj.generasi || obj.generation,
+            team: obj.tim || obj.team, status: obj.status,
+          } as unknown as CreateMemberDto);
         }
       }
-
-      const results = { created: 0, failed: 0, errors: [] as string[] };
-      const now = new Date().toISOString();
-
-      for (const dto of members) {
-        try {
-          const dup = await db.collection('users').where('email', '==', dto.email).get();
-          if (!dup.empty) {
-            results.failed++;
-            results.errors.push(`Email ${dto.email} already exists`);
-            continue;
-          }
-          const memberData = {
-            name: dto.name, email: dto.email,
-            username: dto.username || '', division: dto.division || '',
-            role: dto.role || 'member', memberId: dto.memberId || '',
-            status: dto.status || 'active', notes: dto.notes || '',
-            xpCache: 0, streak: 0, attendanceCount: 0,
-            createdAt: now, updatedAt: now, createdBy: importedBy,
-          };
-          const ref = await db.collection('users').add({ ...memberData, serverTs: this.firebase.timestamp });
-          await Promise.all([
-            this.history.write({ userId: ref.id, changedBy: importedBy, action: 'import_member', before: {}, after: memberData, changedFields: Object.keys(memberData) }),
-            this.vault.saveVersion(ref.id, memberData, importedBy),
-          ]);
-          results.created++;
-        } catch (e) {
-          results.failed++;
-          results.errors.push(`${dto.email}: ${e instanceof Error ? e.message : String(e)}`);
-        }
-      }
-
-      return { ok: true, ...results };
-    } catch (err) {
-      this.logger.error('Import failed', err);
-      throw new BadRequestException(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+    } catch {
+      throw new BadRequestException('Format data tidak valid');
     }
+
+    const results = { created: 0, failed: 0, errors: [] as string[] };
+    for (const dto of dtos) {
+      try {
+        await this.create(dto, importedBy);
+        results.created++;
+      } catch (e) {
+        results.failed++;
+        results.errors.push(`${dto.memberId}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    return { ok: true, ...results };
   }
 }

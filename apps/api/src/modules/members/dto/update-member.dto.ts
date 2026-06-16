@@ -1,41 +1,13 @@
-import { IsString, IsEmail, IsOptional, MaxLength, IsIn } from 'class-validator';
-import { CreateMemberDto } from './create-member.dto';
+import { IsString, IsOptional, MaxLength, IsIn } from 'class-validator';
 
 export class UpdateMemberDto {
-  @IsOptional()
-  @IsString()
-  @MaxLength(80)
+  @IsOptional() @IsString() @MaxLength(80)
   name?: string;
 
-  @IsOptional()
-  @IsEmail()
-  email?: string;
+  @IsOptional() @IsString() @MaxLength(80)
+  team?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(40)
-  username?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(60)
-  division?: string;
-
-  @IsOptional()
-  @IsIn(['member', 'moderator', 'admin'])
-  role?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(40)
-  memberId?: string;
-
-  @IsOptional()
-  @IsIn(['active', 'inactive', 'suspended'])
+  @IsIn(['ACTIVE', 'AFK', 'RESIGN', 'GLORY', 'NPC'])
   status?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  notes?: string;
 }

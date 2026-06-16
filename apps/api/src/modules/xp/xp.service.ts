@@ -191,7 +191,7 @@ export class XpService {
     if (opts.userId) q = q.where('userId', '==', opts.userId);
 
     const snap = await q.limit(500).get();
-    let docs = snap.docs.map(d => ({ id: d.id, ...d.data() as Record<string, any> }));
+    let docs: any[] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     if (opts.from || opts.to) {
       docs = docs.filter(d => {

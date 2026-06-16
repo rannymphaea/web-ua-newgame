@@ -250,6 +250,8 @@ export class AttendanceService {
     } catch (error) {
       console.error('Check anomaly error:', error);
     }
+  }
+
   /**
    * Export attendance as CSV
    */
@@ -260,7 +262,7 @@ export class AttendanceService {
     q = q.orderBy('attendedAt', 'desc');
 
     const snap = await q.get();
-    let docs = snap.docs.map(d => ({ id: d.id, ...d.data() as Record<string, any> }));
+    let docs: any[] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     // Date range filter
     if (opts.from || opts.to) {

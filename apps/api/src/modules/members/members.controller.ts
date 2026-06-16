@@ -15,34 +15,38 @@ export class MembersController {
   list(
     @Query('page') page = '1', @Query('limit') limit = '20',
     @Query('search') search?: string, @Query('division') division?: string,
-    @Query('role') role?: string, @Query('status') status?: string,
-    @Query('generation') generation?: string,
+    @Query('status') status?: string, @Query('generation') generation?: string,
   ) {
-    return this.svc.list({ page: +page, limit: +limit, search, division, role, status, generation });
+    return this.svc.list({ page: +page, limit: +limit, search, division, status, generation });
   }
 
   @Get('export/csv')
-  async exportCsv(
+  exportCsv(
     @Query('division') division?: string,
-    @Query('status') status?: string,
+    @Query('status')   status?: string,
     @Query('generation') generation?: string,
   ) {
     return this.svc.exportCsv({ division, status, generation });
   }
 
-  @Get(':uid') getOne(@Param('uid') uid: string) { return this.svc.getOne(uid); }
+  @Get(':id') getOne(@Param('id') id: string) { return this.svc.getOne(id); }
 
+  /** POST /members — admin tambah anggota baru (menghasilkan kode akses otomatis) */
   @Post()
   create(@Body() dto: CreateMemberDto, @CurrentUser() u: any) { return this.svc.create(dto, u.uid); }
+
+  /** POST /members/:id/reset-password — generate ulang kode akses untuk anggota belum registrasi */
+  @Post(':id/reset-password')
+  resetPassword(@Param('id') id: string, @CurrentUser() u: any) { return this.svc.resetPassword(id, u.uid); }
 
   @Post('import')
   import(@Body() body: { format: 'csv' | 'json'; data: string }, @CurrentUser() u: any) {
     return this.svc.import(body.format, body.data, u.uid);
   }
 
-  @Patch(':uid')
-  update(@Param('uid') uid: string, @Body() dto: UpdateMemberDto, @CurrentUser() u: any) { return this.svc.update(uid, dto, u.uid); }
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateMemberDto, @CurrentUser() u: any) { return this.svc.update(id, dto, u.uid); }
 
-  @Delete(':uid')
-  remove(@Param('uid') uid: string, @CurrentUser() u: any) { return this.svc.remove(uid, u.uid); }
+  @Delete(':id')
+  remove(@Param('id') id: string, @CurrentUser() u: any) { return this.svc.remove(id, u.uid); }
 }
