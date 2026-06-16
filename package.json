@@ -22,6 +22,7 @@
   "dependencies": {
     "cloudinary": "^2.10.0",
     "groq-sdk": "^1.2.1",
-    "openai": "^6.39.0"
+    "openai": "^6.39.0",
+    "posthog-js": "^1.379.2"
   }
 }

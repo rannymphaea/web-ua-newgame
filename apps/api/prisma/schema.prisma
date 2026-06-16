@@ -29,6 +29,7 @@ model User {
   sessions      Session[]
   profile       UserProfile?
   xpHistory     XpHistory[]
+  member        Member?        // diisi setelah anggota registrasi
 
   @@map("users")
 }
@@ -192,4 +193,62 @@ enum EventType {
   OPTIONAL
   COMPETITION
   INTERNAL
+}
+
+// ── Member registry ───────────────────────────────────────────────────────────
+// Tabel ini adalah daftar resmi 125 anggota NEWGAME.
+// Berdiri sendiri dari User — anggota baru register dengan cara verifikasi
+// memberId + tempPassword, lalu akun User dibuat dan dihubungkan via userId.
+
+enum MemberStatus {
+  ACTIVE
+  AFK
+  RESIGN
+  GLORY
+  NPC
+}
+
+enum MemberPillar {
+  GAME_LOGIC
+  GAME_DESIGN
+  GAME_SOUND
+}
+
+enum MemberGeneration {
+  GEN_1
+  GEN_2
+}
+
+model Member {
+  id           String           @id @default(cuid())
+  memberId     String           @unique @map("member_id")   // format: NG11001001GL
+  memberNo     Int              @map("member_no")            // nomor urut
+  name         String
+  pillar       MemberPillar
+  generation   MemberGeneration
+  team         String           @default("")
+  status       MemberStatus     @default(ACTIVE)
+
+  // Auth — password sementara yang di-hash bcrypt
+  // Digunakan saat registrasi pertama kali
+  tempPassword String           @map("temp_password")       // bcrypt hash
+  isRegistered Boolean          @default(false) @map("is_registered")
+  registeredAt DateTime?        @map("registered_at")
+
+  // XP cache — disinkron dari XpHistory
+  xpCache      Int              @default(0) @map("xp_cache")
+  level        Int              @default(1)
+
+  // Relasi ke User (diisi setelah register)
+  userId       String?          @unique @map("user_id")
+  user         User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  @@index([pillar])
+  @@index([generation])
+  @@index([status])
+  @@index([memberId])
+  @@map("members")
 }

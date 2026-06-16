@@ -19,26 +19,41 @@ Keterangan:
 
 wajib sebelum go-live
 
-  [!] seed data anggota ke Firestore
-      Tanpa ini tidak ada anggota yang bisa registrasi.
+  [!] seed data anggota ke PostgreSQL via Prisma
+      Menggantikan seed Firestore lama. Script baru: apps/api/prisma/seed.ts
+      Idempotent — aman dijalankan berulang kali.
 
-      FIREBASE_PROJECT_ID=xxx \
-      FIREBASE_CLIENT_EMAIL=xxx@xxx.iam.gserviceaccount.com \
-      FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n" \
-        node apps/api/src/scripts/seed-members.js
+      cd apps/api
+      npm run db:push         ← buat tabel Member (jika belum ada migration)
+      npm run db:seed         ← seed 125 anggota dengan tempPassword bcrypt
 
-      Cek: Firebase Console -> Firestore -> koleksi members -> harus ada 125 dokumen.
+      Cek: npx prisma studio -> tabel members -> harus ada 125 baris.
+      Atau: SELECT COUNT(*) FROM members; -> harus 125.
+
+      Kredensial plain-text tampil di console saat pertama kali seed.
+      Simpan sekarang — tidak akan muncul lagi jika seed diulang.
 
   [!] distribusi kredensial ke anggota
-      Setiap anggota butuh Member ID dan Kode Akses untuk bisa registrasi.
-      1. Buka MEMBER_CREDENTIALS.md
-      2. Isi tempPassword tiap anggota
-      3. Kirim via WhatsApp group, Discord, atau kertas fisik
+      Alur baru: semua akun anggota sudah ada di database (via seed).
+      Anggota tinggal AKTIVASI dengan cara registrasi menggunakan:
+        - Member ID  (contoh: NG11020038PG)
+        - Kode Akses (auto-generate: format ngNNNxxxxx, contoh: ng020038pg)
 
-      Format yang dikirim ke anggota:
-        Member ID  : NG11020001PG
-        Kode Akses : TempPass123!
-        URL Daftar : https://unandnewgame-tan.vercel.app/login
+      Kode akses di-generate otomatis oleh script seed dan ditampilkan
+      satu kali di console. Admin harus:
+        1. Jalankan seed dan salin output tabel credentials
+        2. Kirim per anggota via WhatsApp personal (BUKAN group broadcast)
+        3. Informasikan URL registrasi: https://unandnewgame-tan.vercel.app/login
+
+      Format pesan ke anggota:
+        Halo [nama],
+        Member ID  : NG11020038PG
+        Kode Akses : ng020038pg
+        URL        : https://unandnewgame-tan.vercel.app/login
+        (Gunakan tab "Daftar", bukan Login)
+
+      Catatan: kode akses hanya bisa dipakai SEKALI untuk registrasi.
+      Setelah registrasi berhasil, akun dikunci ke email yang dipakai.
 
   [!] jalankan Prisma migration di database production
       Tanpa ini fitur yang bergantung PostgreSQL tidak bisa jalan.

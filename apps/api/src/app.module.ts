@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { FirebaseModule } from './firebase/firebase.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -30,6 +32,24 @@ import { DatabaseModule } from './database/database.module';
   controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
+    // ── Global rate limiter (in-memory fallback layer) ─────────────────
+    // Layer 1: Nginx  — 30 req/s general, 5 req/min auth
+    // Layer 2: @nestjs/throttler — in-memory, 100 req/min default
+    // Layer 3: RateLimitGuard   — Redis-backed, per-route custom limits
+    ThrottlerModule.forRoot([
+      {
+        name:   'global',
+        ttl:    60_000,   // 1 menit
+        limit:  100,      // 100 req/menit per IP
+      },
+      {
+        name:   'short',
+        ttl:    10_000,   // 10 detik
+        limit:  20,       // maks 20 req/10 detik (anti-burst)
+      },
+    ]),
+
     FirebaseModule,
     AuthModule,
     UsersModule,
@@ -54,6 +74,13 @@ import { DatabaseModule } from './database/database.module';
     AiModule,
     RedisModule,
     DatabaseModule,
+  ],
+  providers: [
+    // Aktifkan ThrottlerGuard secara global — berlaku untuk semua route
+    {
+      provide:  APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

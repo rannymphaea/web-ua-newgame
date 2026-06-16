@@ -13,20 +13,23 @@ import { useAuthStore } from '@/lib/auth-store';
  * Pirate Map: item menu yang dapat diubah oleh pengurus ke depannya.
  * Bisa digunakan untuk roadmap, panduan anggota, atau halaman khusus.
  */
+const ALL_ROLES = ['npc', 'member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden', 'superadmin', 'glory'];
+const ADMIN_ROLES = ['admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden', 'superadmin'];
+const OWNER_ROLES = ['code commander', 'pixel presiden', 'superadmin'];
+
 const NAV_ITEMS = [
-  { href: '/dashboard',       label: 'Dashboard',        icon: 'ri-dashboard-3-line',    roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/scan',            label: 'Scan QR',          icon: 'ri-qr-code-line',        roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/news',            label: 'Berita & Tutorial', icon: 'ri-newspaper-line',     roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/leaderboard',     label: 'Leaderboard',      icon: 'ri-trophy-line',         roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/badges',          label: 'Badges',           icon: 'ri-medal-line',          roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/calendar',        label: 'Kalender',         icon: 'ri-calendar-event-line', roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  // Pirate Map: bisa diubah kedepannya oleh pengurus (route, label, icon)
-  { href: '/pirate-map',      label: 'Pirate Map',       icon: 'ri-map-2-line',          roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/profile',         label: 'Profil',           icon: 'ri-user-3-line',         roles: ['member', 'inventori', 'admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/admin',           label: 'Admin Panel',      icon: 'ri-shield-star-line',    roles: ['admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/admin/analytics', label: 'Analytics',        icon: 'ri-bar-chart-2-line',    roles: ['admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/members',         label: 'Members',          icon: 'ri-team-line',           roles: ['admin', 'quest keeper', 'gold guardian', 'code commander', 'pixel presiden'] },
-  { href: '/logs',            label: 'System Logs',      icon: 'ri-file-list-3-line',    roles: ['code commander', 'pixel presiden'] },
+  { href: '/dashboard',       label: 'Dashboard',        icon: 'ri-dashboard-3-line',    roles: ALL_ROLES },
+  { href: '/scan',            label: 'Scan QR',          icon: 'ri-qr-code-line',        roles: ALL_ROLES },
+  { href: '/news',            label: 'Berita & Tutorial', icon: 'ri-newspaper-line',     roles: ALL_ROLES },
+  { href: '/leaderboard',     label: 'Leaderboard',      icon: 'ri-trophy-line',         roles: ALL_ROLES },
+  { href: '/badges',          label: 'Badges',           icon: 'ri-medal-line',          roles: ALL_ROLES },
+  { href: '/calendar',        label: 'Kalender',         icon: 'ri-calendar-event-line', roles: ALL_ROLES },
+  { href: '/pirate-map',      label: 'Pirate Map',       icon: 'ri-map-2-line',          roles: ALL_ROLES },
+  { href: '/members',         label: 'Members',          icon: 'ri-team-line',           roles: ALL_ROLES },
+  { href: '/profile',         label: 'Profil',           icon: 'ri-user-3-line',         roles: ALL_ROLES },
+  { href: '/admin',           label: 'Admin Panel',      icon: 'ri-shield-star-line',    roles: ADMIN_ROLES },
+  { href: '/admin/analytics', label: 'Analytics',        icon: 'ri-bar-chart-2-line',    roles: ADMIN_ROLES },
+  { href: '/logs',            label: 'System Logs',      icon: 'ri-file-list-3-line',    roles: OWNER_ROLES },
 ];
 
 const SECTION_DIVIDERS: Record<string, string> = {
@@ -39,7 +42,7 @@ export function Sidebar() {
   const [collapsed,  setCollapsed]  = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted,    setMounted]    = useState(false);
-  const userRole = userData?.role || 'member';
+  const userRole = (userData?.role || 'member').toLowerCase();
   const filteredItems = NAV_ITEMS.filter(item => item.roles.includes(userRole));
 
   useEffect(() => { setMounted(true); }, []);

@@ -201,7 +201,7 @@ export default function LandingPage() {
 
           {/* Eyebrow */}
           <p className="hero-eyebrow">
-            UKM Game Development Â· Universitas Andalas
+            UKM Game Development · Universitas Andalas
           </p>
 
           {/* H1 â€” Multi-Phrase Hero Typewriter */}
@@ -231,7 +231,7 @@ export default function LandingPage() {
             Wadah bagi para game developer muda untuk belajar, berkarya, dan berprestasi bersama.
           </p>
 
-          <p className="hero-tagline">Learn Â· Create Â· Play</p>
+          <p className="hero-tagline">Learn · Create · Play</p>
 
           {/* CTA Buttons */}
           <div className="hero-cta">
@@ -612,13 +612,13 @@ export default function LandingPage() {
               </svg>
             </div>
 
-            {/* Text + chips â€” flex:1 dengan min-width:0 agar wrap benar */}
+            {/* Text + chips — flex:1 dengan min-width:0 agar wrap benar */}
             <div style={{ flex: 1, minWidth: 200 }}>
               <p style={{
                 fontFamily: 'var(--font-inter)', fontSize: '0.72rem',
                 letterSpacing: '0.18em', textTransform: 'uppercase',
                 color: 'var(--novel-cloud)', marginBottom: 6,
-              }}>Dokumen Resmi Â· NEWGAME</p>
+              }}>Dokumen Resmi · NEWGAME</p>
               <h3 style={{
                 fontFamily: 'var(--font-lora)', fontSize: 20, fontWeight: 700,
                 color: 'var(--novel-ink)', marginBottom: 8,
@@ -664,9 +664,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ════ SESI 4 — CHANGELOG / RIWAYAT PEMBARUAN ════════════════════ */}
+      <section id="changelog" className="landing-section">
+        <div className="section-inner" style={{ maxWidth: 800 }}>
+          <div className="reveal">
+            <p className="section-badge">
+              <i className="ri-history-line" />Pembaruan<i className="ri-history-line" />
+            </p>
+            <h2 className="section-title">Riwayat Perubahan</h2>
+            <p className="section-desc">Platform ini terus berkembang. Catatan pembaruan terbaru.</p>
+          </div>
+          <div className="reveal reveal-delay-1" style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {([
+              { date: 'Juni 2026', version: 'v0.1.5', tag: 'Security',    tagColor: '#E63946', tagBg: 'rgba(230,57,70,0.08)',     items: ['Brute force protection: rate limit ketat di semua endpoint auth', 'Bot blocking via User-Agent (sqlmap, nikto, dirbuster, dll)', 'Slow Loris protection + keepalive timeout diperketat', 'Docker network isolation + cap_drop ALL untuk setiap container'] },
+              { date: 'Juni 2026', version: 'v0.1.4', tag: 'Fix',         tagColor: '#22c55e', tagBg: 'rgba(34,197,94,0.08)',      items: ['Sidebar fix: role superadmin kini bisa melihat semua menu', 'Encoding landing page diperbaiki (· → ·)', 'Backup script pg_dump diperbaiki dengan flag terpisah', 'Migrasi seed anggota dari Firestore ke Prisma + PostgreSQL'] },
+              { date: 'Mei 2026',  version: 'v0.1.1', tag: 'Arsitektur',  tagColor: '#B9A6CE', tagBg: 'rgba(185,166,206,0.1)',     items: ['Prisma + PostgreSQL: migrasi dari Firestore ke relasional', 'Upstash Redis: caching leaderboard + rate limiting global', 'Better Auth diintegrasikan dengan Prisma adapter', 'Milvus Vector DB disiapkan untuk pencarian semantik'] },
+              { date: 'Mei 2026',  version: 'v0.1.0', tag: 'Launch',      tagColor: '#FDCF41', tagBg: 'rgba(253,207,65,0.08)',     items: ['Landing page dengan animasi typewriter hero + pirate map', 'Dashboard anggota: XP bar, streak, badge, leaderboard', 'Scan QR absensi + panel admin manajemen berita & media', 'Migrasi ke monorepo: Next.js (web) + NestJS (api)'] },
+            ] as { date: string; version: string; tag: string; tagColor: string; tagBg: string; items: string[] }[]).map((entry, i) => (
+              <div key={i} className={`reveal reveal-delay-${i + 1}`} style={{ display: 'flex', gap: 20, paddingBottom: 32, borderLeft: '2px solid var(--clr-border)', paddingLeft: 24, marginLeft: 12, position: 'relative' }}>
+                <div style={{ position: 'absolute', left: -9, top: 4, width: 16, height: 16, borderRadius: '50%', background: 'var(--clr-bg-surface-solid)', border: '2px solid var(--clr-gold)', boxShadow: '0 0 8px var(--clr-gold-glow)' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-inter)', fontSize: 12, color: 'var(--novel-cloud)' }}>{entry.date}</span>
+                    <code style={{ fontFamily: 'monospace', fontSize: 11, background: 'var(--clr-bg-muted)', color: 'var(--clr-gold-dim)', padding: '2px 8px', borderRadius: 4 }}>{entry.version}</code>
+                    <span style={{ fontFamily: 'var(--font-inter)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: entry.tagColor, background: entry.tagBg, padding: '2px 10px', borderRadius: 99 }}>{entry.tag}</span>
+                  </div>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {entry.items.map((item, ii) => (
+                      <li key={ii} style={{ fontFamily: 'var(--font-cormorant)', fontSize: 16, color: 'var(--novel-cloud)', lineHeight: 1.6, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                        <span style={{ color: 'var(--clr-gold-dim)', marginTop: 2, flexShrink: 0 }}>›</span>{item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+            <div style={{ paddingLeft: 36, marginLeft: 12, marginTop: -8 }}>
+              <a href="https://github.com/rannymphaea/web-ua-newgame/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" className="guidebook-link" style={{ fontSize: 13 }}>
+                <i className="ri-github-line" style={{ fontSize: 14 }} />
+                Lihat riwayat lengkap di GitHub
+                <i className="ri-arrow-right-up-line" style={{ fontSize: 12 }} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="divider-glow" style={{ maxWidth: 600, margin: '0 auto' }} />
 
-      {/* â•â•â•â• CTA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════════════════ CTA ════════════════════════════════════════════════ */}
       <section className="landing-section">
         <motion.div
           className="reveal"
@@ -721,7 +767,7 @@ export default function LandingPage() {
           NEWGAME â€” Universitas Andalas
         </p>
         <p style={{ fontFamily: 'var(--font-inter)', fontSize: 12, color: 'var(--novel-cloud)', marginTop: 6, opacity: 0.7 }}>
-          Learn&nbsp;Â·&nbsp;Create&nbsp;Â·&nbsp;
+          Learn&nbsp;·&nbsp;Create&nbsp;·&nbsp;
           <button id="play-btn" className="footer-play-btn" onClick={openVideo}>Play</button>
         </p>
       </footer>
