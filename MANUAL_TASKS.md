@@ -19,45 +19,25 @@ Keterangan:
 
 wajib sebelum go-live
 
-  [!] seed data anggota ke PostgreSQL via Prisma
-      Menggantikan seed Firestore lama. Script baru: apps/api/prisma/seed.ts
-      Idempotent — aman dijalankan berulang kali.
+  [✅ SELESAI] seed data anggota ke PostgreSQL via Prisma
+      Status: 124 anggota sudah di-seed ke Neon (GEN1: 82, GEN2: 42).
+      Kredensial sudah digenerate. Lihat output seed sebelumnya untuk tabel kode akses.
 
-      cd apps/api
-      npm run db:push         ← sync schema ke Neon (pakai DATABASE_URL)
-      npm run db:seed         ← seed 125 anggota ke Neon
+      Jika perlu tambah anggota baru: POST /api/members (admin only) atau edit seed.ts.
+      Jika perlu reset kode akses: POST /api/members/:memberId/reset-password (admin only).
 
-      ⚠️  PENTING: DATABASE_URL (.env) harus menunjuk ke Neon (cloud).
-          DIRECT_URL hanya untuk Prisma Studio lokal (localhost:5432).
-          db:push dan db:seed selalu pakai DATABASE_URL.
+  [✅ SELESAI] distribusi kredensial — SIAP DIKIRIM
+      Data anggota sudah ada di database. Format kode akses: ngNNNxxxxx
+      Contoh: Member no.20 (NG11020038PG) → kode akses: ng020038pg
 
-      Cek: npx prisma studio -> tabel members -> harus ada ~125 baris.
-      Atau: SELECT COUNT(*) FROM members; -> harus ~125 (125 minus duplikat).
+      Yang perlu dilakukan SEKARANG:
+        1. Buka Prisma Studio (npx prisma studio di apps/api)
+        2. Tabel 'members' → lihat kolom memberId dan referensikan ke output seed
+        3. Kirim via WhatsApp personal per anggota (BUKAN group broadcast)
+        4. URL registrasi: https://unandnewgame-tan.vercel.app/login
 
-      Kredensial plain-text tampil di console saat pertama kali seed.
-      Simpan sekarang — tidak akan muncul lagi jika seed diulang.
-
-  [!] distribusi kredensial ke anggota
-      Alur baru: semua akun anggota sudah ada di database (via seed).
-      Anggota tinggal AKTIVASI dengan cara registrasi menggunakan:
-        - Member ID  (contoh: NG11020038PG)
-        - Kode Akses (auto-generate: format ngNNNxxxxx, contoh: ng020038pg)
-
-      Kode akses di-generate otomatis oleh script seed dan ditampilkan
-      satu kali di console. Admin harus:
-        1. Jalankan seed dan salin output tabel credentials
-        2. Kirim per anggota via WhatsApp personal (BUKAN group broadcast)
-        3. Informasikan URL registrasi: https://unandnewgame-tan.vercel.app/login
-
-      Format pesan ke anggota:
-        Halo [nama],
-        Member ID  : NG11020038PG
-        Kode Akses : ng020038pg
-        URL        : https://unandnewgame-tan.vercel.app/login
-        (Gunakan tab "Daftar", bukan Login)
-
-      Catatan: kode akses hanya bisa dipakai SEKALI untuk registrasi.
-      Setelah registrasi berhasil, akun dikunci ke email yang dipakai.
+      ⚠️  CATATAN: Alur registrasi masih pakai Firebase Auth.
+          Setelah migrasi Firebase → Better Auth selesai, alur ini berubah.
 
   [!] jalankan Prisma migration di database production
       Tanpa ini fitur yang bergantung PostgreSQL tidak bisa jalan.
