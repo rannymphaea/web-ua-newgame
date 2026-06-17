@@ -19,7 +19,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 
 // ── @better-auth/infra: Dashboard plugin ─────────────────────────────────────
-let dash: (() => any) | null = null;
+let dash: ((opts?: any) => any) | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const infraPkg = require('@better-auth/infra');
@@ -105,8 +105,12 @@ export const auth = betterAuth({
 
   // ── Plugins ──────────────────────────────────────────────────────────────
   // @better-auth/infra: dashboard monitoring di /api/auth/dashboard
+  // API key diambil dari BETTER_AUTH_API_KEY di .env
   plugins: [
-    ...(dash ? [dash()] : []),
+    ...(dash
+      ? [dash({ apiKey: process.env.BETTER_AUTH_API_KEY })]
+      : []
+    ),
   ],
 
   // ── Advanced ─────────────────────────────────────────────────────────────
