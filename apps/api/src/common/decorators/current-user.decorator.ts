@@ -1,8 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 /**
- * Extract current user from request (set by FirebaseAuthGuard).
- * Usage: @CurrentUser() user: any
+ * Extract current user from request (set by BetterAuthGuard).
+ * Usage: @CurrentUser() user: any  |  @CurrentUser('role') role: string
  */
 export const CurrentUser = createParamDecorator(
   (data: string, ctx: ExecutionContext) => {

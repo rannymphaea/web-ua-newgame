@@ -13,6 +13,7 @@
     "@tailwindcss/postcss": "^4.3.0",
     "@tailwindcss/typography": "^0.5.19",
     "autoprefixer": "^10.5.0",
+    "better-auth": "^1.6.19",
     "firebase": "^10.7.1",
     "framer-motion": "^12.40.0",
     "html5-qrcode": "^2.3.8",

@@ -1,12 +1,26 @@
 import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { TwoFactorService } from './two-factor.service';
-import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { BetterAuthGuard, SkipAuth } from '../../common/guards/better-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RateLimitGuard, RateLimit } from '../../common/guards/rate-limit.guard';
 
+/**
+ * AuthController — endpoint tambahan di luar Better Auth bawaan.
+ *
+ * Route Better Auth (session, sign-in, sign-up, OAuth) ditangani di:
+ *   /api/auth/* → BetterAuthController (src/auth/better-auth.controller.ts)
+ *
+ * Route ini untuk alur NEWGAME custom:
+ *   POST /api/auth/verify-member   → validasi Member ID + kode akses (sebelum registrasi)
+ *   POST /api/auth/link-member     → hubungkan Member ke akun setelah Better Auth register
+ *   POST /api/auth/lookup-id       → resolve Member ID ke email (untuk login via ID)
+ *   GET  /api/auth/me              → profil lengkap user yang login
+ *   POST /api/auth/set-role        → ubah role user (admin only)
+ *   GET  /api/auth/users           → list semua user (superadmin only)
+ */
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -15,10 +29,12 @@ export class AuthController {
   ) {}
 
   /**
-   * POST /api/auth/verify-member — verifikasi Member ID + kode akses sebelum registrasi.
-   * Rate limit ketat: 5 percobaan / 15 menit per IP untuk cegah enumerasi kredensial.
+   * POST /api/auth/verify-member
+   * Validasi Member ID + kode akses SEBELUM proses registrasi Better Auth.
+   * Rate limit ketat: 5 percobaan / 15 menit per IP.
    */
   @Post('verify-member')
+  @SkipAuth()
   @UseGuards(RateLimitGuard)
   @RateLimit({ limit: 5, windowSeconds: 900, keyPrefix: 'verify-member' })
   async verifyMember(@Body() body: { memberId: string; tempPassword: string }) {
@@ -26,49 +42,47 @@ export class AuthController {
   }
 
   /**
-   * POST /api/auth/lookup-id — resolve NEWGAME Member ID ke email untuk login.
-   * Public endpoint, rate-limited ketat untuk mencegah enumerasi.
-   * Input: { newgameId: "NG11020125SF" }
-   * Output: { found, email, maskedEmail, displayName }
+   * POST /api/auth/lookup-id
+   * Resolve Member ID ke email untuk login unified (ID atau email).
+   * Rate limit: 5 percobaan / 15 menit.
    */
   @Post('lookup-id')
+  @SkipAuth()
   @UseGuards(RateLimitGuard)
   @RateLimit({ limit: 5, windowSeconds: 900, keyPrefix: 'lookup-id' })
-  async lookupByNewgameId(@Body() body: { newgameId: string }) {
-    return this.authService.lookupByNewgameId(body.newgameId);
-  }
-
-  /** POST /api/auth/register — buat profil Firestore setelah Firebase Auth registration */
-  @Post('register')
-  @UseGuards(RateLimitGuard, FirebaseAuthGuard)
-  @RateLimit({ limit: 3, windowSeconds: 3600, keyPrefix: 'register' })
-  async register(
-    @CurrentUser() user: any,
-    @Body() body: { memberId: string; displayName: string; division: string; team?: string },
-  ) {
-    return this.authService.createUserProfile(user.uid, {
-      memberId:    body.memberId,
-      email:       user.email,
-      displayName: body.displayName,
-      division:    body.division,
-      team:        body.team,
-    });
-  }
-
-  /** GET /api/auth/me — profil user yang sedang login */
-  @Get('me')
-  @UseGuards(FirebaseAuthGuard)
-  async getProfile(@CurrentUser() user: any) {
-    return this.authService.getUserProfile(user.uid);
+  async lookupById(@Body() body: { memberId: string }) {
+    return this.authService.lookupByMemberId(body.memberId);
   }
 
   /**
-   * POST /api/auth/set-role — ubah role user.
-   * Superadmin: bisa set role apapun.
-   * Admin biasa: hanya bisa set ke 'member'.
+   * POST /api/auth/link-member
+   * Dipanggil SETELAH Better Auth berhasil buat akun.
+   * Menghubungkan User Better Auth dengan record Member di PostgreSQL.
+   * Body: { memberId: "NG11020038PG" }
+   */
+  @Post('link-member')
+  @UseGuards(BetterAuthGuard, RateLimitGuard)
+  @RateLimit({ limit: 3, windowSeconds: 3600, keyPrefix: 'link-member' })
+  async linkMember(
+    @CurrentUser() user: any,
+    @Body() body: { memberId: string },
+  ) {
+    return this.authService.linkMemberToUser(user.id, body.memberId);
+  }
+
+  /** GET /api/auth/me — profil lengkap user yang sedang login */
+  @Get('me')
+  @UseGuards(BetterAuthGuard)
+  async getProfile(@CurrentUser() user: any) {
+    return this.authService.getUserProfile(user.id);
+  }
+
+  /**
+   * POST /api/auth/set-role
+   * Ubah role user. Superadmin: semua role. Admin: hanya ke 'member'.
    */
   @Post('set-role')
-  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles('admin')
   async setRole(
     @CurrentUser() caller: any,
@@ -77,65 +91,51 @@ export class AuthController {
     return this.authService.setUserRole(body.userId, body.role, caller.role);
   }
 
-  /** GET /api/auth/users — list semua user (code commander / pixel presiden only) */
+  /** GET /api/auth/users — list semua user (superadmin / code commander only) */
   @Get('users')
-  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles('code commander')
   async getAllUsers() {
     return this.authService.getAllUsers();
   }
 
-  /**
-   * POST /api/auth/register-admin
-   * Buat akun admin baru. Hanya bisa dipanggil oleh code commander atau pixel presiden.
-   * Body: { email, password, displayName, division? }
-   */
-  @Post('register-admin')
-  @UseGuards(FirebaseAuthGuard, RolesGuard)
-  @Roles('code commander')
-  async registerAdmin(
-    @Body() body: { email: string; password: string; displayName: string; division?: string },
-  ) {
-    return this.authService.registerAdmin(body);
-  }
-
-  // ── 2FA Endpoints ─────────────────────────────────────────
+  // ── 2FA Endpoints ─────────────────────────────────────────────────────────
 
   /** POST /api/auth/2fa/setup — Generate TOTP secret */
   @Post('2fa/setup')
-  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles('admin')
   async twoFactorSetup(@CurrentUser() user: any) {
-    return this.twoFactorService.setup(user.uid);
+    return this.twoFactorService.setup(user.id);
   }
 
   /** POST /api/auth/2fa/verify — Verify code and enable 2FA */
   @Post('2fa/verify')
-  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles('admin')
   async twoFactorVerify(@CurrentUser() user: any, @Body() body: { code: string }) {
-    return this.twoFactorService.verify(user.uid, body.code);
+    return this.twoFactorService.verify(user.id, body.code);
   }
 
   /** POST /api/auth/2fa/validate — Validate TOTP on login */
   @Post('2fa/validate')
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(BetterAuthGuard)
   async twoFactorValidate(@CurrentUser() user: any, @Body() body: { code: string }) {
-    return this.twoFactorService.validate(user.uid, body.code);
+    return this.twoFactorService.validate(user.id, body.code);
   }
 
   /** POST /api/auth/2fa/disable — Disable 2FA */
   @Post('2fa/disable')
-  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles('admin')
   async twoFactorDisable(@CurrentUser() user: any, @Body() body: { code: string }) {
-    return this.twoFactorService.disable(user.uid, body.code);
+    return this.twoFactorService.disable(user.id, body.code);
   }
 
   /** GET /api/auth/2fa/status — Check if 2FA enabled */
   @Get('2fa/status')
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(BetterAuthGuard)
   async twoFactorStatus(@CurrentUser() user: any) {
-    return this.twoFactorService.status(user.uid);
+    return this.twoFactorService.status(user.id);
   }
 }

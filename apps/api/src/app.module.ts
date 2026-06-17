@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { FirebaseModule } from './firebase/firebase.module';
+import { BetterAuthModule } from './auth/better-auth.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { MembersModule } from './modules/members/members.module';
@@ -51,6 +52,7 @@ import { DatabaseModule } from './database/database.module';
     ]),
 
     FirebaseModule,
+    BetterAuthModule,   // ← Better Auth: routes /api/auth/*
     AuthModule,
     UsersModule,
     MembersModule,
