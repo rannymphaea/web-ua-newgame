@@ -105,14 +105,14 @@ export default function DashboardPage() {
       api.get('/events').catch(() => []),
     ]);
     if (Array.isArray(newsRes)) setNews((newsRes as NewsItem[]).slice(0, 6));
-    if (Array.isArray(lbRes) && user?.uid) {
-      const idx = (lbRes as { uid?: string }[]).findIndex(u => u.uid === user.uid);
+    if (Array.isArray(lbRes) && user?.id) {
+      const idx = (lbRes as { id?: string; uid?: string }[]).findIndex(u => u.id === user.id || u.uid === user.id);
       setRank(idx >= 0 ? idx + 1 : 0);
     }
     const allEv = Array.isArray(evRes) ? evRes as EventDoc[] : [];
     setEvents(allEv.filter(e => e.status === 'open').slice(0, 4));
     setSecondLoaded(true);
-  }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     /* Wait 1 frame after paint, then load secondary data */
