@@ -29,13 +29,13 @@ void main() async {
     await windowManager.ensureInitialized();
     const size = Size(420, 900); // lebar HP + chrome
     await windowManager.waitUntilReadyToShow(
-      WindowOptions(
+      const WindowOptions(
         size: size,
-        minimumSize: const Size(360, 640),
-        maximumSize: const Size(600, 1100),
+        minimumSize: Size(360, 640),
+        maximumSize: Size(600, 1100),
         center: true,
         title: 'NEWGAME Simulator',
-        backgroundColor: const Color(0xFF080D14),
+        backgroundColor: Color(0xFF080D14),
         skipTaskbar: false,
         titleBarStyle: TitleBarStyle.normal,
       ),
@@ -50,32 +50,31 @@ void main() async {
 }
 
 bool get _isDesktop =>
-    !kIsWeb &&
-    (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+    !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
 // ── Color tokens (sama dengan web globals.css) ───────────
-const kBg     = Color(0xFF080D14);
-const kSurf   = Color(0xFF0C1420);
+const kBg = Color(0xFF080D14);
+const kSurf = Color(0xFF0C1420);
 const kBorder = Color(0xFF1E2D40);
-const kMuted  = Color(0xFF8892A4);
-const kTxt    = Color(0xFFF0EEF4);
-const kGold   = Color(0xFFFDCF41);
+const kMuted = Color(0xFF8892A4);
+const kTxt = Color(0xFFF0EEF4);
+const kGold = Color(0xFFFDCF41);
 const kPurple = Color(0xFFB9A6CE);
-const kGreen  = Color(0xFF22C55E);
-const kRed    = Color(0xFFEF4444);
+const kGreen = Color(0xFF22C55E);
+const kRed = Color(0xFFEF4444);
 
 // ── Halaman yang tersedia ─────────────────────────────────
 const navPages = <NavPage>[
-  NavPage('Landing',     '/landing',     Icons.home_rounded),
-  NavPage('Login',       '/login',       Icons.lock_rounded),
-  NavPage('Dashboard',   '/dashboard',   Icons.dashboard_rounded),
-  NavPage('Scan QR',     '/scan',        Icons.qr_code_scanner_rounded),
+  NavPage('Landing', '/landing', Icons.home_rounded),
+  NavPage('Login', '/login', Icons.lock_rounded),
+  NavPage('Dashboard', '/dashboard', Icons.dashboard_rounded),
+  NavPage('Scan QR', '/scan', Icons.qr_code_scanner_rounded),
   NavPage('Leaderboard', '/leaderboard', Icons.leaderboard_rounded),
-  NavPage('Berita',      '/news',        Icons.newspaper_rounded),
-  NavPage('Profil',      '/profile',     Icons.person_rounded),
-  NavPage('Kalender',    '/calendar',    Icons.calendar_month_rounded),
-  NavPage('Badges',      '/badges',      Icons.military_tech_rounded),
-  NavPage('Admin',       '/admin',       Icons.admin_panel_settings_rounded),
+  NavPage('Berita', '/news', Icons.newspaper_rounded),
+  NavPage('Profil', '/profile', Icons.person_rounded),
+  NavPage('Kalender', '/calendar', Icons.calendar_month_rounded),
+  NavPage('Badges', '/badges', Icons.military_tech_rounded),
+  NavPage('Admin', '/admin', Icons.admin_panel_settings_rounded),
 ];
 
 class NavPage {
@@ -132,7 +131,8 @@ class _UnsupportedPage extends StatelessWidget {
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
-              width: 80, height: 80,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [kGold, kPurple]),
                 borderRadius: BorderRadius.circular(24),
@@ -142,9 +142,12 @@ class _UnsupportedPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text('NEWGAME Simulator', style: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.w800, color: kGold,
-            )),
+            const Text('NEWGAME Simulator',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: kGold,
+                )),
             const SizedBox(height: 12),
             Text(
               '$platform tidak didukung.\n\n'

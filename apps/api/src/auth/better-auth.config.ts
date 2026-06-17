@@ -38,8 +38,14 @@ export const auth = betterAuth({
   database: prismaAdapter(_prismaForAuth, { provider: 'postgresql' }),
 
   // ── Base URL ─────────────────────────────────────────────────────────────
-  // Harus sama dengan URL API kamu agar redirect OAuth benar
+  // URL API tempat Better Auth berjalan (production: https://unandnewgame.vercel.app)
   baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3001',
+
+  // ── Base Path ─────────────────────────────────────────────────────────────
+  // Path prefix untuk semua route auth. Di NestJS: prefix 'api' + controller 'auth'
+  // → semua route berada di /api/auth/*
+  // Ini WAJIB agar @better-auth/infra dashboard bisa verify ownership
+  basePath: '/api/auth',
 
   // ── Secret ───────────────────────────────────────────────────────────────
   secret: process.env.BETTER_AUTH_SECRET ?? 'change-me-in-production-32chars!',

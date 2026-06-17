@@ -10,12 +10,12 @@ import 'main.dart';
 
 // Daftar preset device (lebar x tinggi viewport)
 const _devices = <_Device>[
-  _Device('Pixel 7',        412, 915),
-  _Device('Galaxy S23',     360, 780),
-  _Device('Redmi Note 12',  393, 873),
-  _Device('iPhone 14',      390, 844),
-  _Device('iPhone SE',      375, 667),
-  _Device('Galaxy A54',     412, 892),
+  _Device('Pixel 7', 412, 915),
+  _Device('Galaxy S23', 360, 780),
+  _Device('Redmi Note 12', 393, 873),
+  _Device('iPhone 14', 390, 844),
+  _Device('iPhone SE', 375, 667),
+  _Device('Galaxy A54', 412, 892),
 ];
 
 class _Device {
@@ -133,22 +133,29 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
       child: Row(children: [
         // Logo
         Container(
-          width: 26, height: 26,
+          width: 26,
+          height: 26,
           decoration: BoxDecoration(
             gradient: const LinearGradient(colors: [kGold, kPurple]),
             borderRadius: BorderRadius.circular(7),
           ),
           child: const Center(
-            child: Text('N', style: TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w900, color: kBg,
-            )),
+            child: Text('N',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: kBg,
+                )),
           ),
         ),
         const SizedBox(width: 8),
-        const Text('NEWGAME Simulator', style: TextStyle(
-          fontSize: 12, fontWeight: FontWeight.w700,
-          color: kGold, letterSpacing: 0.5,
-        )),
+        const Text('NEWGAME Simulator',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: kGold,
+              letterSpacing: 0.5,
+            )),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -157,9 +164,12 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: kGold.withAlpha(50)),
           ),
-          child: const Text('v0.1.5', style: TextStyle(
-            fontSize: 9, color: kGold, fontWeight: FontWeight.w600,
-          )),
+          child: const Text('v0.1.5',
+              style: TextStyle(
+                fontSize: 9,
+                color: kGold,
+                fontWeight: FontWeight.w600,
+              )),
         ),
         const Spacer(),
 
@@ -170,13 +180,15 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
           underline: const SizedBox(),
           isDense: true,
           style: const TextStyle(fontSize: 11, color: kTxt),
-          items: List.generate(_devices.length, (i) => DropdownMenuItem(
-            value: i,
-            child: Text(
-              '${_devices[i].name} (${_devices[i].w}×${_devices[i].h})',
-              style: const TextStyle(fontSize: 11, color: kTxt),
-            ),
-          )),
+          items: List.generate(
+              _devices.length,
+              (i) => DropdownMenuItem(
+                    value: i,
+                    child: Text(
+                      '${_devices[i].name} (${_devices[i].w}×${_devices[i].h})',
+                      style: const TextStyle(fontSize: 11, color: kTxt),
+                    ),
+                  )),
           onChanged: (v) {
             if (v != null) setState(() => _selectedDevice = v);
           },
@@ -190,7 +202,8 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
         _iconBtn(Icons.arrow_back_rounded, 'Back', () => _controller.goBack()),
         const SizedBox(width: 4),
         // Forward
-        _iconBtn(Icons.arrow_forward_rounded, 'Forward', () => _controller.goForward()),
+        _iconBtn(Icons.arrow_forward_rounded, 'Forward',
+            () => _controller.goForward()),
         const SizedBox(width: 4),
         // Server config
         _iconBtn(Icons.settings_rounded, 'Server URL', _showServerDialog),
@@ -205,7 +218,8 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(6),
         child: Container(
-          width: 28, height: 28,
+          width: 28,
+          height: 28,
           decoration: BoxDecoration(
             color: kSurf,
             borderRadius: BorderRadius.circular(6),
@@ -228,11 +242,13 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
       child: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
-          child: Text('HALAMAN', style: TextStyle(
-            fontSize: 9, fontWeight: FontWeight.w800,
-            color: kMuted.withAlpha(180),
-            letterSpacing: 1.2,
-          )),
+          child: Text('HALAMAN',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: kMuted.withAlpha(180),
+                letterSpacing: 1.2,
+              )),
         ),
         Expanded(
           child: ListView.builder(
@@ -250,7 +266,8 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
                   margin: const EdgeInsets.only(bottom: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
                   decoration: BoxDecoration(
                     color: active ? kGold.withAlpha(20) : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
@@ -259,14 +276,16 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
                     ),
                   ),
                   child: Row(children: [
-                    Icon(page.icon, size: 14,
-                      color: active ? kGold : kMuted),
+                    Icon(page.icon, size: 14, color: active ? kGold : kMuted),
                     const SizedBox(width: 7),
-                    Expanded(child: Text(page.label, style: TextStyle(
-                      fontSize: 11,
-                      color: active ? kGold : kTxt,
-                      fontWeight: active ? FontWeight.w700 : FontWeight.normal,
-                    ))),
+                    Expanded(
+                        child: Text(page.label,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: active ? kGold : kTxt,
+                              fontWeight:
+                                  active ? FontWeight.w700 : FontWeight.normal,
+                            ))),
                   ]),
                 ),
               );
@@ -295,8 +314,10 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
 
               // Screen content
               Positioned(
-                left: 12, right: 12,
-                top: 40, bottom: 40,
+                left: 12,
+                right: 12,
+                top: 40,
+                bottom: 40,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
                   child: _buildWebViewContent(),
@@ -305,9 +326,11 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
 
               // Loading bar
               if (_isLoading)
-                Positioned(
-                  top: 40, left: 12, right: 12,
-                  child: const LinearProgressIndicator(
+                const Positioned(
+                  top: 40,
+                  left: 12,
+                  right: 12,
+                  child: LinearProgressIndicator(
                     backgroundColor: Colors.transparent,
                     valueColor: AlwaysStoppedAnimation<Color>(kGold),
                     minHeight: 2,
@@ -324,23 +347,31 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
     if (_hasError) {
       return Container(
         color: kBg,
-        child: Center(child: Padding(
+        child: Center(
+            child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             const Icon(Icons.error_outline_rounded, size: 36, color: kRed),
             const SizedBox(height: 12),
-            const Text('WebView error', style: TextStyle(
-              color: kTxt, fontSize: 14, fontWeight: FontWeight.w600,
-            )),
+            const Text('WebView error',
+                style: TextStyle(
+                  color: kTxt,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                )),
             const SizedBox(height: 8),
-            Text(_errorMsg, style: const TextStyle(
-              fontSize: 10, color: kMuted, fontFamily: 'monospace',
-            ), textAlign: TextAlign.center),
+            Text(_errorMsg,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: kMuted,
+                  fontFamily: 'monospace',
+                ),
+                textAlign: TextAlign.center),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Pastikan Microsoft Edge WebView2 Runtime sudah terinstal.\n'
               'Download: microsoft.com/edge/webview2',
-              style: const TextStyle(fontSize: 10, color: kMuted),
+              style: TextStyle(fontSize: 10, color: kMuted),
               textAlign: TextAlign.center,
             ),
           ]),
@@ -350,12 +381,15 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
     if (!_initialized) {
       return Container(
         color: kBg,
-        child: const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        child: const Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
           CircularProgressIndicator(color: kGold, strokeWidth: 2),
           SizedBox(height: 12),
-          Text('Menginisialisasi WebView...', style: TextStyle(
-            color: kMuted, fontSize: 12,
-          )),
+          Text('Menginisialisasi WebView...',
+              style: TextStyle(
+                color: kMuted,
+                fontSize: 12,
+              )),
         ])),
       );
     }
@@ -373,14 +407,18 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(children: [
         Container(
-          width: 6, height: 6,
+          width: 6,
+          height: 6,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _hasError ? kRed : (_isLoading ? kGold : kGreen),
-            boxShadow: [BoxShadow(
-              color: (_hasError ? kRed : (_isLoading ? kGold : kGreen)).withAlpha(120),
-              blurRadius: 4,
-            )],
+            boxShadow: [
+              BoxShadow(
+                color: (_hasError ? kRed : (_isLoading ? kGold : kGreen))
+                    .withAlpha(120),
+                blurRadius: 4,
+              )
+            ],
           ),
         ),
         const SizedBox(width: 6),
@@ -389,15 +427,18 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
           style: const TextStyle(fontSize: 10, color: kMuted),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Text(
+        Expanded(
+            child: Text(
           _currentPath,
           style: const TextStyle(
-            fontSize: 10, color: kMuted, fontFamily: 'monospace',
+            fontSize: 10,
+            color: kMuted,
+            fontFamily: 'monospace',
           ),
           overflow: TextOverflow.ellipsis,
         )),
         Text('${_device.name} · ${_device.w}×${_device.h}',
-          style: const TextStyle(fontSize: 10, color: kMuted)),
+            style: const TextStyle(fontSize: 10, color: kMuted)),
       ]),
     );
   }
@@ -409,9 +450,12 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: kSurf,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text('Server URL', style: TextStyle(
-          fontSize: 14, fontWeight: FontWeight.w700, color: kTxt,
-        )),
+        title: const Text('Server URL',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: kTxt,
+            )),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text(
             'Default: http://localhost:3000\n'
@@ -422,12 +466,15 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
           const SizedBox(height: 14),
           TextField(
             controller: ctrl,
-            style: const TextStyle(fontSize: 12, color: kTxt, fontFamily: 'monospace'),
+            style: const TextStyle(
+                fontSize: 12, color: kTxt, fontFamily: 'monospace'),
             decoration: InputDecoration(
               labelText: 'Base URL',
               labelStyle: const TextStyle(fontSize: 11, color: kMuted),
-              filled: true, fillColor: kBg,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: kBg,
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: kBorder),
@@ -442,7 +489,8 @@ class _WindowsSimulatorPageState extends State<WindowsSimulatorPage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: kGold, foregroundColor: kBg,
+              backgroundColor: kGold,
+              foregroundColor: kBg,
             ),
             onPressed: () {
               _baseUrl = ctrl.text.trim();

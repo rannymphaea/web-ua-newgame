@@ -21,6 +21,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@better-auth/infra": "^0.2.14",
     "better-auth": "^1.6.19",
     "cloudinary": "^2.10.0",
     "groq-sdk": "^1.2.1",
