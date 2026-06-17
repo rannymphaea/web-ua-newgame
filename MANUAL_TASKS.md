@@ -56,9 +56,13 @@ Register:
 - `POST /api/auth/link-member` — link akun ke Member (auth required)
 - `GET  /api/auth/me` — profil lengkap dari PostgreSQL
 
----
+### [✅] BETTER_AUTH_API_KEY dikonfigurasi
+- Key: `ba_d87ixeru4249lphbt7irdgzfuw5ck39w` (sudah di `apps/api/.env`)
+- Dipakai oleh `@better-auth/infra` untuk dashboard monitoring
+- Dashboard tersedia di: `http://localhost:3001/api/auth/dashboard`
+- ⚠️ **WAJIB**: Regenerate key ini di [dashboard.better-auth.com](https://better-auth.com)
+  karena key sudah terekspos di chat history
 
-## 🔴 WAJIB SEBELUM GO-LIVE
 
 ### [!] Isi Google OAuth credentials
 1. Buka: https://console.cloud.google.com/apis/credentials
