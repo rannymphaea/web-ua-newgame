@@ -5,6 +5,63 @@ Disusun dari yang paling lama ke yang paling baru.
 
 ---
 
+## v0.2.0 — 17 Juni 2026 · Better Auth + PostgreSQL (Fase 1)
+
+### 🔐 Auth Infrastructure (Breaking Change)
+Migrasi penuh dari Firebase Auth ke **Better Auth 1.6**.
+Firebase Auth masih aktif untuk service yang belum dimigrasikan, namun auth utama
+(login, register, session, OAuth) kini berjalan di Better Auth.
+
+**Perubahan auth:**
+- `better-auth.config.ts` — instance singleton dengan Google OAuth, session cookie,
+  @better-auth/infra dashboard, dan NEWGAME custom user fields
+- `better-auth.controller.ts` — NestJS wildcard handler untuk semua `/api/auth/*`
+- `better-auth.guard.ts` — pengganti `FirebaseAuthGuard` di semua endpoint
+- `auth.service.ts` — full rewrite ke Prisma, tanpa Firestore
+- `auth.controller.ts` — semua `FirebaseAuthGuard` diganti `BetterAuthGuard`
+- `auth-store.ts` (web) — Firebase `onAuthStateChanged` → `authClient.getSession()`
+- `auth-client.ts` (web) — Better Auth React client baru
+
+**Login flow baru:**
+- Unified login: satu form, toggle Email ↔ Member ID
+- Member ID → lookup PostgreSQL → sign in dengan email yang di-resolve
+- Google OAuth via `authClient.signIn.social({ provider: 'google' })`
+- Lupa password via REST `POST /api/auth/forget-password`
+- Register: verify Member ID → `authClient.signUp.email()` → link-member
+
+### 🗄️ Database (PostgreSQL/Neon)
+- **124 anggota di-seed** ke PostgreSQL via Prisma (GEN1: 82, GEN2: 42)
+- Prisma schema diperluas: tambah `Account`, `Verification`; update `Session`, `User`
+- `User` model: Better Auth fields (name, emailVerified, image) + NEWGAME fields
+  (role string, memberId, pillar, xpCache, level, streak, attendanceCount, status)
+- `Role` enum dihapus → pakai string field yang fleksibel
+- Tabel `accounts` + `verifications` dibuat di Neon via `prisma db push`
+
+### 🛡️ Security
+- Rate limiting global via `@nestjs/throttler` (100 req/menit, 20 req/10 detik)
+- Better Auth built-in rate limit: 10 attempt/15 menit untuk auth endpoint
+- `@SkipAuth()` decorator untuk endpoint publik (verifyMember, lookupId)
+- Cookie `secure: true` + `crossSubdomain` di production
+
+### 📦 Dependencies
+- `better-auth@1.6.19` (api + web)
+- `@better-auth/infra@0.2.14` (dashboard plugin)
+- `prisma@5.22.0` + `@prisma/client`
+- Hapus: `firebase-admin` (dari auth flow)
+
+### 🐛 Bug Fixes
+- `authClient.forgetPassword` tidak ada di tipe → ganti dengan direct REST call
+- `lookupByNewgameId` → rename ke `lookupByMemberId` (konsisten)
+- `user.uid` → `user.id` (Better Auth pakai `id`, bukan `uid`)
+
+### 📝 Docs
+- `README.md` → v0.2.0, tech stack, env vars, infra table, login flow diperbarui
+- `MANUAL_TASKS.md` → dokumentasi Fase 1 lengkap + roadmap Fase 2/3
+- `EXTERNAL_SERVICES.md` → status infra diperbarui
+- `CHANGELOG.md` → entry ini
+
+---
+
 3 Mei 2026
 
 Halaman detail profil anggota dengan riwayat aktivitas. Kalender kegiatan interaktif.

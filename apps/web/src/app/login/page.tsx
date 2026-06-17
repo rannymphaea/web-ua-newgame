@@ -221,21 +221,43 @@ export default function LoginPage() {
     }
   }
 
-  /* ── Forgot Password (Better Auth) ─────────────────────────── */
+  /* ── Forgot Password ────────────────────────────────────────── */
+  // Better Auth 1.6.x: method 'forgetPassword' tidak ada di tipe React client.
+  // Solusi: panggil langsung REST endpoint /api/auth/forget-password.
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
     if (!forgotEmail.trim()) { setError('Masukkan email kamu'); return; }
     setLoading(true); setError('');
     try {
-      await authClient.forgetPassword({
-        email:       forgotEmail.trim(),
-        redirectTo:  '/reset-password',
+      const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+      const resetUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/reset-password`;
+
+      const res = await fetch(`${apiBase}/api/auth/forget-password`, {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify({
+          email:      forgotEmail.trim().toLowerCase(),
+          redirectTo: resetUrl,
+        }),
       });
-      setSuccess(`Link reset password telah dikirim ke ${forgotEmail}. Cek inbox dan folder spam.`);
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as any).message || 'Gagal mengirim email reset');
+      }
+
+      setSuccess(`Link reset password dikirim ke ${forgotEmail}. Cek inbox dan folder spam.`);
       setShowForgot(false);
       setForgotEmail('');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Gagal mengirim link reset');
+      const msg = err instanceof Error ? err.message : 'Gagal mengirim link reset';
+      // Jika email provider belum dikonfigurasi, kasih pesan yang jelas
+      if (msg.includes('email') || msg.includes('send') || msg.includes('provider')) {
+        setError('Fitur reset password membutuhkan konfigurasi email provider. Hubungi admin.');
+      } else {
+        setError(msg);
+      }
     } finally { setLoading(false); }
   }
 
