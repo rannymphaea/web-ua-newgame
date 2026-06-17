@@ -31,10 +31,9 @@ async function bootstrap() {
 }
 
 module.exports = async (req, res) => {
-  // Redirect root path ke frontend landing page
+  // API root — kembalikan info singkat
   if (req.url === '/' || req.url === '') {
-    const frontendUrl = process.env.WEB_URL || 'https://unandnewgame-tan.vercel.app';
-    res.redirect(301, `${frontendUrl}/landing`);
+    res.status(200).json({ service: 'NEWGAME API', version: '0.2.0', status: 'ok' });
     return;
   }
 
