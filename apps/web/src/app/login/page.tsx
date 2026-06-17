@@ -3,15 +3,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { authClient } from '@/lib/auth-client';
 import { api } from '@/lib/api';
 
 /** Detect HTML response from misconfigured API URL */
@@ -62,51 +54,49 @@ type LoginMethod = 'email' | 'member-id';
    ════════════════════════════════════════════════════════════════ */
 export default function LoginPage() {
   const router = useRouter();
-  const [mode,    setMode]    = useState<PageMode>('login');
+  const [mode,        setMode]        = useState<PageMode>('login');
   const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
-  const [success, setSuccess] = useState('');
-  const [showForgot, setShowForgot] = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
+  const [success,     setSuccess]     = useState('');
+  const [showForgot,  setShowForgot]  = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
 
   // Email login
-  const [email,           setEmail]           = useState('');
-  const [password,        setPassword]        = useState('');
+  const [email,    setEmail]    = useState('');
+  const [password, setPassword] = useState('');
 
-  // NEWGAME ID login
-  const [ngId,         setNgId]         = useState('');
-  const [ngPassword,   setNgPassword]   = useState('');
-  const [ngLookupDone, setNgLookupDone] = useState(false);
+  // NEWGAME ID login — lookup dulu, lalu signIn dengan email yang di-resolve
+  const [ngId,          setNgId]          = useState('');
+  const [ngPassword,    setNgPassword]    = useState('');
+  const [ngLookupDone,  setNgLookupDone]  = useState(false);
   const [ngMaskedEmail, setNgMaskedEmail] = useState('');
+  const [ngResolvedEmail, setNgResolvedEmail] = useState('');
 
   // Register
   const [regName,         setRegName]         = useState('');
-  const [regMemberId,     setRegMemberId]     = useState('');
-  const [regTempPassword, setRegTempPassword] = useState('');
-  const [regEmail,        setRegEmail]        = useState('');
-  const [regPassword,     setRegPassword]     = useState('');
+  const [regMemberId,     setRegMemberId]      = useState('');
+  const [regTempPassword, setRegTempPassword]  = useState('');
+  const [regEmail,        setRegEmail]         = useState('');
+  const [regPassword,     setRegPassword]      = useState('');
 
-  /* ── Login via Email ───────────────────────────────────────── */
+  /* ── Login via Email (Better Auth) ────────────────────────── */
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      if (!cred.user.emailVerified) {
-        setError('Verifikasi email kamu terlebih dahulu sebelum login.');
-        setLoading(false); return;
-      }
+      const result = await authClient.signIn.email({
+        email:    email.trim().toLowerCase(),
+        password: password,
+      });
+      if (result.error) throw new Error(result.error.message || 'Login gagal');
       try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
       router.push('/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login gagal';
-      if (msg.includes('wrong-password') || msg.includes('invalid-credential')) {
-        setError('Password salah');
-      } else if (msg.includes('user-not-found')) {
-        setError('Email tidak ditemukan');
-      } else if (msg.includes('too-many-requests')) {
+      if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('wrong')) {
+        setError('Email atau password salah');
+      } else if (msg.toLowerCase().includes('too many') || msg.toLowerCase().includes('rate')) {
         setError('Terlalu banyak percobaan, coba lagi dalam beberapa menit');
       } else {
         setError(msg);
@@ -117,149 +107,135 @@ export default function LoginPage() {
   /* ── Login via NEWGAME Member ID ───────────────────────────── */
   async function handleNewgameIdLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
     try {
-      // Step 1: Lookup Member ID → get email
-      const lookupRes = await fetch(
-        `/api/auth/lookup-id`,
-        {
-          method: 'POST',
+      let resolvedEmail = ngResolvedEmail;
+
+      // Step 1: Resolve Member ID ke email (jika belum)
+      if (!ngLookupDone) {
+        const lookupRes = await fetch('/api/auth/lookup-id', {
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newgameId: ngId.trim().toUpperCase() }),
-        },
-      );
-
-      if (!lookupRes.ok) {
-        const err = await safeParseJson(lookupRes).catch(() => ({}));
-        const status = lookupRes.status;
-        if (status === 404) {
-          throw new Error('ID anggota tidak ditemukan');
-        } else if (status === 400) {
-          throw new Error(err.message || 'Format Member ID tidak valid');
-        } else if (status === 401) {
-          throw new Error(err.message || 'Akun kamu belum diaktifkan oleh admin');
-        } else if (status === 429) {
-          throw new Error('Terlalu banyak percobaan, coba lagi dalam beberapa menit');
-        } else {
-          throw new Error(err.message || 'Gagal mencari Member ID');
+          body:    JSON.stringify({ memberId: ngId.trim().toUpperCase() }),
+        });
+        if (!lookupRes.ok) {
+          const err = await safeParseJson(lookupRes).catch(() => ({}));
+          const status = lookupRes.status;
+          if (status === 404)      throw new Error('Member ID tidak ditemukan');
+          if (status === 400)      throw new Error((err as any).message || 'Format Member ID tidak valid');
+          if (status === 401)      throw new Error((err as any).message || 'Akun belum diaktifkan');
+          if (status === 429)      throw new Error('Terlalu banyak percobaan');
+          throw new Error((err as any).message || 'Gagal mencari Member ID');
         }
+        const lookupData = await safeParseJson(lookupRes) as any;
+        setNgMaskedEmail(lookupData.maskedEmail);
+        setNgResolvedEmail(lookupData.email);
+        setNgLookupDone(true);
+        resolvedEmail = lookupData.email;
       }
 
-      const lookupData = await safeParseJson(lookupRes);
-      setNgMaskedEmail(lookupData.maskedEmail);
-      setNgLookupDone(true);
-
-      // Step 2: Sign in with Firebase using the resolved email
-      const cred = await signInWithEmailAndPassword(auth, lookupData.email, ngPassword);
-      if (!cred.user.emailVerified) {
-        setError('Verifikasi email kamu terlebih dahulu sebelum login.');
-        setLoading(false); return;
-      }
+      // Step 2: Sign in dengan Better Auth menggunakan email yang di-resolve
+      const result = await authClient.signIn.email({
+        email:    resolvedEmail,
+        password: ngPassword,
+      });
+      if (result.error) throw new Error(result.error.message || 'Password salah');
 
       try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
       router.push('/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login gagal';
-      if (msg.includes('wrong-password') || msg.includes('invalid-credential')) {
+      if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('wrong')) {
         setError('Password salah');
-      } else if (msg.includes('too-many-requests')) {
-        setError('Terlalu banyak percobaan, coba lagi dalam beberapa menit');
       } else {
         setError(msg);
       }
-      setNgLookupDone(false);
+      if (!ngLookupDone) setNgLookupDone(false);
     } finally { setLoading(false); }
   }
 
-  /* ── Register ──────────────────────────────────────────────── */
+  /* ── Register via Better Auth + link ke Member ─────────────── */
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
     try {
-      // Step 1: Verifikasi Member ID + Kode Akses ke backend
-      const verifyRes = await fetch(
-        `/api/auth/verify-member`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            memberId:     regMemberId.trim().toUpperCase(),
-            tempPassword: regTempPassword.trim(),
-          }),
-        },
-      );
+      // Step 1: Verifikasi Member ID + Kode Akses (Prisma)
+      const verifyRes = await fetch('/api/auth/verify-member', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          memberId:     regMemberId.trim().toUpperCase(),
+          tempPassword: regTempPassword.trim(),
+        }),
+      });
       if (!verifyRes.ok) {
         const err = await safeParseJson(verifyRes).catch(() => ({}));
-        throw new Error(err.message || 'Verifikasi gagal — cek Member ID dan Kode Akses');
+        throw new Error((err as any).message || 'Verifikasi gagal — cek Member ID dan Kode Akses');
       }
-      const verified = await safeParseJson(verifyRes);
+      const verified = await safeParseJson(verifyRes) as any;
 
-      // Step 2: Buat akun Firebase Auth
-      const cred = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
-      await sendEmailVerification(cred.user);
-
-      // Step 3: Simpan profil ke Firestore via backend
-      const idToken = await cred.user.getIdToken();
-      api.setToken(idToken);
-      await api.post('/auth/register', {
-        memberId:    verified.memberId,
-        displayName: regName.trim() || verified.name,
-        division:    verified.division,
-        team:        verified.team || '',
+      // Step 2: Buat akun via Better Auth
+      const signUpResult = await authClient.signUp.email({
+        email:    regEmail.trim().toLowerCase(),
+        password: regPassword,
+        name:     regName.trim() || verified.name,
       });
+      if (signUpResult.error) throw new Error(signUpResult.error.message || 'Pendaftaran gagal');
 
-      setSuccess('Pendaftaran berhasil! Cek email kamu untuk verifikasi sebelum login.');
+      // Step 3: Link Member ke akun (Better Auth session sudah aktif)
+      const linkRes = await fetch('/api/auth/link-member', {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify({ memberId: regMemberId.trim().toUpperCase() }),
+      });
+      if (!linkRes.ok) {
+        const err = await safeParseJson(linkRes).catch(() => ({}));
+        // Jika link gagal, lanjut tetap berhasil — bisa di-link manual nanti
+        console.warn('Link member gagal:', (err as any).message);
+      }
+
+      setSuccess('Pendaftaran berhasil! Kamu sudah bisa login.');
       setMode('login');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Pendaftaran gagal';
-      if (msg.includes('email-already-in-use')) {
-        setError('Email ini sudah terdaftar. Gunakan email lain atau login dengan akun yang ada.');
-      } else if (msg.includes('sudah terdaftar')) {
-        setError('Member ID ini sudah digunakan untuk registrasi. Jika ini akun kamu, silakan login.');
-      } else if (msg.includes('weak-password')) {
-        setError('Password terlalu lemah. Gunakan minimal 6 karakter.');
+      if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('sudah')) {
+        setError('Email ini sudah terdaftar. Gunakan email lain atau login.');
+      } else if (msg.toLowerCase().includes('password')) {
+        setError('Password terlalu lemah. Gunakan minimal 8 karakter.');
       } else {
         setError(msg);
       }
     } finally { setLoading(false); }
   }
 
-  /* ── Google Login ──────────────────────────────────────────── */
+  /* ── Google Login (Better Auth Social) ─────────────────────── */
   async function handleGoogleLogin() {
-    if (!auth) { setError('Firebase tidak terkonfigurasi. Hubungi admin untuk set env vars.'); return; }
     setLoading(true); setError('');
     try {
-      const provider = new GoogleAuthProvider();
-      const cred = await signInWithPopup(auth, provider);
-      const idToken = await cred.user.getIdToken();
-      api.setToken(idToken);
-      try { sessionStorage.setItem('ng-just-logged-in', '1'); } catch {}
-      router.push('/dashboard');
+      await authClient.signIn.social({ provider: 'google' });
+      // Redirect ditangani oleh Better Auth OAuth callback
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Google login gagal');
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   }
 
-  /* ── Forgot Password ───────────────────────────────────────── */
+  /* ── Forgot Password (Better Auth) ─────────────────────────── */
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth) { setError('Firebase tidak terkonfigurasi.'); return; }
     if (!forgotEmail.trim()) { setError('Masukkan email kamu'); return; }
     setLoading(true); setError('');
     try {
-      await sendPasswordResetEmail(auth, forgotEmail.trim());
+      await authClient.forgetPassword({
+        email:       forgotEmail.trim(),
+        redirectTo:  '/reset-password',
+      });
       setSuccess(`Link reset password telah dikirim ke ${forgotEmail}. Cek inbox dan folder spam.`);
       setShowForgot(false);
       setForgotEmail('');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal';
-      if (msg.includes('user-not-found')) {
-        setError('Email tidak terdaftar');
-      } else {
-        setError(msg);
-      }
+      setError(err instanceof Error ? err.message : 'Gagal mengirim link reset');
     } finally { setLoading(false); }
   }
 

@@ -1,12 +1,16 @@
-import { betterAuth } from "better-auth";
-import { Pool } from "pg";
+/**
+ * lib/auth.ts — ROOT LEVEL (re-export dari API config)
+ * ─────────────────────────────────────────────────────
+ * File ini di-generate oleh `npx auth init` tapi sudah kita ganti.
+ * Instance Better Auth yang sebenarnya ada di:
+ *   apps/api/src/auth/better-auth.config.ts
+ *
+ * File ini hanya dipakai jika ada tool/script yang membutuhkan
+ * referensi dari root directory.
+ * ─────────────────────────────────────────────────────────────
+ * JANGAN jalankan `npx auth migrate` — kita pakai Prisma untuk schema.
+ * Tabel sudah dibuat via: cd apps/api && npm run db:push
+ */
 
-const database = new Pool({
-  connectionString: "postgresql://postgres:password@localhost:5432/database",
-});
-
-export const auth = betterAuth({
-  database: database,
-  baseURL: "http://localhost:3000/",
-  emailAndPassword: { enabled: true },
-});
+// Re-export dari config utama
+export { auth } from '../apps/api/src/auth/better-auth.config';

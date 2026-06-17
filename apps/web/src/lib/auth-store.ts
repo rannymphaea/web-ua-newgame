@@ -1,137 +1,156 @@
 'use client';
-// Auth state manager (Zustand). Login, logout, token refresh, proteksi rute + session cache.
+/**
+ * Auth Store — NEWGAME (Better Auth)
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Pengganti auth-store yang lama (pakai Firebase).
+ * Sekarang menggunakan Better Auth session via cookie/API.
+ *
+ * MIGRATION NOTE:
+ *   Lama: Firebase onAuthStateChanged + Firestore doc read
+ *   Baru: Better Auth getSession → /api/auth/me (PostgreSQL)
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 import { create } from 'zustand';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { authClient } from './auth-client';
 import { api } from './api';
 import { SessionCache } from './session-cache';
 
 interface UserData {
-  name: string;
-  username: string;
-  email: string;
-  role: string;
-  division: string;
-  memberId: string;
-  photoURL: string;
-  xpCache: number;
-  streak: number;
-  attendanceCount: number;
-  status: string;
-  level: number;
+  id:             string;
+  name:           string;
+  email:          string;
+  role:           string;
+  memberId:       string;
+  pillar:         string;
+  division:       string;
+  image:          string;
+  xpCache:        number;
+  streak:         number;
+  attendanceCount:number;
+  status:         string;
+  level:          number;
 }
 
 interface AuthState {
-  user: User | null;
-  userData: UserData | null;
-  loading: boolean;
+  user:        UserData | null;
+  loading:     boolean;
   initialized: boolean;
-  init: () => void;
-  logout: () => Promise<void>;
+  init:        () => Promise<void>;
+  logout:      () => Promise<void>;
+  refresh:     () => Promise<void>;
 }
 
-/**
- * OPTIMISTIC INIT:
- * Firebase caches auth state in IndexedDB/localStorage.
- * On return visits, auth.currentUser is available synchronously —
- * no need to wait for onAuthStateChanged to show the UI.
- *
- * Strategy:
- *   - If auth.currentUser exists synchronously → loading = false immediately
- *   - If not → loading = true until onAuthStateChanged resolves
- * This eliminates the 1–3 second blank/spinner for logged-in users.
- */
-const getOptimisticUser = () => {
-  try { return auth.currentUser; } catch { return null; }
-};
-
-// FIX: Sync user from Firebase cache immediately to prevent redirect flash.
-// If auth.currentUser exists and is verified → set user synchronously so
-// the dashboard layout never sees (loading=false, user=null) at the same time.
-const _optimistic = getOptimisticUser();
-const _optimisticUser = (_optimistic?.emailVerified) ? _optimistic : null;
-
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user:        _optimisticUser,   // ← sync init — prevents redirect race
-  userData:    null,
-  // Start non-loading if Firebase already has a verified cached user
-  loading:     _optimisticUser === null,
+  user:        null,
+  loading:     true,
   initialized: false,
 
-  init: () => {
+  init: async () => {
     if (get().initialized) return;
-    // Guard: auth is null during SSR/build when Firebase env vars are not set
-    if (!auth) { set({ loading: false }); return; }
     set({ initialized: true });
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if ((globalThis as Record<string, unknown>).__ngTokenInterval) {
-        clearInterval((globalThis as Record<string, unknown>).__ngTokenInterval as ReturnType<typeof setInterval>);
-        (globalThis as Record<string, unknown>).__ngTokenInterval = null;
-      }
+    try {
+      // Cek session dari Better Auth cookie
+      const session = await authClient.getSession();
 
-      if (!user || !user.emailVerified) {
-        set({ user: null, userData: null, loading: false });
+      if (!session?.data?.user) {
+        set({ user: null, loading: false });
         api.setToken(null);
         return;
       }
 
-      // If we already showed UI optimistically, don't re-show spinner
-      set(s => ({ loading: s.userData ? false : true }));
+      const baUser = session.data.user;
 
-      try {
-        const token = await user.getIdToken();
-        api.setToken(token);
-
-        if (!db) { set({ user: null, userData: null, loading: false }); return; }
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (!userDoc.exists() || userDoc.data().status === 'suspended') {
-          await signOut(auth);
-          set({ user: null, userData: null, loading: false });
-          return;
-        }
-
-        const data = userDoc.data();
-        const userData: UserData = {
-          name:            data.name            || user.displayName || '',
-          username:        data.username        || '',
-          email:           data.email           || user.email || '',
-          role:            data.role            || 'member',
-          division:        data.division        || '',
-          memberId:        data.memberId        || '',
-          photoURL:        data.photoURL        || user.photoURL || '',
-          xpCache:         data.xpCache         || 0,
-          streak:          data.streak          || 0,
-          attendanceCount: data.attendanceCount || 0,
-          status:          data.status          || 'active',
-          level:           Math.floor((data.xpCache || 0) / 100) + 1,
-        };
-
-        // Cache ke sessionStorage — mengurangi Firestore reads pada revisit
-        SessionCache.set(user.uid, userData as unknown as Record<string, unknown>);
-        set({ user, userData, loading: false });
-
-        (globalThis as Record<string, unknown>).__ngTokenInterval = setInterval(async () => {
-          try { const t = await user.getIdToken(true); api.setToken(t); } catch { /* ignore */ }
-        }, 10 * 60 * 1000);
-
-      } catch {
-        set({ user: null, userData: null, loading: false });
+      // Cek cache lokal dulu untuk load cepat
+      const cached = SessionCache.get(baUser.id) as UserData | null;
+      if (cached) {
+        set({ user: cached, loading: false });
+        // Refresh di background
+        get().refresh();
+        return;
       }
-    });
 
-    (globalThis as Record<string, unknown>).__ngAuthUnsubscribe = unsubscribe;
+      // Ambil profil lengkap dari API (PostgreSQL)
+      const profileRes = await fetch('/api/auth/me', {
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+      });
+
+      if (!profileRes.ok) {
+        set({ user: null, loading: false });
+        api.setToken(null);
+        return;
+      }
+
+      const profile = await profileRes.json();
+
+      if (profile.status === 'suspended') {
+        await authClient.signOut();
+        set({ user: null, loading: false });
+        return;
+      }
+
+      const userData: UserData = {
+        id:             profile.id             || baUser.id,
+        name:           profile.displayName    || baUser.name || '',
+        email:          profile.email          || baUser.email || '',
+        role:           profile.role           || 'member',
+        memberId:       profile.memberId       || '',
+        pillar:         profile.pillar         || '',
+        division:       profile.division       || '',
+        image:          profile.image          || (baUser as any).image || '',
+        xpCache:        profile.xpCache        || 0,
+        streak:         profile.streak         || 0,
+        attendanceCount:profile.attendanceCount|| 0,
+        status:         profile.status         || 'active',
+        level:          profile.level          || Math.floor((profile.xpCache || 0) / 100) + 1,
+      };
+
+      SessionCache.set(baUser.id, userData as unknown as Record<string, unknown>);
+      set({ user: userData, loading: false });
+
+    } catch {
+      set({ user: null, loading: false });
+    }
+  },
+
+  refresh: async () => {
+    try {
+      const session = await authClient.getSession();
+      if (!session?.data?.user) {
+        set({ user: null });
+        return;
+      }
+
+      const profileRes = await fetch('/api/auth/me', { credentials: 'include' });
+      if (!profileRes.ok) return;
+
+      const profile = await profileRes.json();
+      const userData: UserData = {
+        id:             profile.id             || session.data.user.id,
+        name:           profile.displayName    || session.data.user.name || '',
+        email:          profile.email          || session.data.user.email || '',
+        role:           profile.role           || 'member',
+        memberId:       profile.memberId       || '',
+        pillar:         profile.pillar         || '',
+        division:       profile.division       || '',
+        image:          profile.image          || '',
+        xpCache:        profile.xpCache        || 0,
+        streak:         profile.streak         || 0,
+        attendanceCount:profile.attendanceCount|| 0,
+        status:         profile.status         || 'active',
+        level:          profile.level          || 1,
+      };
+
+      SessionCache.set(session.data.user.id, userData as unknown as Record<string, unknown>);
+      set({ user: userData });
+    } catch { /* silent */ }
   },
 
   logout: async () => {
-    if ((globalThis as Record<string, unknown>).__ngTokenInterval) {
-      clearInterval((globalThis as Record<string, unknown>).__ngTokenInterval as ReturnType<typeof setInterval>);
-      (globalThis as Record<string, unknown>).__ngTokenInterval = null;
-    }
-    await signOut(auth);
+    await authClient.signOut();
     api.setToken(null);
-    SessionCache.clear();  // Bersihkan session cache saat logout
-    set({ user: null, userData: null });
+    SessionCache.clear();
+    set({ user: null });
   },
 }));
